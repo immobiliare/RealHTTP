@@ -12,7 +12,7 @@
 import Foundation
 
 /// Allows to create a multipart/form-data for uploads fo forms.
-open class MultipartForm: HTTPEncodableParameters {
+open class MultipartForm: HTTPRequestParameters {
     
     // MARK: - Public Properties
     

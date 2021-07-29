@@ -29,8 +29,7 @@
         
         public var request: HTTPRequest<Utente, Error> {
             let req = HTTPRequest<Utente,Error>(method: .post, route: "agents/login")
-            req.parameters = ["username": self.username, "password": self.password] as [String: AnyObject]
-            req.paramsEncoding = .queryString
+            req.parameters = URLEncoded(.queryString, parameters: ["username": self.username, "password": self.password] as [String: AnyObject])
             return req
         }
         

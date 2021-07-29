@@ -1,26 +1,21 @@
 //
-//  IndomioNetwork
+//  File.swift
+//  
 //
-//  Created by the Mobile Team @ ImmobiliareLabs
-//  Email: mobile@immobiliare.it
-//  Web: http://labs.immobiliare.it
-//
-//  Copyright ©2021 Immobiliare.it SpA. All rights reserved.
-//  Licensed under MIT License.
+//  Created by Daniele on 29/07/21.
 //
 
 import Foundation
 
-// MARK: - HTTPRequestBuilder
-
-/// This is the default implementation used by the library in order to produce a valid `URLRequest`
-/// to execute in a client instance.
-open class HTTPRequestBuilder: HTTPRequestBuilderProtocol {
+public class URLEncoded: HTTPRequestParameters {
     
     // MARK: - Public Properties
+
+    /// Parameters to encode.
+    public var parameters: HTTPRequestParametersDict?
     
-    /// Defines how the parameters are encoded into the request.
-    public var paramsEncoding: HTTPParametersEncoding
+    /// Where parameters must be encoded.
+    public var destination: HTTPParametersDestination
     
     // MARK: - Additional Configuration
     
@@ -34,56 +29,38 @@ open class HTTPRequestBuilder: HTTPRequestBuilderProtocol {
     
     // MARK: - Initialization
     
-    public init(_ paramsEncoding: HTTPParametersEncoding = .auto) {
-        self.paramsEncoding = paramsEncoding
+    public init(_ destination: HTTPParametersDestination = .auto, parameters: HTTPRequestParametersDict?) {
+        self.destination = destination
+        self.parameters = parameters
     }
     
-    // MARK: - Public Methods
+    // MARK: - Encoding
     
-    open func urlRequest(for request: HTTPRequestProtocol, in client: HTTPClient) throws -> URLRequest {
-        // Create the full URL of the request.
-        let fullURLString = (client.baseURL + request.route)
-        guard let fullURL = URL(string: fullURLString) else {
-            throw IndomioHTTPError.invalidURL(fullURLString) // failed to produce a valid url
-        }
-        
-        // Setup the new URLRequest instance
-        let cachePolicy = request.cachePolicy ?? client.cachePolicy
-        let timeout = request.timeout ?? client.timeout
-        let headers = (client.headers + request.headers)
-        
-        var urlRequest = try URLRequest(url: fullURL,
-                                        method: request.method,
-                                        cachePolicy: cachePolicy,
-                                        timeout: timeout,
-                                        headers: headers)
-        // Apply modifier if set
-        try request.urlRequestModifier?(&urlRequest)
-
+    public func encodeParametersIn(request: inout URLRequest) throws {
         // Apply parameters if set
-        guard let parameters = request.parameters, parameters.isEmpty == false else {
-            return urlRequest // no parameters set
+        guard let parameters = self.parameters, parameters.isEmpty == false else {
+            return // no parameters set
         }
         
-        guard paramsEncoding.encodesParametersInURL(request.method) else {
-            if urlRequest.headers[.contentType] == nil {
-                urlRequest.headers[.contentType] = "application/x-www-form-urlencoded; charset=utf-8"
+        guard destination.encodesParametersInURL(request.method) else {
+            if request.headers[.contentType] == nil {
+                request.headers[.contentType] = "application/x-www-form-urlencoded; charset=utf-8"
             }
             
-            urlRequest.httpBody = nil
-            return urlRequest
+            request.httpBody = nil
+            return
         }
         
         // Encode parameters
-        if var urlComponents = URLComponents(url: fullURL, resolvingAgainstBaseURL: false) {
+        if let fullURL = request.url,
+           var urlComponents = URLComponents(url: fullURL, resolvingAgainstBaseURL: false) {
             let percentEncodedQuery = (urlComponents.percentEncodedQuery.map {
                 $0 + "&"
             } ?? "") + encodeParameters(parameters)
             urlComponents.percentEncodedQuery = percentEncodedQuery
-            urlRequest.url = urlComponents.url
+            request.url = urlComponents.url
         }
-        
-        return urlRequest
+
     }
     
     // MARK: - Private Functions
@@ -148,9 +125,10 @@ open class HTTPRequestBuilder: HTTPRequestBuilderProtocol {
     }
 }
 
+
 // MARK: - HTTPRequestBuilder (ArrayEncoding, BoolEncoding)
 
-public extension HTTPRequestBuilder {
+public extension URLEncoded {
     
     /// Configure how arrays objects must be encoded in a request.
     ///

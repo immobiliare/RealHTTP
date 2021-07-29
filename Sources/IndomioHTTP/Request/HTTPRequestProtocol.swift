@@ -12,8 +12,8 @@
 import Foundation
 
 /// Parameters for an `HTTPRequestProtocol`
-public typealias HTTPRequestParameters = [String: AnyObject]
 public typealias HTTPURLRequestModifierCallback = ((inout URLRequest) throws -> Void)
+public typealias HTTPRequestParametersDict = [String: AnyObject]
 
 /// Generic protocol which describe a request.
 public protocol HTTPRequestProtocol {
@@ -32,7 +32,7 @@ public protocol HTTPRequestProtocol {
     var headers: HTTPHeaders { get set }
     
     /// Parameters to encode onto the request.
-    var parameters: HTTPEncodableParameters? { get set }
+    var parameters: HTTPRequestParameters? { get set }
     
     /// Timeout interval for request. When `nil` no timeout is set. This override the
     /// `HTTPClient` instance's `timeout`.
@@ -43,11 +43,6 @@ public protocol HTTPRequestProtocol {
     
     /// Maximum number of retries to set.
     var maxRetries: Int { get set }
-    
-    /// This create the `URLRequest` instance for a request when running in a `HTTPClient` instance.
-    /// You can setup your own object here to transform the request itself.
-    /// By default the `HTTPRequestBuilder` is used.
-    var requestBuilder: HTTPRequestBuilderProtocol { get set }
     
     /// This method is called right after the `URLRequest`associated with the object is created
     /// and before it's executed by the client. You can use it in order to modify some settings.
@@ -61,5 +56,9 @@ public protocol HTTPRequestProtocol {
     ///   - method: HTTP method for the request, by default is `.get`.
     ///   - route: route to compose with the base url of the `HTTPClient` where the request is running.
     init(method: HTTPMethod, route: String)
+    
+    // MARK: - Public Functions
+    
+    func urlRequest(for request: HTTPRequestProtocol, in client: HTTPClient) throws -> URLRequest
     
 }

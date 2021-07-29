@@ -38,6 +38,12 @@ extension URLRequest {
         self.allHTTPHeaderFields = headers?.asDictionary
     }
     
+    /// Returns the `httpMethod` as `HTTPMethod`
+    public var method: HTTPMethod? {
+        get { httpMethod.flatMap(HTTPMethod.init) }
+        set { httpMethod = newValue?.rawValue }
+    }
+    
 }
 
 // MARK: - NSNumber
