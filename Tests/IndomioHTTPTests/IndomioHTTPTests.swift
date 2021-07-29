@@ -9,7 +9,7 @@
             // Use XCTAssert and related functions to verify your tests produce the correct
             // results.
 
-            let client = HTTPClient(baseURL: "http://sp-ws-app-imm-develop.kube.dev.rm.ns.farm:80")
+            let client = HTTPClient(baseURL: "http://sp-ws-app-imm-develop.kube.dev.rm.ns.farm:80/v1/")
             
             LoginOp(username: "ciao", pwd: "bello").request.run(in: client)
             
@@ -27,10 +27,12 @@
         public var username: String
         public var password: String
         
-        public lazy var request: HTTPRequest<Utente, Error> = {
-            var req = HTTPRequest<Utente,Error>(method: .post, route: "")
+        public var request: HTTPRequest<Utente, Error> {
+            let req = HTTPRequest<Utente,Error>(method: .post, route: "agents/login")
+            req.parameters = ["username": self.username, "password": self.password] as [String: AnyObject]
+            req.paramsEncoding = .queryString
             return req
-        }()
+        }
         
         public init(username: String, pwd: String) {
             self.username = username

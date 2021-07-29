@@ -13,3 +13,8 @@ import Foundation
 
 /// Current IndomioNetwork version.
 let LibraryVersion = "1.0.0"
+
+public enum IndomioHTTPError: Error {
+    case invalidURL(URLConvertible)
+    
+}

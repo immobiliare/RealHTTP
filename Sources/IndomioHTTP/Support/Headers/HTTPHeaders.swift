@@ -138,6 +138,18 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
 
         headers.remove(at: index)
     }
+
+    /// Case-insensitively find a header's value passing the name.
+    ///
+    /// - Parameter name: name of the header, search is not case sensitive.
+    /// - Returns: String or nil if ket does not exists.
+    public func value(for name: String) -> String? {
+        guard let index = headers.index(of: name) else {
+            return nil
+        }
+
+        return headers[index].value
+    }
     
     // MARK: - Other Functions
     
@@ -159,11 +171,41 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
         return Dictionary(namesAndValues, uniquingKeysWith: { _, last in last })
     }
     
+    /// Subscript access to the value of an header.
+    /// NOTE: It's case insentive.
+    ///
+    /// - Parameter name: The name of the header.
+    public subscript(_ name: String) -> String? {
+        get {
+            value(for: name)
+        }
+        set {
+            if let value = newValue {
+                add(name: name, value: value)
+            } else {
+                remove(name: name)
+            }
+        }
+    }
+    
+    public subscript(_ key: HTTPHeaderField) -> String? {
+        get {
+            self[key.rawValue]
+        }
+        set {
+            self[key.rawValue] = newValue
+        }
+    }
+    
     /// Description of the headers.
     public var description: String {
         headers.map {
             $0.description
         }.joined(separator: "\n")
+    }
+    
+    static func + (left: HTTPHeaders, right: HTTPHeaders) -> HTTPHeaders {
+        HTTPHeaders(left.headers + right.headers)
     }
 
 }

@@ -54,14 +54,12 @@ public enum HTTPCacheControl {
         switch self {
         case .maxAge(seconds: let seconds):
             return "max-age=\(Int(seconds))"
-            
         case .maxStale(seconds: let seconds):
             guard let seconds = seconds else {
                 return "max-stale"
             }
             
             return "max-stale=\(Int(seconds))"
-            
         case .minFresh(seconds: let seconds):
             guard let seconds = seconds else {
                 return "max-fresh"
@@ -70,16 +68,12 @@ public enum HTTPCacheControl {
             return "min-fresh=\(Int(seconds))"
         case .noCache:
             return "no-cache"
-            
         case .noStore:
             return "no-store"
-            
         case .noTransform:
             return "no-transform"
-            
         case .onlyIfCached:
             return "only-if-cached"
-            
         }
     }
     
