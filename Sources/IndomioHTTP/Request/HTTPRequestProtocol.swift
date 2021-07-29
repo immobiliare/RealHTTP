@@ -13,6 +13,7 @@ import Foundation
 
 /// Parameters for an `HTTPRequestProtocol`
 public typealias HTTPRequestParameters = [String: AnyObject]
+public typealias HTTPURLRequestModifierCallback = ((inout URLRequest) throws -> Void)
 
 /// Generic protocol which describe a request.
 public protocol HTTPRequestProtocol {
@@ -50,6 +51,10 @@ public protocol HTTPRequestProtocol {
     /// You can setup your own object here to transform the request itself.
     /// By default the `HTTPRequestBuilder` is used.
     var requestBuilder: HTTPRequestBuilderProtocol { get set }
+    
+    /// This method is called right after the `URLRequest`associated with the object is created
+    /// and before it's executed by the client. You can use it in order to modify some settings.
+    var urlRequestModifier: HTTPURLRequestModifierCallback? { get set }
     
     // MARK: - Initialization
     

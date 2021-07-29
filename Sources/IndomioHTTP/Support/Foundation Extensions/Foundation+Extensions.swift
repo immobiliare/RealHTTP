@@ -10,6 +10,35 @@
 //
 
 import Foundation
+import CoreServices
+
+// MARK: - URLRequest
+
+extension URLRequest {
+    
+    /// Create a new instance of `URLRequest` with passed settings.
+    ///
+    /// - Parameters:
+    ///   - url: url convertible value.
+    ///   - method: http method to use.
+    ///   - cachePolicy: cache policy to use.
+    ///   - timeout: timeout interval.
+    ///   - headers: headers to use.
+    /// - Throws: throw an exception if url is not valid and cannot be converted to request.
+    public init(url: URLConvertible, method: HTTPMethod,
+                cachePolicy: URLRequest.CachePolicy,
+                timeout: TimeInterval,
+                headers: HTTPHeaders? = nil) throws {
+        let url = try url.asURL()
+
+        self.init(url: url)
+
+        self.httpMethod = method.rawValue
+        self.timeoutInterval = timeout
+        self.allHTTPHeaderFields = headers?.asDictionary
+    }
+    
+}
 
 // MARK: - NSNumber
 
@@ -31,6 +60,18 @@ extension String {
     /// - Returns: String
     public var queryEscaped: String {
         self.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowedSet) ?? self
+    }
+    
+    /// Return the suggested mime type for path extension of the receiver.
+    ///
+    /// - Returns: String
+    internal func suggestedMimeType() -> String {
+        if let id = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, self as CFString, nil)?.takeRetainedValue(),
+            let contentType = UTTypeCopyPreferredTagWithClass(id, kUTTagClassMIMEType)?.takeRetainedValue() {
+            return contentType as String
+        }
+
+        return "application/octet-stream"
     }
     
 }
@@ -67,5 +108,69 @@ extension CharacterSet {
 
         return CharacterSet.urlQueryAllowed.subtracting(encodableDelimiters)
     }()
+    
+}
+
+// MARK: - Bundle
+
+internal extension Bundle {
+    
+    private static let UnknownIdentifier = "Unknown"
+    
+    /// Bundle identifier.
+    var bundleID: String {
+        infoDictionary?["CFBundleIdentifier"] as? String ?? Bundle.UnknownIdentifier
+    }
+    
+    /// Name of the executable which is running this library.
+    var executableName: String {
+        (infoDictionary?["CFBundleExecutable"] as? String) ??
+            (ProcessInfo.processInfo.arguments.first?.split(separator: "/").last.map(String.init)) ??
+            Bundle.UnknownIdentifier
+    }
+    
+    /// Version of the application.
+    var appVersion: String {
+        infoDictionary?["CFBundleShortVersionString"] as? String ?? Bundle.UnknownIdentifier
+    }
+    
+    /// Build of the application.
+    var appBuild: String {
+        infoDictionary?["CFBundleVersion"] as? String ?? Bundle.UnknownIdentifier
+    }
+    
+    /// Name and version of the operating system.
+    var osNameIdentifier: String {
+        return "\(osName) \(osVersion)"
+    }
+    
+    // Version of the operating system.
+    var osVersion: String {
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+    }
+    
+    /// Name of the operating system.
+    var osName: String {
+        #if os(iOS)
+        #if targetEnvironment(macCatalyst)
+        return "macOS(Catalyst)"
+        #else
+        return "iOS"
+        #endif
+        #elseif os(watchOS)
+        return "watchOS"
+        #elseif os(tvOS)
+        return "tvOS"
+        #elseif os(macOS)
+        return "macOS"
+        #elseif os(Linux)
+        return "Linux"
+        #elseif os(Windows)
+        return "Windows"
+        #else
+        return "Unknown"
+        #endif
+    }
     
 }

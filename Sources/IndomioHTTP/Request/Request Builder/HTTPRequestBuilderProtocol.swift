@@ -29,6 +29,7 @@ public protocol HTTPRequestBuilderProtocol {
     ///   - client: destination client
     func urlRequest(for request: HTTPRequestProtocol, in client: HTTPClient) throws -> URLRequest
     
+    
 }
 
 // MARK: - HTTPParametersEncoding

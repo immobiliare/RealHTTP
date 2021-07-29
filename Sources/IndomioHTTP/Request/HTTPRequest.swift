@@ -16,6 +16,9 @@ open class HTTPRequest<Object: HTTPDataDecodable, Err: Error>: HTTPRequestProtoc
     
     // MARK: - Public Properties
     
+    /// Route to the endpoint.
+    open var route: String
+    
     /// The object used to transform the request in a valid `URLRequest`.
     /// You can override it in case you need to make some special transforms.
     open var requestBuilder: HTTPRequestBuilderProtocol = HTTPRequestBuilder()
@@ -39,14 +42,14 @@ open class HTTPRequest<Object: HTTPDataDecodable, Err: Error>: HTTPRequestProtoc
     /// Cache policy.
     open var cachePolicy: URLRequest.CachePolicy?
     
+    /// Request modifier callback.
+    open var urlRequestModifier: HTTPURLRequestModifierCallback?
+    
     /// Encoding of the parameters. By default is auto.
     open var paramsEncoding: HTTPParametersEncoding {
         get { requestBuilder.paramsEncoding }
         set { requestBuilder.paramsEncoding = newValue }
     }
-    
-    /// Route to the endpoint.
-    open var route: String
     
     // MARK: - Initialization
     

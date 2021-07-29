@@ -57,7 +57,10 @@ open class HTTPRequestBuilder: HTTPRequestBuilderProtocol {
                                         cachePolicy: cachePolicy,
                                         timeout: timeout,
                                         headers: headers)
-        
+        // Apply modifier if set
+        try request.urlRequestModifier?(&urlRequest)
+
+        // Apply parameters if set
         guard let parameters = request.parameters, parameters.isEmpty == false else {
             return urlRequest // no parameters set
         }
