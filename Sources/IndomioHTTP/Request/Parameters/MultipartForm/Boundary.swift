@@ -44,7 +44,7 @@ extension MultipartForm {
         ///
         /// - Parameter kind: kind of boundary to get.
         /// - Returns: String
-        internal func boundaryFor(_ kind: Kind) -> String {
+        internal func boundaryStringFor(_ kind: Kind) -> String {
             switch kind {
             case .start:
                 return "--\(id)\(Boundary.crlf)"
@@ -58,9 +58,9 @@ extension MultipartForm {
         // MARK: - Private Functions
         
         fileprivate static func generate() -> String {
-            let first = UInt32.random(in: UInt32.min...UInt32.max)
-            let second = UInt32.random(in: UInt32.min...UInt32.max)
-            return String(format: "indomiohttp.boundary.%08x%08x", first, second)
+            let firstPart = UInt32.random(in: UInt32.min...UInt32.max)
+            let secondPart = UInt32.random(in: UInt32.min...UInt32.max)
+            return String(format: "indomiohttp.boundary.%08x%08x", firstPart, secondPart)
         }
         
     }

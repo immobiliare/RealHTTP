@@ -148,7 +148,7 @@ open class MultipartForm: HTTPEncodableParameters {
         var data = Data()
 
         // Boundary section
-        let boundarySection = Data(boundary.boundaryFor(.start).utf8)
+        let boundarySection = Data(boundary.boundaryStringFor(.start).utf8)
         data.append(boundarySection)
 
         // Header section with content-disposition data
@@ -156,49 +156,13 @@ open class MultipartForm: HTTPEncodableParameters {
         data.append(headersSection)
         
         // Stream of data
-        let streamSection = try encodeFormItemData(item)
+        let streamSection = try item.encodedData()
         data.append(streamSection)
         
         // Final boundary
         if kind == .end {
-            let boundaryEndSection = Data(boundary.boundaryFor(.end).utf8)
+            let boundaryEndSection = Data(boundary.boundaryStringFor(.end).utf8)
             data.append(boundaryEndSection)
-        }
-        
-        return data
-    }
-    
-    /// Encode a stream of multipart form item and produce the Data.
-    ///
-    /// - Parameter item: item to encode.
-    /// - Throws: throw an exception if encoding fails.
-    /// - Returns: Data
-    private func encodeFormItemData(_ item: MultipartFormItem) throws -> Data {
-        item.stream.open()
-        
-        defer {
-            item.stream.close()
-        }
-        
-        var data = Data()
-        
-        /// The optimal read/write buffer size for input/output streams is 1024bytes (1KB).
-        /// <https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/Streams/Articles/ReadingInputStreams.html>
-        let streamBufferSize = 1024
-        
-        while item.stream.hasBytesAvailable {
-            var buffer = [UInt8](repeating: 0, count: streamBufferSize)
-            let bytesRead = item.stream.read(&buffer, maxLength: streamBufferSize)
-
-            if let error = item.stream.streamError {
-                throw IndomioHTTPError.multipartStreamReadFailed(error)
-            }
-
-            guard bytesRead > 0 else {
-                break
-            }
-
-            data.append(buffer, count: bytesRead)
         }
         
         return data
@@ -239,6 +203,71 @@ open class MultipartForm: HTTPEncodableParameters {
 
     
 }
+
+// MARK: - MultipartFormItem
+
+/// A single item of the MultipartForm object.
+internal class MultipartFormItem {
+    
+    // MARK: - Public Properties
+    
+    /// Metadata assigned to the single form element.
+    let headers: HTTPHeaders
+    
+    /// Stream of the body for this form item.
+    let stream: InputStream
+    
+    /// Length of the body.
+    let length: UInt64
+    
+    // MARK: - Initialization
+    
+    init(stream: InputStream, length: UInt64, headers: HTTPHeaders) {
+        self.headers = headers
+        self.stream = stream
+        self.length = length
+    }
+    
+    // MARK: - Encoding
+    
+    /// Encode a stream and produce the Data.
+    ///
+    /// - Parameter item: item to encode.
+    /// - Throws: throw an exception if encoding fails.
+    /// - Returns: Data
+    internal func encodedData() throws -> Data {
+        stream.open()
+        
+        defer {
+            stream.close()
+        }
+        
+        var data = Data()
+        
+        /// The optimal read/write buffer size for input/output streams is 1024bytes (1KB).
+        /// <https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/Streams/Articles/ReadingInputStreams.html>
+        let bufferSize = 1024
+        
+        while stream.hasBytesAvailable {
+            var buffer = [UInt8](repeating: 0, count: bufferSize)
+            let bytesRead = stream.read(&buffer, maxLength: bufferSize)
+
+            if let error = stream.streamError {
+                throw IndomioHTTPError.multipartStreamReadFailed(error)
+            }
+
+            guard bytesRead > 0 else {
+                break
+            }
+
+            data.append(buffer, count: bytesRead)
+        }
+        
+        return data
+    }
+    
+}
+
 
 // MARK: - HTTPHeaders Extensions
 
