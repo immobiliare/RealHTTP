@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "IndomioNetwork",
+    name: "IndomioHTTP",
     platforms: [
         .iOS(.v13),
         .macOS(.v10_15),
@@ -13,18 +13,18 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "IndomioNetwork",
-            targets: ["IndomioNetwork"]),
+            name: "IndomioHTTP",
+            targets: ["IndomioHTTP"]),
     ],
     dependencies: [
     ],
     targets: [
         .target(
-            name: "IndomioNetwork",
+            name: "IndomioHTTP",
             dependencies: []),
         .testTarget(
-            name: "IndomioNetworkTests",
-            dependencies: ["IndomioNetwork"]),
+            name: "IndomioHTTPTests",
+            dependencies: ["IndomioHTTP"]),
     ],
     swiftLanguageVersions: [
         .v5

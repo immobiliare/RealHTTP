@@ -168,7 +168,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
 
 }
 
-// MARK: - URLRequest Extension
+// MARK: - HTTPHeaders's UIKit Extensions
 
 extension URLRequest {
         
@@ -184,13 +184,26 @@ extension URLRequest {
 
 }
 
-// MARK: - HTTPURLResponse Extension
 
 extension HTTPURLResponse {
     
     /// Returns `allHeaderFields` as `HTTPHeaders`.
     public var headers: HTTPHeaders {
         HTTPHeaders(allHeaderFields as? [String: String])
+    }
+    
+}
+
+extension URLSessionConfiguration {
+    
+    /// `httpAdditionalHeaders` as `HTTPHeaders` object.
+    public var headers: HTTPHeaders {
+        get {
+            HTTPHeaders(httpAdditionalHeaders as? [String: String])
+        }
+        set {
+            httpAdditionalHeaders = newValue.asDictionary
+        }
     }
     
 }

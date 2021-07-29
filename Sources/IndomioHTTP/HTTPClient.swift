@@ -24,6 +24,9 @@ public class HTTPClient {
     /// Headers which are part of each request made using the client.
     public var headers = HTTPHeaders.default
     
+    /// Timeout interval for requests. Value can be overriden if `nil`.
+    public var timeout: TimeInterval?
+    
     // MARK: - Initialization
     
     /// Initialize a new HTTP client with given passed base URL.
@@ -34,6 +37,16 @@ public class HTTPClient {
     public init(baseURL: String, session: URLSession = .shared) {
         self.baseURL = baseURL
         self.session = session
+    }
+    
+    /// Initialize a new HTTP client with given `URLSessionConfiguration` instance.
+    ///
+    /// - Parameters:
+    ///   - baseURL: base URL.
+    ///   - configuration: `URLSession` configuration.
+    public convenience init(baseURL: String, configuration: URLSessionConfiguration) {
+        let session = URLSession(configuration: configuration)
+        self.init(baseURL: baseURL, session: session)
     }
     
 }
