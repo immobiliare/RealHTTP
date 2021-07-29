@@ -12,7 +12,7 @@
 import Foundation
 import Combine
 
-open class HTTPRequest<Object: HTTPDataDecodable, Err: Error>: HTTPRequestProtocol {
+open class HTTPRequest<Object: HTTPDataDecodable, Err: Swift.Error>: HTTPRequestProtocol, BuilderRepresentable {
     
     // MARK: - Public Properties
     
@@ -43,7 +43,7 @@ open class HTTPRequest<Object: HTTPDataDecodable, Err: Error>: HTTPRequestProtoc
     
     // MARK: - Initialization
     
-    required public init(method: HTTPMethod, route: String) {
+    required public init(method: HTTPMethod = .get, route: String = "") {
         self.method = method
         self.route = route
     }

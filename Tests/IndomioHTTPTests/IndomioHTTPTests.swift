@@ -14,6 +14,7 @@
             LoginOp(username: "ciao", pwd: "bello").request.run(in: client)
             
             
+            
         }
     }
 
@@ -28,8 +29,12 @@
         public var password: String
         
         public var request: HTTPRequest<Utente, Error> {
-            let req = HTTPRequest<Utente,Error>(method: .post, route: "agents/login")
-            req.parameters = URLEncoded(.queryString, parameters: ["username": self.username, "password": self.password] as [String: AnyObject])
+            let params =  ["username": self.username, "password": self.password]
+            
+            let req = HTTPRequest<Utente,Error>()
+                .set(\.method, .post)
+                .set(\.parameters, URLEncoded(parameters: params as [String:AnyObject]))
+                
             return req
         }
         
