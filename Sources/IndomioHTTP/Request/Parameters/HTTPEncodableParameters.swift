@@ -12,8 +12,7 @@
 import Foundation
 
 public protocol HTTPEncodableParameters {
-    
-    /// Encode the parameters as data.
-    func encode() throws -> Data
+        
+    func encodeParametersIn(request: inout URLRequest) throws
     
 }

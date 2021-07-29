@@ -1,2 +1,4 @@
-# IndomioNetwork
-Elegant REST Client in Swift
+# IndomioHTTP
+
+HTTP RESTful Client in Swift
+Under development

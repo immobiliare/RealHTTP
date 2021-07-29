@@ -118,11 +118,23 @@ open class MultipartForm: HTTPEncodableParameters {
     
     // MARK: - Encoding
     
+    public func encodeParametersIn(request: inout URLRequest) throws {
+        // Append the content type if not set
+        if request.headers[.contentType] == nil {
+            request.headers[.contentType] = self.contentType
+        }
+        
+        // Set the body for multipart form data.
+        request.httpBody = try encodeData()
+    }
+    
+    // MARK: - Private Functions
+
     /// Encode the multipart form data and produce the output to be attached to the URLRequest.
     ///
     /// - Throws: throw an exception if encoding fails.
     /// - Returns: Data
-    public func encode() throws -> Data {
+    private func encodeData() throws -> Data {
         var data = Data()
 
         try formItems.enumerated().forEach {
@@ -133,9 +145,7 @@ open class MultipartForm: HTTPEncodableParameters {
         
         return data
     }
-    
-    // MARK: - Private Functions
-    
+        
     /// Encode a single item of the multipart form.
     ///
     /// - Parameters:

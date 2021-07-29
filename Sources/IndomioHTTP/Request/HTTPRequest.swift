@@ -37,19 +37,13 @@ open class HTTPRequest<Object: HTTPDataDecodable, Err: Error>: HTTPRequestProtoc
     open var headers = HTTPHeaders()
     
     /// Parameters for request.
-    open var parameters: HTTPRequestParameters?
+    open var parameters: HTTPEncodableParameters?
     
     /// Cache policy.
     open var cachePolicy: URLRequest.CachePolicy?
     
     /// Request modifier callback.
     open var urlRequestModifier: HTTPURLRequestModifierCallback?
-    
-    /// Encoding of the parameters. By default is auto.
-    open var paramsEncoding: HTTPParametersEncoding {
-        get { requestBuilder.paramsEncoding }
-        set { requestBuilder.paramsEncoding = newValue }
-    }
     
     // MARK: - Initialization
     

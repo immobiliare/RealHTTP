@@ -32,10 +32,7 @@ public protocol HTTPRequestProtocol {
     var headers: HTTPHeaders { get set }
     
     /// Parameters to encode onto the request.
-    var parameters: HTTPRequestParameters? { get set }
-    
-    /// Defines how the parameters must be encoded into the request.
-    var paramsEncoding: HTTPParametersEncoding { get set }
+    var parameters: HTTPEncodableParameters? { get set }
     
     /// Timeout interval for request. When `nil` no timeout is set. This override the
     /// `HTTPClient` instance's `timeout`.
