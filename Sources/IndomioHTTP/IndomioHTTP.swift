@@ -19,4 +19,5 @@ public enum IndomioHTTPError: Error {
     case multipartInvalidFile(URL)
     case multipartFailedStringEncoding
     case multipartStreamReadFailed(Error)
+    case jsonEncodingFailed(Error)
 }

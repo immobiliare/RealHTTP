@@ -83,7 +83,23 @@ public extension HTTPHeader {
     static func authBearerToken(_ bearerToken: String) -> HTTPHeader {
         auth("Bearer \(bearerToken)")
     }
-
+    
+    /// `OAuth` `Authorization` header using the `oAuthToken` provided.
+    ///
+    /// - Parameter oAuthToken: The token value.
+    /// - Returns: HTTPHeader
+    static func authOAuth(_ oAuthToken: String) -> HTTPHeader {
+        auth("OAuth \(oAuthToken)")
+    }
+    
+    /// Set the `x-api-key` header for authorized calls.
+    ///
+    /// - Parameter xAPIKey: value of the key.
+    /// - Returns: HTTPHeader
+    static func xAPIKey(_ xAPIKey: String) -> HTTPHeader {
+        HTTPHeader(name: "x-api-key", value: xAPIKey)
+    }
+    
 }
 
 // MARK: - HTTPHeader + Accept

@@ -12,7 +12,7 @@
 import Foundation
 
 /// Allows to create a multipart/form-data for uploads fo forms.
-open class MultipartForm: HTTPRequestParameters {
+public class MultipartFormData: HTTPRequestEncodableData {
     
     // MARK: - Public Properties
     
@@ -26,10 +26,15 @@ open class MultipartForm: HTTPRequestParameters {
         }
     }
     
-    /// The boundary used to separate the body parts in the encoded form data.
-    public let boundary: Boundary
+    /// The id of the boundary
+    public var boundaryID: String {
+        boundary.id
+    }
     
     // MARK: - Private Properties
+    
+    /// The boundary used to separate the body parts in the encoded form data.
+    private let boundary: Boundary
     
     /// Body contents of the form.
     private var formItems = [MultipartFormItem]()
@@ -38,9 +43,9 @@ open class MultipartForm: HTTPRequestParameters {
     
     /// Initialize a new multipart form.
     ///
-    /// - Parameter boundary: boundary, if `nil` a value is generated automatically.
-    public init(boundary: Boundary? = nil) {
-        self.boundary = boundary ?? Boundary()
+    /// - Parameter boundary: boundary identifier, if `nil` it will generated automatically
+    public init(boundary id: String? = nil) {
+        self.boundary = .init(id)
     }
     
     // MARK: - Add Items
@@ -205,7 +210,7 @@ open class MultipartForm: HTTPRequestParameters {
 
         var headers: HTTPHeaders = [.contentDisposition(contentDisposition)]
         if let mimeType = mimeType {
-            headers.add(.contentType(mimeType))
+            headers.set(.contentType(mimeType))
         }
 
         return headers
@@ -287,7 +292,7 @@ fileprivate extension HTTPHeaders {
     ///
     /// - Returns: Data
     func asMultipartFormItemHeaders() -> String {
-        let clrf = MultipartForm.Boundary.crlf
+        let clrf = MultipartFormData.Boundary.crlf
         
         return map {
             "\($0.name): \($0.value)\(clrf)"

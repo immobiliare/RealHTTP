@@ -13,10 +13,10 @@ import Foundation
 
 // MARK: - Boundary
 
-extension MultipartForm {
+extension MultipartFormData {
     
     /// Boundary object identify the sequence used to separate components in a multipart form data.
-    public struct Boundary: ExpressibleByStringLiteral {
+    internal struct Boundary: ExpressibleByStringLiteral {
         
         /// Identifier of the boundary.
         public let id: String
@@ -69,7 +69,7 @@ extension MultipartForm {
 
 // MARK: - Kind
 
-extension MultipartForm.Boundary {
+extension MultipartFormData.Boundary {
     
     /// Type of boundary.
     /// - `start`: initial sequence of the form

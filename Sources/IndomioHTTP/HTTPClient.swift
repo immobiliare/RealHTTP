@@ -11,7 +11,7 @@
 
 import Foundation
 
-public class HTTPClient {
+public class HTTPClient: NSObject {
     
     // MARK: - Public Properties
     
@@ -19,7 +19,7 @@ public class HTTPClient {
     public let baseURL: String
     
     /// Service's URLSession instance to use.
-    public var session: URLSession
+    public var session: URLSession!
     
     /// Headers which are part of each request made using the client.
     public var headers = HTTPHeaders.default
@@ -33,16 +33,7 @@ public class HTTPClient {
     public var cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy
     
     // MARK: - Initialization
-    
-    /// Initialize a new HTTP client with given passed base URL.
-    ///
-    /// - Parameters:
-    ///   - baseURL: base URL.
-    ///   - session: session to use, by default is `.shared`.
-    public init(baseURL: String, session: URLSession = .shared) {
-        self.baseURL = baseURL
-        self.session = session
-    }
+
     
     /// Initialize a new HTTP client with given `URLSessionConfiguration` instance.
     ///
@@ -66,9 +57,17 @@ public class HTTPClient {
     ///                     which handles the transfers in a separate process.
     ///                     In iOS, this configuration makes it possible for transfers to continue even when
     ///                     the app itself is suspended or terminated.
-    public convenience init(baseURL: String, configuration: URLSessionConfiguration) {
-        let session = URLSession(configuration: configuration)
-        self.init(baseURL: baseURL, session: session)
+    public init(baseURL: String, configuration: URLSessionConfiguration = .default) {
+        self.baseURL = baseURL
+        super.init()
+        
+        self.session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
     }
+    
+}
+
+extension HTTPClient: URLSessionDelegate {
+    
+    
     
 }

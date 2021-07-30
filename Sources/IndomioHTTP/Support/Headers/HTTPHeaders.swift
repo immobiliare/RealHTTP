@@ -38,7 +38,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// - Parameter headers: headers.
     public init(_ headers: [HTTPHeader] = []) {
         headers.forEach {
-            add($0)
+            set($0)
         }
     }
     
@@ -49,7 +49,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// - Parameter headersDictionary: headers dictionary.
     public init(_ headersDictionary: [String: String]?) {
         headersDictionary?.forEach {
-            add(HTTPHeader(name: $0.key, value: $0.value))
+            set(HTTPHeader(name: $0.key, value: $0.value))
         }
     }
     
@@ -65,10 +65,10 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// - Parameter headersDictionary: elements.
     public init(dictionaryLiteral headersDictionary: (String, String)...) {
         headersDictionary.forEach {
-            add(name: $0.0, value: $0.1)
+            set($0.0, $0.1)
         }
     }
-
+    
     // MARK: - Sequence, Collection Conformance
     
     public func makeIterator() -> IndexingIterator<[HTTPHeader]> {
@@ -99,15 +99,24 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// - Parameters:
     ///   - name: name of the header.
     ///   - value: value of the header.
-    public mutating func add(name: String, value: String) {
-        add(HTTPHeader(name: name, value: value))
+    public mutating func set(_ name: String, _ value: String) {
+        set(HTTPHeader(name: name, value: value))
+    }
+    
+    /// Add of a new header to the list.
+    ///
+    /// - Parameters:
+    ///   - field: field.
+    ///   - value: value.
+    public mutating func set(_ field: HTTPHeaderField, _ value: String) {
+        set(HTTPHeader(name: field.rawValue, value: value))
     }
     
     /// Update the headers value by adding a new header.
     /// NOTE: It's case insensitive.
     ///
     /// - Parameter header: header to add.
-    public mutating func add(_ header: HTTPHeader) {
+    public mutating func set(_ header: HTTPHeader) {
         guard let index = headers.index(of: header.name) else {
             headers.append(header)
             return
@@ -120,9 +129,18 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// NOTE: It's case insentive.
     ///
     /// - Parameter headers: headers to add.
-    public mutating func add(_ headers: [HTTPHeader]) {
+    public mutating func set(_ headers: [HTTPHeader]) {
         headers.forEach {
-            add($0)
+            set($0)
+        }
+    }
+    
+    /// Add headers from a dictionary.
+    ///
+    /// - Parameter headers: headers
+    public mutating func set(_ headers: [HTTPHeaderField: String]) {
+        headers.enumerated().forEach {
+            set(HTTPHeader(name: $0.element.key.rawValue, value: $0.element.value))
         }
     }
     
@@ -181,7 +199,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
         }
         set {
             if let value = newValue {
-                add(name: name, value: value)
+                set(name, value)
             } else {
                 remove(name: name)
             }

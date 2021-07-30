@@ -23,7 +23,7 @@ public protocol BuilderRepresentable {
 extension BuilderRepresentable {
 
     @inlinable
-    public func set<T>(_ keyPath: WritableKeyPath<Self, T>, _ value: T) -> Self {
+    public func with<T>(_ keyPath: WritableKeyPath<Self, T>, _ value: T) -> Self {
         var result = self
         result[keyPath: keyPath] = value
         return result
@@ -41,7 +41,7 @@ extension BuilderRepresentable {
 
 extension BuilderRepresentable {
     
-    public func set<T>(_ keyPath: ReferenceWritableKeyPath<Self, T>, _ value: T) -> Self {
+    public func with<T>(_ keyPath: ReferenceWritableKeyPath<Self, T>, _ value: T) -> Self {
         self[keyPath: keyPath] = value
         return self
     }

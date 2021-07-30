@@ -1,21 +1,25 @@
 //
-//  File.swift
-//  
+//  IndomioNetwork
 //
-//  Created by Daniele on 29/07/21.
+//  Created by the Mobile Team @ ImmobiliareLabs
+//  Email: mobile@immobiliare.it
+//  Web: http://labs.immobiliare.it
+//
+//  Copyright ©2021 Immobiliare.it SpA. All rights reserved.
+//  Licensed under MIT License.
 //
 
 import Foundation
 
-public class URLEncoded: HTTPRequestParameters {
+public class URLParametersData: HTTPRequestEncodableData {
     
     // MARK: - Public Properties
-
+    
     /// Parameters to encode.
     public var parameters: HTTPRequestParametersDict?
     
     /// Where parameters must be encoded.
-    public var destination: HTTPParametersDestination
+    public var destination: Destination
     
     // MARK: - Additional Configuration
     
@@ -29,9 +33,21 @@ public class URLEncoded: HTTPRequestParameters {
     
     // MARK: - Initialization
     
-    public init(_ destination: HTTPParametersDestination = .auto, parameters: HTTPRequestParametersDict?) {
+    /// Initialize a new `URLParametersData` encoder with given destination.
+    ///
+    /// - Parameters:
+    ///   - destination: destination of the url produced.
+    ///   - parameters: parameters to encode.
+    internal init(in destination: Destination, parameters: HTTPRequestParametersDict?) {
         self.destination = destination
         self.parameters = parameters
+    }
+    
+    /// Initialize to produce query parameters.
+    ///
+    /// - Parameter queryParameters: query parameters.
+    public convenience init(queryParameters: HTTPRequestParametersDict) {
+        self.init(in: .queryString, parameters: queryParameters)
     }
     
     // MARK: - Encoding
@@ -42,7 +58,7 @@ public class URLEncoded: HTTPRequestParameters {
             return // no parameters set
         }
         
-        guard destination.encodesParametersInURL(request.method) else {
+        guard destination == .queryString else {
             if request.headers[.contentType] == nil {
                 request.headers[.contentType] = "application/x-www-form-urlencoded; charset=utf-8"
             }
@@ -60,7 +76,6 @@ public class URLEncoded: HTTPRequestParameters {
             urlComponents.percentEncodedQuery = percentEncodedQuery
             request.url = urlComponents.url
         }
-
     }
     
     // MARK: - Private Functions
@@ -71,7 +86,7 @@ public class URLEncoded: HTTPRequestParameters {
     /// - Returns: String encoded
     private func encodeParameters(_ parameters: [String: Any]) -> String {
         var components = [(String, String)]()
-
+        
         for key in parameters.keys.sorted(by: <) {
             let value = parameters[key]!
             components += encodeKey(key, withValue: value)
@@ -128,7 +143,7 @@ public class URLEncoded: HTTPRequestParameters {
 
 // MARK: - HTTPRequestBuilder (ArrayEncoding, BoolEncoding)
 
-public extension URLEncoded {
+public extension URLParametersData {
     
     /// Configure how arrays objects must be encoded in a request.
     ///
@@ -161,6 +176,21 @@ public extension URLEncoded {
             }
         }
         
+    }
+    
+}
+
+// MARK: - HTTPParametersDestination
+
+extension URLParametersData {
+        
+    /// Defines how the url encoded query string must be applied to the request.
+    ///
+    /// - `queryString` sets/appends encoded query string result to existing query string.
+    /// - `httpBody`: sets encoded query string result as the HTTP body.
+    public enum Destination {
+        case queryString
+        case httpBody
     }
     
 }

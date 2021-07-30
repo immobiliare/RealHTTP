@@ -32,8 +32,11 @@ open class HTTPRequest<Object: HTTPDataDecodable, Err: Swift.Error>: HTTPRequest
     /// Headers to send along the request.
     open var headers = HTTPHeaders()
     
-    /// Parameters for request.
-    open var parameters: HTTPRequestParameters?
+    /// Query string parameters which are set with the full url of the request.
+    open var queryParameters: URLParametersData?
+    
+    /// Body content of the request.
+    open var content: HTTPRequestEncodableData?
     
     /// Cache policy.
     open var cachePolicy: URLRequest.CachePolicy?
@@ -48,10 +51,120 @@ open class HTTPRequest<Object: HTTPDataDecodable, Err: Swift.Error>: HTTPRequest
         self.route = route
     }
     
+    // MARK: - Execute Request
+
     func run(in client: HTTPClient) -> AnyPublisher<Object, Err> {
         let urlRequest = try? urlRequest(for: self, in: client)
         print(urlRequest)
         fatalError()
+    }
+    
+}
+
+// MARK: - HTTPRequest Configuration
+
+extension HTTPRequest {
+        
+    /// Set the HTTP method for request.
+    ///
+    /// - Parameter httpMethod: method to use.
+    /// - Returns: Self
+    public func method(_ httpMethod: HTTPMethod) -> Self {
+        self.method = httpMethod
+        return self
+    }
+    
+    public func retry(_ attempts: Int) -> Self {
+        self.maxRetries = attempts
+        return self
+    }
+    
+    public func header(_ name: HTTPHeaderField, _ value: String) -> Self {
+        self.headers[name] = value
+        return self
+    }
+    
+    /// Set multiple headers.
+    ///
+    /// - Parameter headers: headers.
+    /// - Returns: Self
+    public func headers(_ builder: ((inout HTTPHeaders) -> Void)) -> Self {
+        builder(&headers)
+        return self
+    }
+    
+    /// Set the request timeout interval.
+    /// If not set the `HTTPClient`'s timeout where the instance is running will be used.
+    /// - Parameter timeout: timeout interval in seconds.
+    /// - Returns: Self
+    public func timeout(_ timeout: TimeInterval) -> Self {
+        self.timeout = timeout
+        return self
+    }
+    
+    /// Set the content of the request to Multipart Form Data by passing a preconfigured MultipartForm object.
+    /// Any previously set body is overriden.
+    ///
+    /// - Parameter form: form to set.
+    /// - Returns: Self
+    public func multipart(_ form: MultipartFormData) -> Self {
+        self.content = form
+        return self
+    }
+    
+    /// Set the content of the request to a builder configuration for a MultipartForm.
+    /// The object is created for you and you can configure the content of the form directly
+    /// from the callback.
+    ///
+    /// - Parameters:
+    ///   - boundary: boundary identifier; ignore parameters to automatically generate the boundary.
+    ///   - builder: builder callback where you can configure the instance of the new MultipartForm created.
+    /// - Returns: Self
+    public func multipart(boundary: String? = nil, _ builder: ((inout MultipartFormData) -> Void)) -> Self {
+        var multipartForm = MultipartFormData(boundary: boundary)
+        builder(&multipartForm)
+        self.content = multipartForm
+        return self
+    }
+    
+    /// Set the content of the request to a `Encodable` object.
+    ///
+    /// - Parameters:
+    ///   - encoder: encoder used for serialization.
+    ///   - params: parameters to set.
+    /// - Returns: Self
+    public func json<Object: Encodable>(encoder: JSONEncoder? = nil, _ object: Object) -> Self {
+        self.content = EncodableJSON(encoder, object: object)
+        return self
+    }
+    
+    /// Set the content of the request to a JSON serializable object.
+    /// - Parameters:
+    ///   - options: options for writing content. By default it uses `.sortedKey` in order to produce the same
+    ///              url every time and avoid problem with backend cache which depends by the same url every time.
+    ///   - params: parameters list.
+    /// - Returns: Self
+    public func json(_ options: JSONSerialization.WritingOptions = [.sortedKeys], _ params: Any) -> Self {
+        self.content = JSONData(params, options: options)
+        return self
+    }
+    
+    /// Set the query parameters for request.
+    ///
+    /// - Parameter queryParams: query parameters.
+    /// - Returns: Self
+    public func query(_ queryParams: [String: AnyObject]) -> Self {
+        self.queryParameters = URLParametersData(in: .queryString, parameters: queryParams)
+        return self
+    }
+    
+    /// Set the body of the request to the parameters encoded and x-www-formurlencoded format.
+    ///
+    /// - Parameter parameters: parameters to set.
+    /// - Returns: Self
+    public func formURLEncoded(_ parameters: [String: AnyObject]) -> Self {
+        self.content = URLParametersData(in: .httpBody, parameters: parameters)
+        return self
     }
     
     // MARK: - Private Functions
@@ -74,8 +187,10 @@ open class HTTPRequest<Object: HTTPDataDecodable, Err: Swift.Error>: HTTPRequest
                                         timeout: timeout,
                                         headers: headers)
         
-        // Encode parameters/body
-        try parameters?.encodeParametersIn(request: &urlRequest)
+        // Encode query string parameters
+        try queryParameters?.encodeParametersIn(request: &urlRequest)
+        // Encode the body
+        try content?.encodeParametersIn(request: &urlRequest)
         
         // Apply modifier if set
         try request.urlRequestModifier?(&urlRequest)

@@ -32,9 +32,10 @@
             let params =  ["username": self.username, "password": self.password]
             
             let req = HTTPRequest<Utente,Error>()
-                .set(\.method, .post)
-                .set(\.parameters, URLEncoded(parameters: params as [String:AnyObject]))
-                
+                .method(.post)
+                .json(["username": self.username, "password": self.password])
+
+        
             return req
         }
         

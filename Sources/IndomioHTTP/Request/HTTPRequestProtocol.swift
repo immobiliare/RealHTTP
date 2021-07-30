@@ -14,6 +14,7 @@ import Foundation
 /// Parameters for an `HTTPRequestProtocol`
 public typealias HTTPURLRequestModifierCallback = ((inout URLRequest) throws -> Void)
 public typealias HTTPRequestParametersDict = [String: AnyObject]
+public typealias HTTPParameters = [String: Any]
 
 /// Generic protocol which describe a request.
 public protocol HTTPRequestProtocol {
@@ -32,7 +33,9 @@ public protocol HTTPRequestProtocol {
     var headers: HTTPHeaders { get set }
     
     /// Parameters to encode onto the request.
-    var parameters: HTTPRequestParameters? { get set }
+    var queryParameters: URLParametersData? { get set }
+    
+    var content: HTTPRequestEncodableData? { get set }
     
     /// Timeout interval for request. When `nil` no timeout is set. This override the
     /// `HTTPClient` instance's `timeout`.
