@@ -26,6 +26,8 @@ import Foundation
 /// - `processing`: This code indicates that the server has received and is processing the request,
 ///                 but no response is available yet.
 ///
+/// - `none`: no response received from server.
+///
 /// ## SUCCESS - 2xx
 ///
 /// - `ok`: Standard response for successful HTTP requests.
@@ -121,6 +123,7 @@ import Foundation
 /// - `networkAuthenticationRequired`: The client needs to authenticate to gain network access.
 ///
 public enum HTTPStatusCode: Int, Error {
+    case none = 0
 
     // MARK: - Informational - 1xx
     
@@ -209,6 +212,19 @@ public enum HTTPStatusCode: Int, Error {
     public var responseType: ResponseType {
         ResponseType(httpStatusCode: self.rawValue)
     }
+    
+    /// Initialize an HTTPStatusCode from a URLResponse object.
+    /// If no valid code can be extracted the `.none` is set.
+    ///
+    /// - Parameter urlResponse: url response instance
+    public init?(URLResponse: URLResponse?) {
+        guard let statusCode = (URLResponse as? HTTPURLResponse)?.statusCode else {
+            self = .none
+            return
+        }
+        
+        self.init(rawValue: statusCode)
+    }
 
 }
 
@@ -236,7 +252,12 @@ public extension HTTPStatusCode {
         case undefined
 
         /// ResponseType by HTTP status code
-        public init(httpStatusCode: Int) {
+        public init(httpStatusCode: Int?) {
+            guard let httpStatusCode = httpStatusCode else {
+                self = .undefined
+                return
+            }
+            
             switch httpStatusCode {
                 case 100 ..< 200:   self = .informational
                 case 200 ..< 300:   self = .success

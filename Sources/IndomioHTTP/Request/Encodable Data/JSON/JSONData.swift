@@ -43,7 +43,7 @@ open class JSONData: HTTPRequestEncodableData {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: data, options: options)
         } catch {
-            throw IndomioHTTPError.jsonEncodingFailed(error)
+            throw HTTPError(.jsonEncodingFailed, error: error)
         }
     }
     

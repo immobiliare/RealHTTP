@@ -28,6 +28,11 @@ public class HTTPClient: NSObject {
     /// Requests may override this behaviour.
     public var timeout: TimeInterval = 60
     
+    /// Validators for response. Values are executed in order.
+    public var validators: [HTTPResponseValidator] = [
+        HTTPStandardValidator() // standard validator for http responses
+    ]
+    
     /// The cache policy for the request. Defaults to `.useProtocolCachePolicy`.
     /// Requests may override this behaviour.
     public var cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy
@@ -63,6 +68,26 @@ public class HTTPClient: NSObject {
         
         self.session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
     }
+    
+    // MARK: - Private Functions
+    
+    internal func execute(request: HTTPRequestProtocol) {
+        do {
+            let urlRequest = try request.urlRequest(in: self)
+            print(urlRequest.curlString)
+            let task = session.dataTask(with: urlRequest) { [weak self] data, response, error in
+                guard let self = self else { return }
+                request.didReceiveResponse(fromClient: self, response: (response, data, error), urlRequest: urlRequest)
+            }
+            task.resume()
+        } catch {
+            fatalError()
+        }
+    }
+    
+    // MARK: - Validate Received Data
+    
+
     
 }
 

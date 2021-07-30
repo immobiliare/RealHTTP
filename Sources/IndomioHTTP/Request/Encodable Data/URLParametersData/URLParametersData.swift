@@ -58,23 +58,26 @@ public class URLParametersData: HTTPRequestEncodableData {
             return // no parameters set
         }
         
-        guard destination == .queryString else {
+        switch destination {
+        case .httpBody:
             if request.headers[.contentType] == nil {
                 request.headers[.contentType] = "application/x-www-form-urlencoded; charset=utf-8"
             }
             
-            request.httpBody = nil
-            return
-        }
-        
-        // Encode parameters
-        if let fullURL = request.url,
-           var urlComponents = URLComponents(url: fullURL, resolvingAgainstBaseURL: false) {
-            let percentEncodedQuery = (urlComponents.percentEncodedQuery.map {
-                $0 + "&"
-            } ?? "") + encodeParameters(parameters)
-            urlComponents.percentEncodedQuery = percentEncodedQuery
-            request.url = urlComponents.url
+            request.httpBody = encodeParameters(parameters).data(using: .utf8)
+            
+        case .queryString:
+            if let fullURL = request.url,
+               var urlComponents = URLComponents(url: fullURL, resolvingAgainstBaseURL: false) {
+                let percentEncodedQuery = (urlComponents.percentEncodedQuery.map {
+                    $0 + "&"
+                } ?? "") + encodeParameters(parameters)
+                urlComponents.percentEncodedQuery = percentEncodedQuery
+                request.url = urlComponents.url
+            } else {
+                throw HTTPError(.urlEncodingFailed)
+            }
+            
         }
     }
     

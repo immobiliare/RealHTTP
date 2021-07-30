@@ -62,6 +62,14 @@ public protocol HTTPRequestProtocol {
     
     // MARK: - Public Functions
     
-    func urlRequest(for request: HTTPRequestProtocol, in client: HTTPClient) throws -> URLRequest
+    /// Create the underlying `URLRequest` instance for an `HTTPRequestProtocol` running into a `HTTPClient` instance.
+    ///
+    /// - Parameters:
+    ///   - request: request.
+    ///   - client: client in which the request should run.
+    func urlRequest(in client: HTTPClient) throws -> URLRequest
     
+    
+    func didReceiveResponse(fromClient client: HTTPClient, response: HTTPResponse, urlRequest: URLRequest)
+
 }

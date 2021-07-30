@@ -73,7 +73,7 @@ public class MultipartFormData: HTTPRequestEncodableData {
     /// - Throws: throw an exeption if conversion fails.
     public func add(string: String, name: String) throws {
         guard let data = string.data(using: .utf8) else {
-            throw IndomioHTTPError.multipartFailedStringEncoding
+            throw HTTPError(.multipartFailedStringEncoding)
         }
         
         add(data: data, name: name)
@@ -94,7 +94,7 @@ public class MultipartFormData: HTTPRequestEncodableData {
               !fileExtension.isEmpty, // extension is set
               fileURL.isFileURL, // is it a file?
               try fileURL.checkPromisedItemIsReachable() else { // is file reachable
-            throw IndomioHTTPError.multipartInvalidFile(fileURL)
+            throw HTTPError(.multipartInvalidFile(fileURL))
         }
         
         let formHeaders = formItemHeaders(name: name, fileName: fileName, mimeType: mimeType)
@@ -102,7 +102,7 @@ public class MultipartFormData: HTTPRequestEncodableData {
         let fileSize = try FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as! NSNumber
         
         guard let fileStream = InputStream(url: fileURL) else {
-            throw IndomioHTTPError.multipartInvalidFile(fileURL)
+            throw HTTPError(.multipartInvalidFile(fileURL))
         }
         
         add(stream: fileStream, withLength: fileSize.uint64Value, headers: formHeaders)
@@ -268,7 +268,7 @@ internal class MultipartFormItem {
             let bytesRead = stream.read(&buffer, maxLength: bufferSize)
 
             if let error = stream.streamError {
-                throw IndomioHTTPError.multipartStreamReadFailed(error)
+                throw HTTPError(.multipartStreamReadFailed, error: error)
             }
 
             guard bytesRead > 0 else {

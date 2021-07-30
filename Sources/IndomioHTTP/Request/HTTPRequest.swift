@@ -12,7 +12,8 @@
 import Foundation
 import Combine
 
-open class HTTPRequest<Object: HTTPDataDecodable, Err: Swift.Error>: HTTPRequestProtocol, BuilderRepresentable {
+open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderRepresentable {
+    public typealias ResultCallback = ((Result<Object, Error>) -> Void)
     
     // MARK: - Public Properties
     
@@ -44,6 +45,8 @@ open class HTTPRequest<Object: HTTPDataDecodable, Err: Swift.Error>: HTTPRequest
     /// Request modifier callback.
     open var urlRequestModifier: HTTPURLRequestModifierCallback?
     
+    private var resultCallback: ResultCallback?
+    
     // MARK: - Initialization
     
     required public init(method: HTTPMethod = .get, route: String = "") {
@@ -52,11 +55,32 @@ open class HTTPRequest<Object: HTTPDataDecodable, Err: Swift.Error>: HTTPRequest
     }
     
     // MARK: - Execute Request
-
-    func run(in client: HTTPClient) -> AnyPublisher<Object, Err> {
-        let urlRequest = try? urlRequest(for: self, in: client)
-        print(urlRequest)
-        fatalError()
+    
+    /// Run the request into the destination client.
+    ///
+    /// - Parameter client: client instance.
+    /// - Throws: throw an exception if something went wrong.
+    /// - Returns: Self
+    public func run(in client: HTTPClient) -> Self {
+        client.execute(request: self)
+        return self
+    }
+    
+    public func then(_ callback: @escaping ResultCallback) -> Self {
+        self.resultCallback = callback
+        return self
+    }
+    
+    public func didReceiveResponse(fromClient client: HTTPClient, response: HTTPResponse, urlRequest: URLRequest) {
+        for validator in client.validators {
+            if let error = validator.validate(response: response) {
+                // something went wrong
+                resultCallback?(.failure(error))
+                return
+            }
+        }
+        
+        resultCallback?(.failure(HTTPError.init(.network)))
     }
     
 }
@@ -74,6 +98,19 @@ extension HTTPRequest {
         return self
     }
     
+    /// Set the route of the request.
+    ///
+    /// - Parameter route: route.
+    /// - Returns: Self
+    public func route(_ route: String) -> Self {
+        self.route = route
+        return self
+    }
+    
+    /// Set the retry attempts for request.
+    ///
+    /// - Parameter attempts: attempts.
+    /// - Returns: Self
     public func retry(_ attempts: Int) -> Self {
         self.maxRetries = attempts
         return self
@@ -169,20 +206,20 @@ extension HTTPRequest {
     
     // MARK: - Private Functions
     
-    open func urlRequest(for request: HTTPRequestProtocol, in client: HTTPClient) throws -> URLRequest {
+    open func urlRequest(in client: HTTPClient) throws -> URLRequest {
         // Create the full URL of the request.
-        let fullURLString = (client.baseURL + request.route)
+        let fullURLString = (client.baseURL + route)
         guard let fullURL = URL(string: fullURLString) else {
-            throw IndomioHTTPError.invalidURL(fullURLString) // failed to produce a valid url
+            throw HTTPError(.invalidURL(fullURLString)) // failed to produce a valid url
         }
         
         // Setup the new URLRequest instance
-        let cachePolicy = request.cachePolicy ?? client.cachePolicy
-        let timeout = request.timeout ?? client.timeout
-        let headers = (client.headers + request.headers)
+        let cachePolicy = cachePolicy ?? client.cachePolicy
+        let timeout = timeout ?? client.timeout
+        let headers = (client.headers + headers)
         
         var urlRequest = try URLRequest(url: fullURL,
-                                        method: request.method,
+                                        method: method,
                                         cachePolicy: cachePolicy,
                                         timeout: timeout,
                                         headers: headers)
@@ -193,7 +230,7 @@ extension HTTPRequest {
         try content?.encodeParametersIn(request: &urlRequest)
         
         // Apply modifier if set
-        try request.urlRequestModifier?(&urlRequest)
+        try urlRequestModifier?(&urlRequest)
 
         return urlRequest
     }
