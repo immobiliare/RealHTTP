@@ -74,5 +74,7 @@ public extension HTTPError {
         case generic(Error)
         case network
         case connectionError
+        case invalidResponse
+        case failedBuildingURLRequest
     }
 }

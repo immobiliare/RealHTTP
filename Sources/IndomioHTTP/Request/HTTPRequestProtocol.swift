@@ -84,9 +84,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     @discardableResult
     func response(_ callback: @escaping DataResultCallback) -> Self
     
-    
-    func didReceiveResponse(fromClient client: HTTPClient, response: HTTPRawResponse)
-
+    func receiveResponse(_ response: HTTPRawResponse, client: HTTPClient)
 }
 
 // MARK: - HTTPRequestState

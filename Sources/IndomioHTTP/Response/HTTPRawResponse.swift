@@ -23,12 +23,12 @@ public struct HTTPRawResponse {
     public let data: Data?
     
     /// Error parsed.
-    public let error: HTTPError?
+    public internal(set) var error: HTTPError?
     
     // MARK: - In (Public Properties)
     
     /// `URLRequest` executed.
-    public let urlRequest: URLRequest
+    public let urlRequest: URLRequest?
     
     /// Parent executed request.
     public internal(set) weak var request: HTTPRequestProtocol?
@@ -48,9 +48,9 @@ public struct HTTPRawResponse {
     ///   - data: data received.
     ///   - error: error parsed.
     internal init(request: HTTPRequestProtocol,
-                urlRequest: URLRequest,
-                client: HTTPClient,
-                response: URLResponse?, data: Data?, error: Error?) {
+                  urlRequest: URLRequest?,
+                  client: HTTPClient,
+                  response: URLResponse? = nil, data: Data? = nil, error: Error?) {
         self.request = request
         self.urlRequest = urlRequest
         self.client = client

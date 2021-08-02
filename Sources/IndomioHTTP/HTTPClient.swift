@@ -71,24 +71,29 @@ public class HTTPClient: NSObject {
     
     // MARK: - Private Functions
     
+    /// Execute the request.
+    ///
+    /// - Parameter request: request.
+    /// - Returns: the same request for chaining.
     @discardableResult
     internal func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol {
         do {
             let urlRequest = try request.urlRequest(in: self)
             let task = session.dataTask(with: urlRequest) { [weak self] data, urlResponse, error in
-                self?.didFinishRequest(request,
-                                       urlRequest: urlRequest,
-                                       urlResponse: urlResponse,
-                                       data: data,
-                                       error: error)
+                guard let self = self else { return }
+                
+                // Parse the response and create the object which contains all the datas.
+                var response = HTTPRawResponse(request: request,
+                                               urlRequest: urlRequest,
+                                               client: self,
+                                               response: urlResponse,
+                                               data: data,
+                                               error: error)
+                self.didCompleteRequest(request, response: &response)
             }
             task.resume()
         } catch { // Failed to compose the request itself
-            didFinishRequest(request,
-                             urlRequest: nil,
-                             urlResponse: nil,
-                             data: nil,
-                             error: error)
+            didFailBuildingURLRequestFor(request, error: error)
         }
         
         return request
@@ -102,36 +107,34 @@ public class HTTPClient: NSObject {
     ///   - request: request.
     ///   - urlRequest: urlRequest executed.
     ///   - rawData: raw data.
-    private func didFinishRequest(_ request: HTTPRequestProtocol,
-                                  urlRequest: URLRequest?,
-                                  urlResponse: URLResponse?,
-                                  data: Data?,
-                                  error: Error?) {
-        
-        guard let urlRequest = urlRequest else {
-            
-            return
-        }
-        
-        let rawResponse = HTTPRawResponse(request: request,
-                                          urlRequest: urlRequest,
-                                          client: self,
-                                          response: urlResponse,
-                                          data: data,
-                                          error: error)
-        let validationAction = validate(response: rawResponse)
+    private func didCompleteRequest(_ request: HTTPRequestProtocol, response: inout HTTPRawResponse) {
+        let validationAction = validate(response: response)
         switch validationAction {
         case .failWithError(let error):
-            break
-        case .passed:
-            break
+            // Response validation failed with error, set the new error and forward it
+            response.error = HTTPError.init(.invalidResponse, error: error)
+            didCompleteRequest(request, response: response)
+
         case .retryAfter(let altRequest):
-            break
+            // Response validation failed, you can retry but we need to execute another call first.
+            execute(request: altRequest).response { [weak self] altResponse in
+                self?.execute(request: request)
+            }
+            
+        case .passed:
+            // Passed, nothing to do
+            didCompleteRequest(request, response: response)
         }
     }
     
-    func didFailRequest(_ request: HTTPRequestProtocol, response: HTTPRawResponse) {
-        
+    func didFailBuildingURLRequestFor(_ request: HTTPRequestProtocol, error: Error) {
+        let error = HTTPError(.failedBuildingURLRequest, error: error)
+        let response = HTTPRawResponse(request: request, urlRequest: nil, client: self, error: error)
+        didCompleteRequest(request, response: response)
+    }
+    
+    func didCompleteRequest(_ request: HTTPRequestProtocol, response: HTTPRawResponse) {
+        request.receiveResponse(response, client: self)
     }
     
     /// Validat the response with the list of validators.
@@ -151,14 +154,9 @@ public class HTTPClient: NSObject {
         return .passed
     }
     
-    // MARK: - Validate Received Data
-    
-
-    
 }
 
 extension HTTPClient: URLSessionDelegate {
-    
     
     
 }

@@ -151,38 +151,6 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
         return self
     }
     
-    // MARK: - Response
-    
-    public func didReceiveResponse(fromClient client: HTTPClient, response: HTTPRawResponse) {
-        let validationResult = validate(validators: client.validators, response: response)
-        
-        switch validationResult {
-        case .failWithError(let error):
-            resultCallback?(.failure(error))
-        case .retryAfter(let altRequest):
-            // Attempt to execute the altRequest and again this request.
-            client.execute(request: altRequest).response { [weak self] result in
-                guard let self = self else {
-                    return
-                }
-                
-                if let error = result.error {
-                    self.resultCallback?(.failure(error))
-                    return
-                }
-                
-                client.execute(request: self)
-            }
-            break
-        default:
-            break
-        }
-        
-        resultCallback?(.failure(HTTPError.init(.network)))
-    }
-    
-
-    
 }
 
 // MARK: - HTTPRequest Configuration
@@ -306,6 +274,11 @@ extension HTTPRequest {
     
     // MARK: - Private Functions
     
+    /// Build the request when running in a given client.
+    ///
+    /// - Parameter client: client where the request is running into.
+    /// - Throws: throw an exception if request building process did fails.
+    /// - Returns: URLRequest
     open func urlRequest(in client: HTTPClient) throws -> URLRequest {
         // Create the full URL of the request.
         let fullURLString = (client.baseURL + route)
@@ -333,6 +306,17 @@ extension HTTPRequest {
         try urlRequestModifier?(&urlRequest)
 
         return urlRequest
+    }
+    
+    public func receiveResponse(_ response: HTTPRawResponse, client: HTTPClient) {
+        guard isPending else {
+            return
+        }
+        
+        stateQueue.sync {
+            self.state = .finished
+            self._rawResult = response
+        }
     }
     
 }
