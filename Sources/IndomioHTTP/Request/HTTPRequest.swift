@@ -24,7 +24,7 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
     /// Keep the response received for this request.
     /// It's `nil` until the state of the request is `finished`.
     public private(set) var response: HTTPRawResponse?
-    
+            
     /// Route to the endpoint.
     open var route: String
 
@@ -60,11 +60,11 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
         }
     }
     
-    /// Thread safe property which return if the promise is currently in a `pending` state.
+    /// Thread safe property which return if the promise is currently in a `pending` or `executing` state.
     /// A pending promise it's a promise which is not resolved yet.
     public var isPending: Bool {
         return stateQueue.sync {
-            return state == .pending
+            return state == .pending || state == .executing
         }
     }
     
@@ -74,8 +74,9 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
     private var _result: HTTPRequestResult?
     private var _rawResult: HTTPRawResponse?
     
-    private var resultCallback: ResultCallback?
-    private var dataCallback: DataResultCallback?
+    /// Registered callbacks
+    private var resultCallback: (queue: DispatchQueue?, callback: ResultCallback)?
+    private var rawResultCallback: (queue: DispatchQueue?, callback: DataResultCallback)?
 
     /// Sync queue.
     public let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
@@ -93,28 +94,64 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
     }
     
     // MARK: - Execute Request
-    
-    private func changeState(_ newState: HTTPRequestState) {
-        stateQueue.sync {
-            state = newState
-        }
-    }
-    
-    /// Reset the state of the promise
-    internal func resetState() {
-        self.stateQueue.sync {
-            self.state = .pending
-        }
-    }
-    
+
     /// Run the request into the destination client.
     ///
     /// - Parameter client: client instance.
     /// - Throws: throw an exception if something went wrong.
     /// - Returns: Self
     public func run(in client: HTTPClient) -> Self {
+        guard isPending else {
+            return self // already started
+        }
+        
+        changeState(.executing)
         client.execute(request: self)
         return self
+    }
+    
+    // MARK: - Private Functions
+    
+    /// Sync change the state of the request.
+    ///
+    /// - Parameter newState: new state to set.
+    private func changeState(_ newState: HTTPRequestState) {
+        stateQueue.sync {
+            state = newState
+            
+            if newState == .finished {
+                dispatchEvents()
+            }
+        }
+    }
+    
+    /// Dispatch events call registered events.
+    private func dispatchEvents() {
+        guard state == .finished else {
+            return
+        }
+        
+        // Raw Response
+        if let rawResult = _rawResult, let rawResultCallback = self.rawResultCallback  {
+            if let queue = rawResultCallback.queue {
+                queue.async {
+                    rawResultCallback.callback(rawResult)
+                }
+            } else {
+                rawResultCallback.callback(rawResult)
+            }
+        }
+        
+        // Decoded Response
+        if let result = _result, let resultCallback = self.resultCallback {
+            if let queue = resultCallback.queue {
+                queue.async {
+                    resultCallback.callback(result)
+                }
+            } else {
+                resultCallback.callback(result)
+            }
+        }
     }
     
     /// link with the raw response.
@@ -122,16 +159,11 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
     /// - Parameter callback: callback.
     /// - Returns: Self
     @discardableResult
-    public func then(_ callback: @escaping ResultCallback) -> Self {
+    public func response(in queue: DispatchQueue? = .main, _ callback: @escaping ResultCallback) -> Self {
         stateQueue.sync {
-            resultCallback = callback
-
-            if state == .finished, let result = result {
-                callback(result)
-            }
+            resultCallback = (queue, callback)
+            dispatchEvents()
         }
-        
-        self.resultCallback = callback
         return self
     }
     
@@ -140,13 +172,10 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
     /// - Parameter callback: callback.
     /// - Returns: Self
     @discardableResult
-    public func response(_ callback: @escaping DataResultCallback) -> Self {
+    public func rawResponse(in queue: DispatchQueue? = .main, _ callback: @escaping DataResultCallback) -> Self {
         stateQueue.sync {
-            dataCallback = callback
-            
-            if state == .finished, let rawResult = _rawResult {
-                callback(rawResult)
-            }
+            rawResultCallback = (queue, callback)
+            dispatchEvents()
         }
         return self
     }
@@ -310,12 +339,22 @@ extension HTTPRequest {
     
     public func receiveResponse(_ response: HTTPRawResponse, client: HTTPClient) {
         guard isPending else {
-            return
+            return // ignore any further data when request is completed yet.
         }
+        
+        do {
+            print(response.data?.jsonString())
+            let decodedObj = try Object.decode(response)
+            print(decodedObj)
+        } catch {
+            fatalError()
+        }
+    
         
         stateQueue.sync {
             self.state = .finished
             self._rawResult = response
+            dispatchEvents()
         }
     }
     

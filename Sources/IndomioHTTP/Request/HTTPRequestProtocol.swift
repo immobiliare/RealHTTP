@@ -81,10 +81,24 @@ public protocol HTTPRequestProtocol: AnyObject {
     
     // MARK: - Execution
     
+    /// Execute a call (if needed) and get the raw response.
+    ///
+    /// - Parameters:
+    ///   - queue: queue in which the call is executed, `nil` to use the same queue of the caller.
+    ///   - callback: callback.
     @discardableResult
-    func response(_ callback: @escaping DataResultCallback) -> Self
+    func rawResponse(in queue: DispatchQueue?, _ callback: @escaping DataResultCallback) -> Self
     
+    // MARK: - Private
+    
+    /// Called when a response from client did received.
+    /// NOTE: You should never call it directly.
+    ///
+    /// - Parameters:
+    ///   - response: response.
+    ///   - client: client.
     func receiveResponse(_ response: HTTPRawResponse, client: HTTPClient)
+    
 }
 
 // MARK: - HTTPRequestState

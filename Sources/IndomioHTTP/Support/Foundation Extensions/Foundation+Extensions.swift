@@ -98,6 +98,49 @@ extension URLRequest {
     
 }
 
+// MARK: - Data
+
+extension Data {
+    
+    /// Convert a data to a string.
+    ///
+    /// - Parameter encoding: encoding to use, `utf8` if not specified.
+    /// - Returns: String?
+    public func asString(encoding: String.Encoding = .utf8) -> String? {
+        String(data: self, encoding: encoding)
+    }
+    
+    /// Print a json value for a given data. If not convertible `nil` is retuened.
+    ///
+    /// - Parameters:
+    ///   - options: options, `prettyPrinted` if not specified.
+    ///   - encoding: encoding to use, `utf8` if not specified.
+    /// - Returns: String?
+    public func jsonString(options: JSONSerialization.WritingOptions = [.prettyPrinted],
+                           encoding: String.Encoding = .utf8) -> String? {
+        do {
+            let json = try JSONSerialization.jsonObject(with: self, options: [])
+            let value = try JSONSerialization.data(withJSONObject: json, options: options).asString(encoding: encoding)
+            return value
+        } catch {
+            return nil
+        }
+    }
+    
+    /// JSON object.
+    ///
+    /// - Returns: T?
+    public func json<T>() -> T? {
+        do {
+            let json = try JSONSerialization.jsonObject(with: self, options: [])
+            return json as? T
+        } catch {
+            return nil
+        }
+    }
+    
+}
+
 // MARK: - NSNumber
 
 extension NSNumber {

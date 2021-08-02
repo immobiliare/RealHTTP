@@ -13,14 +13,18 @@ import Foundation
 
 public protocol HTTPDataDecodable {
     
-    static func decode(_ data: Data) throws -> Self
+    static func decode(_ response: HTTPRawResponse) throws -> Self
     
 }
 
 // Provide default implementation for Decodable models.
 public extension HTTPDataDecodable where Self: Decodable {
 
-    static func decode(_ data: Data) throws -> Self {
+    static func decode(_ response: HTTPRawResponse) throws -> Self {
+        guard let data = response.data else {
+            fatalError()
+        }
+        
         let decoder = JSONDecoder()
         let model = try decoder.decode(Self.self, from: data)
         return model
