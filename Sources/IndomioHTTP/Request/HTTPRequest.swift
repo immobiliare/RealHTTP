@@ -12,7 +12,7 @@
 import Foundation
 import Combine
 
-open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderRepresentable {
+open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol, BuilderRepresentable {
     public typealias HTTPRequestResult = Result<Object, Error>
     public typealias ResultCallback = ((HTTPRequestResult) -> Void)
 
@@ -56,7 +56,7 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
     /// The current result of the request. If not executed yet it's `nil`.
     public var result: HTTPRequestResult? {
         stateQueue.sync {
-            return _result
+            return _resultObject
         }
     }
     
@@ -71,8 +71,8 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
     // MARK: - Private Properties
     
     /// Inner storage of the result.
-    private var _result: HTTPRequestResult?
-    private var _rawResult: HTTPRawResponse?
+    private var _resultObject: HTTPRequestResult?
+    private var _resultRaw: HTTPRawResponse?
     
     /// Registered callbacks
     private var resultCallback: (queue: DispatchQueue?, callback: ResultCallback)?
@@ -132,7 +132,7 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
         }
         
         // Raw Response
-        if let rawResult = _rawResult, let rawResultCallback = self.rawResultCallback  {
+        if let rawResult = _resultRaw, let rawResultCallback = self.rawResultCallback  {
             if let queue = rawResultCallback.queue {
                 queue.async {
                     rawResultCallback.callback(rawResult)
@@ -143,7 +143,7 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
         }
         
         // Decoded Response
-        if let result = _result, let resultCallback = self.resultCallback {
+        if let result = _resultObject, let resultCallback = self.resultCallback {
             if let queue = resultCallback.queue {
                 queue.async {
                     resultCallback.callback(result)
@@ -342,18 +342,14 @@ extension HTTPRequest {
             return // ignore any further data when request is completed yet.
         }
         
-        do {
-            print(response.data?.jsonString())
-            let decodedObj = try Object.decode(response)
-            print(decodedObj)
-        } catch {
-            fatalError()
-        }
-    
+        // Attempt to decode the object.
+        let decodedObj = Object.decode(response)
         
         stateQueue.sync {
             self.state = .finished
-            self._rawResult = response
+            // Keep in cache our data decoded and raw
+            self._resultRaw = response
+            self._resultObject = decodedObj
             dispatchEvents()
         }
     }

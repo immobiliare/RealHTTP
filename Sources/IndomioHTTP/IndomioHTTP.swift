@@ -76,5 +76,7 @@ public extension HTTPError {
         case connectionError
         case invalidResponse
         case failedBuildingURLRequest
+        case objectDecodeFailed
+        case noDataToDecode
     }
 }
