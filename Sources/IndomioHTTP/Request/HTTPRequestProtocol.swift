@@ -16,10 +16,20 @@ public typealias HTTPURLRequestModifierCallback = ((inout URLRequest) throws -> 
 public typealias HTTPRequestParametersDict = [String: AnyObject]
 public typealias HTTPParameters = [String: Any]
 
+// MARK: - HTTPRequestProtocol
+
 /// Generic protocol which describe a request.
-public protocol HTTPRequestProtocol {
-    
+public protocol HTTPRequestProtocol: AnyObject {
+    typealias HTTPResponseCallback = ((Result<Data, Error>) -> Void)
+    typealias DataResultCallback = ((HTTPRawResponse) -> Void)
+
     // MARK: - Public Properties
+    
+    /// Current state of the request (not thread-safe)
+    var state: HTTPRequestState { get }
+    
+    /// Thread safe value which identify if a request in pending state or not.
+    var isPending: Bool { get }
     
     /// Path to the endpoint. URL is composed along the `baseURL` of the `HTTPClient`
     /// instance where the request is running into.
@@ -69,7 +79,24 @@ public protocol HTTPRequestProtocol {
     ///   - client: client in which the request should run.
     func urlRequest(in client: HTTPClient) throws -> URLRequest
     
+    // MARK: - Execution
     
-    func didReceiveResponse(fromClient client: HTTPClient, response: HTTPResponse, urlRequest: URLRequest)
+    @discardableResult
+    func response(_ callback: @escaping DataResultCallback) -> Self
+    
+    
+    func didReceiveResponse(fromClient client: HTTPClient, response: HTTPRawResponse)
 
+}
+
+// MARK: - HTTPRequestState
+
+/// Defines the state of the request.
+/// - `pending`: request has never executed, no response is available.
+/// - `executing`: request is currently in progress.
+/// - `finished`: request is finished and result is available.
+public enum HTTPRequestState {
+    case pending
+    case executing
+    case finished
 }

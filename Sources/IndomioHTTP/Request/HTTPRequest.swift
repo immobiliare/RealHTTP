@@ -13,9 +13,17 @@ import Foundation
 import Combine
 
 open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderRepresentable {
-    public typealias ResultCallback = ((Result<Object, Error>) -> Void)
-    
+    public typealias HTTPRequestResult = Result<Object, Error>
+    public typealias ResultCallback = ((HTTPRequestResult) -> Void)
+
     // MARK: - Public Properties
+    
+    /// Current state of the request.
+    public private(set) var state: HTTPRequestState = .pending
+
+    /// Keep the response received for this request.
+    /// It's `nil` until the state of the request is `finished`.
+    public private(set) var response: HTTPRawResponse?
     
     /// Route to the endpoint.
     open var route: String
@@ -44,17 +52,60 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
     
     /// Request modifier callback.
     open var urlRequestModifier: HTTPURLRequestModifierCallback?
+        
+    /// The current result of the request. If not executed yet it's `nil`.
+    public var result: HTTPRequestResult? {
+        stateQueue.sync {
+            return _result
+        }
+    }
+    
+    /// Thread safe property which return if the promise is currently in a `pending` state.
+    /// A pending promise it's a promise which is not resolved yet.
+    public var isPending: Bool {
+        return stateQueue.sync {
+            return state == .pending
+        }
+    }
+    
+    // MARK: - Private Properties
+    
+    /// Inner storage of the result.
+    private var _result: HTTPRequestResult?
+    private var _rawResult: HTTPRawResponse?
     
     private var resultCallback: ResultCallback?
+    private var dataCallback: DataResultCallback?
+
+    /// Sync queue.
+    public let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
     
     // MARK: - Initialization
     
+    /// Initialize a new request.
+    ///
+    /// - Parameters:
+    ///   - method: method for http.
+    ///   - route: route name.
     required public init(method: HTTPMethod = .get, route: String = "") {
         self.method = method
         self.route = route
     }
     
     // MARK: - Execute Request
+    
+    private func changeState(_ newState: HTTPRequestState) {
+        stateQueue.sync {
+            state = newState
+        }
+    }
+    
+    /// Reset the state of the promise
+    internal func resetState() {
+        self.stateQueue.sync {
+            self.state = .pending
+        }
+    }
     
     /// Run the request into the destination client.
     ///
@@ -66,22 +117,71 @@ open class HTTPRequest<Object: HTTPDataDecodable>: HTTPRequestProtocol, BuilderR
         return self
     }
     
+    /// link with the raw response.
+    ///
+    /// - Parameter callback: callback.
+    /// - Returns: Self
+    @discardableResult
     public func then(_ callback: @escaping ResultCallback) -> Self {
+        stateQueue.sync {
+            resultCallback = callback
+
+            if state == .finished, let result = result {
+                callback(result)
+            }
+        }
+        
         self.resultCallback = callback
         return self
     }
     
-    public func didReceiveResponse(fromClient client: HTTPClient, response: HTTPResponse, urlRequest: URLRequest) {
-        for validator in client.validators {
-            if let error = validator.validate(response: response) {
-                // something went wrong
-                resultCallback?(.failure(error))
-                return
+    /// Attempt to execute the request to get raw response data.
+    ///
+    /// - Parameter callback: callback.
+    /// - Returns: Self
+    @discardableResult
+    public func response(_ callback: @escaping DataResultCallback) -> Self {
+        stateQueue.sync {
+            dataCallback = callback
+            
+            if state == .finished, let rawResult = _rawResult {
+                callback(rawResult)
             }
+        }
+        return self
+    }
+    
+    // MARK: - Response
+    
+    public func didReceiveResponse(fromClient client: HTTPClient, response: HTTPRawResponse) {
+        let validationResult = validate(validators: client.validators, response: response)
+        
+        switch validationResult {
+        case .failWithError(let error):
+            resultCallback?(.failure(error))
+        case .retryAfter(let altRequest):
+            // Attempt to execute the altRequest and again this request.
+            client.execute(request: altRequest).response { [weak self] result in
+                guard let self = self else {
+                    return
+                }
+                
+                if let error = result.error {
+                    self.resultCallback?(.failure(error))
+                    return
+                }
+                
+                client.execute(request: self)
+            }
+            break
+        default:
+            break
         }
         
         resultCallback?(.failure(HTTPError.init(.network)))
     }
+    
+
     
 }
 

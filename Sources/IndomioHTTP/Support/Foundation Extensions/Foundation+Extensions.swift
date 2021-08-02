@@ -12,6 +12,24 @@
 import Foundation
 import CoreServices
 
+// MARK: - Swift.Error
+
+extension Swift.Error {
+    
+    /// Return `true` when error is related to the connection.
+    var isConnectionError: Bool {
+        switch self {
+        case URLError.notConnectedToInternet,
+             URLError.networkConnectionLost,
+             URLError.cannotLoadFromNetwork:
+             return true
+        default:
+            return false
+        }
+    }
+    
+}
+
 // MARK: - URLRequest
 
 extension URLRequest {
@@ -50,7 +68,7 @@ extension URLRequest {
     /// Logging URL requests in whole may expose sensitive data,
     /// or open up possibility for getting access to your user data,
     /// so make sure to disable this feature for production builds!
-    public var curlString: String {
+    public var cURLString: String {
         #if !DEBUG
         return ""
         #else

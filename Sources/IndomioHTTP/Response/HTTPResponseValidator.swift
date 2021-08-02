@@ -13,17 +13,28 @@ import Foundation
 
 // MARK: - HTTPResponseValidator
 
-public typealias HTTPResponse = (response: URLResponse?, data: Data?, error: Error?)
+/// The action to execute with validator.
+///
+/// - `failWithError`: call fails with given error.
+/// - `retryAfter`: attempt to execute another request, then the current one
+///                 (ie. session is expired and a silent login must be accomplished
+///                 before re-trying the current request).
+/// - `passed`: validation is passed, nothing to do.
+public enum HTTPResponseValidatorAction {
+    case failWithError(Error)
+    case retryAfter(HTTPRequestProtocol)
+    case passed
+}
 
+// MARK: - HTTPResponseValidator
+
+/// Validatation of the responses.
 public protocol HTTPResponseValidator {
     
-    /// Validate the reponse of an HTTP operation and throw an exception if something is wrong.
+    /// Validate the reponse of an HTTP operation and execute specified action.
     ///
-    /// - Parameters:
-    ///   - response: URL response.
-    ///   - data: data received.
-    ///   - error: error received.
-    func validate(response: HTTPResponse) -> Error?
+    /// - Parameter response: response to read.
+    func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction
     
 }
 
@@ -38,8 +49,12 @@ public struct HTTPStandardValidator: HTTPResponseValidator {
     
     // MARK: - Validation
     
-    public func validate(response: HTTPResponse) -> Error? {
-        HTTPError.fromHTTPResponse(response)
+    public func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction {
+        if let error = response.error {
+            return .failWithError(error)
+        }
+        
+        return .passed
     }
     
 }
@@ -53,20 +68,24 @@ extension HTTPError {
     ///
     /// - Parameter httpResponse: response from http layer.
     /// - Returns: HTTPError?
-    public static func fromHTTPResponse(_ httpResponse: HTTPResponse) -> HTTPError? {
+    public static func fromHTTPResponse(response: URLResponse?, data: Data?, error: Error?) -> HTTPError? {
         // If HTTP is an error or an error has received we can create the error object
-        let httpCode = HTTPStatusCode(URLResponse: httpResponse.response) ?? .none
-        let isError = (httpResponse.error != nil || httpCode.responseType != .success)
-        let cocoaErrorCode = (httpResponse.error as NSError?)?.code
-        let userInfo = (httpResponse.error as NSError?)?.userInfo
-
+        let httpCode = HTTPStatusCode(URLResponse: response) ?? .none
+        let isError = (error != nil || httpCode.responseType != .success)
+        
         guard isError else {
             return nil
         }
         
-        return HTTPError(.network,
+        // Evaluate error kind
+        let cocoaErrorCode = (error as NSError?)?.code
+        let userInfo = (error as NSError?)?.userInfo
+        let isConnectionError = error?.isConnectionError ?? false
+        let errorType: HTTPError.ErrorType = (isConnectionError ? .connectionError : .network)
+        
+        return HTTPError(errorType,
                          code: httpCode,
-                         error: httpResponse.error,
+                         error: error,
                          userInfo: userInfo,
                          cocoaCode: cocoaErrorCode)
     }

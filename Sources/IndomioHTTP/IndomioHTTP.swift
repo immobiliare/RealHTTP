@@ -73,5 +73,6 @@ public extension HTTPError {
         case urlEncodingFailed
         case generic(Error)
         case network
+        case connectionError
     }
 }
