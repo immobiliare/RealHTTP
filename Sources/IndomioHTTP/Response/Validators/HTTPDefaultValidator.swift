@@ -11,39 +11,13 @@
 
 import Foundation
 
-// MARK: - HTTPResponseValidator
-
-/// The action to execute with validator.
-///
-/// - `failWithError`: call fails with given error.
-/// - `retryIfPossible`: retry the call; this action may be ignored if source HTTPRequest does not allows retry or
-///                      the maximum amount of retries has been reached yet.
-/// - `retryAfter`: attempt to execute another request, then the current one
-///                 (ie. session is expired and a silent login must be accomplished
-///                 before re-trying the current request).
-/// - `passed`: validation is passed, nothing to do.
-public enum HTTPResponseValidatorAction {
-    case failWithError(Error)
-    case retryIfPossible
-    case retryAfter(HTTPRequestProtocol)
-    case passed
-}
-
-// MARK: - HTTPResponseValidator
-
-/// Validatation of the responses.
-public protocol HTTPResponseValidator {
-    
-    /// Validate the reponse of an HTTP operation and execute specified action.
-    ///
-    /// - Parameter response: response to read.
-    func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction
-    
-}
-
-// MARK: - HTTPStandardValidator
-
-open class HTTPStandardValidator: HTTPResponseValidator {
+/// This is the default HTTP validator used to validate the request. You can use
+/// it as is or subclass to make your own validator.
+/// 
+/// This validator allows you to configure:
+/// - Allows/Deny Empty responses: to allows or generate an error in case of empty response by server.
+/// - Configure Retry Policy: allows you to configure what kind of `Error` should trigger a retry attempt for request.
+open class HTTPDefaultValidator: HTTPResponseValidator {
     
     // MARK: - Public Properties
     
@@ -105,39 +79,6 @@ open class HTTPStandardValidator: HTTPResponseValidator {
             default:
                 return false
         }
-    }
-    
-}
-
-// MARK: - HTTPError (URLResponse)
-
-extension HTTPError {
-    
-    /// Parse the response of an HTTP operation and return `nil` if no error has found,
-    /// a valid `HTTPError` if call has failed.
-    ///
-    /// - Parameter httpResponse: response from http layer.
-    /// - Returns: HTTPError?
-    public static func fromHTTPResponse(response: URLResponse?, data: Data?, error: Error?) -> HTTPError? {
-        // If HTTP is an error or an error has received we can create the error object
-        let httpCode = HTTPStatusCode(URLResponse: response) ?? .none
-        let isError = (error != nil || httpCode.responseType != .success)
-        
-        guard isError else {
-            return nil
-        }
-        
-        // Evaluate error kind
-        let cocoaErrorCode = (error as NSError?)?.code
-        let userInfo = (error as NSError?)?.userInfo
-        let isConnectionError = error?.isConnectionError ?? false
-        let errorType: HTTPError.ErrorType = (isConnectionError ? .connectionError : .network)
-        
-        return HTTPError(errorType,
-                         code: httpCode,
-                         error: error,
-                         userInfo: userInfo,
-                         cocoaCode: cocoaErrorCode)
     }
     
 }

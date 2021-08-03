@@ -30,7 +30,7 @@ public class HTTPClient: NSObject {
     
     /// Validators for response. Values are executed in order.
     public var validators: [HTTPResponseValidator] = [
-        HTTPStandardValidator() // standard validator for http responses
+        HTTPDefaultValidator() // standard validator for http responses
     ]
     
     /// The cache policy for the request. Defaults to `.useProtocolCachePolicy`.
