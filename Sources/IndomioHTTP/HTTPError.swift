@@ -66,6 +66,19 @@ public struct HTTPError: LocalizedError {
 
 public extension HTTPError {
     
+    /// Typology of errors:
+    /// - `invalidURL`: invalid URL provided, request cannot be executed
+    /// - `multipartInvalidFile`: multipart form, invalid file has been set (not found or permissions error)
+    /// - `multipartFailedStringEncoding`: failed to encode multipart form
+    /// - `jsonEncodingFailed`: encoding in JSON failed
+    /// - `urlEncodingFailed`: encoding in URL failed
+    /// - `network`: network related error
+    /// - `missingConnection`: connection cannot be established
+    /// - `invalidResponse`: invalid response received
+    /// - `failedBuildingURLRequest`: failed to build URLRequest (wrong parameters)
+    /// - `objectDecodeFailed`: object decoding failed
+    /// - `emptyResponse`: empty response received from server
+    /// - `maxRetryAttemptsReached`: the maximum number of retries for request has been reached
     enum ErrorType {
         case invalidURL(URLConvertible)
         case multipartInvalidFile(URL)
@@ -73,13 +86,11 @@ public extension HTTPError {
         case multipartStreamReadFailed
         case jsonEncodingFailed
         case urlEncodingFailed
-        case generic(Error)
         case network
-        case connectionError
+        case missingConnection
         case invalidResponse
         case failedBuildingURLRequest
         case objectDecodeFailed
-        case noDataToDecode
         case emptyResponse
         case maxRetryAttemptsReached
     }
@@ -107,8 +118,8 @@ extension HTTPError {
         // Evaluate error kind
         let cocoaErrorCode = (error as NSError?)?.code
         let userInfo = (error as NSError?)?.userInfo
-        let isConnectionError = error?.isConnectionError ?? false
-        let errorType: HTTPError.ErrorType = (isConnectionError ? .connectionError : .network)
+        let isConnectionError = error?.isMissingConnection ?? false
+        let errorType: HTTPError.ErrorType = (isConnectionError ? .missingConnection : .network)
         
         return HTTPError(errorType,
                          code: httpCode,

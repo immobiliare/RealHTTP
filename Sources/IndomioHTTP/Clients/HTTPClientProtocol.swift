@@ -35,9 +35,14 @@ public protocol HTTPClientProtocol {
     
     // MARK: - Public Functions
     
+    /// Validate response from a request.
+    ///
+    /// - Parameter response: response.
     func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction
 
 }
+
+// MARK: - HTTPClientProtocol Configuration
 
 public extension HTTPClientProtocol {
     
@@ -57,5 +62,44 @@ public extension HTTPClientProtocol {
         
         return .passed
     }
+    
+    /// Set base url.
+    ///
+    /// - Parameter url: base url.
+    /// - Returns: Self
+    mutating func baseURL(_ url: String) -> Self {
+        self.baseURL = url
+        return self
+    }
+    
+    /// Set header name with value.
+    ///
+    /// - Parameters:
+    ///   - name: name of the header.
+    ///   - value: value of the header.
+    /// - Returns: Self
+    mutating func header(_ name: HTTPHeaderField, _ value: String) -> Self {
+        self.headers[name] = value
+        return self
+    }
+    
+    /// Set multiple headers.
+    ///
+    /// - Parameter headers: headers.
+    /// - Returns: Self
+    mutating func headers(_ builder: ((inout HTTPHeaders) -> Void)) -> Self {
+        builder(&headers)
+        return self
+    }
+    
+    /// Set the request timeout interval.
+    /// If not set the `HTTPClient`'s timeout where the instance is running will be used.
+    /// - Parameter timeout: timeout interval in seconds.
+    /// - Returns: Self
+    mutating func timeout(_ timeout: TimeInterval) -> Self {
+        self.timeout = timeout
+        return self
+    }
+    
     
 }

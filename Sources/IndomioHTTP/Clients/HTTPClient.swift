@@ -62,7 +62,7 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     ///                     which handles the transfers in a separate process.
     ///                     In iOS, this configuration makes it possible for transfers to continue even when
     ///                     the app itself is suspended or terminated.
-    public init(baseURL: String, configuration: URLSessionConfiguration = .default) {
+    public init(baseURL: String = "", configuration: URLSessionConfiguration = .default) {
         self.baseURL = baseURL
         super.init()
         

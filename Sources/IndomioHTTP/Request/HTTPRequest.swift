@@ -12,7 +12,8 @@
 import Foundation
 import Combine
 
-open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol, BuilderRepresentable {
+/// Defines the generic request you can execute in a client.
+open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     public typealias HTTPRequestResult = Result<Object, Error>
     public typealias ResultCallback = ((HTTPRequestResult) -> Void)
 

@@ -11,12 +11,21 @@
 
 import Foundation
 
+/// This class is used to enqueue a `HTTPRequestProtocol` inside an operation queue
+/// and it's used by the `HTTPClientQueue`. You should never need to instantiate this
+/// class but it will be created automatically for you when client execute a new request.
 internal class HTTPRequestOperation : Operation {
     
     // MARK: - Private Properties
     
+    /// Associated session task. It will be executed (via `resume()`) when
+    /// operation will be picked and started.
     private var task : URLSessionTask!
+    
+    /// The request itself.
     private var request: HTTPRequestProtocol
+    
+    /// Associated weak reference to client. If client is `nil` operation is cancelled.
     private weak var client: HTTPClientQueue?
     
     // default state is ready (when the operation is created)
@@ -38,7 +47,7 @@ internal class HTTPRequestOperation : Operation {
   
     // MARK: - Initialization
     
-    init(client: HTTPClientQueue, request: HTTPRequestProtocol) {
+    internal init(client: HTTPClientQueue, request: HTTPRequestProtocol) {
         self.client = client
         self.request = request
         
@@ -74,17 +83,14 @@ internal class HTTPRequestOperation : Operation {
             return
         }
         
-        // set the state to executing
-        state = .executing
-        // start the downloading
-        self.task.resume()
+        state = .executing // set the state to executing
+        task.resume() // start the downloading
     }
     
     override func cancel() {
         super.cancel()
         
-        // cancel the downloading
-        self.task.cancel()
+        task.cancel() // cancel the downloading
     }
     
     // MARK: - Private Functions
@@ -95,6 +101,7 @@ internal class HTTPRequestOperation : Operation {
         }
         
         guard let client = self.client else {
+            // reference is lost.
             return
         }
         
@@ -111,6 +118,8 @@ internal class HTTPRequestOperation : Operation {
             // Response validation failed, you can retry but we need to execute another call first.
             request.reset(retries: true)
             
+            // Create a new operation for this request but link it with a dependency to the alt request
+            // so it will be executed in order (alt -> this).
             let altRequestOp = HTTPRequestOperation(client: client, request: altRequest)
             let newRequestOp = HTTPRequestOperation(client: client, request: request)
             newRequestOp.addDependency(altRequestOp)
@@ -140,10 +149,6 @@ internal class HTTPRequestOperation : Operation {
         
     }
     
-    func didCompleteRequest(_ request: HTTPRequestProtocol, response: HTTPRawResponse) {
-        request.receiveResponse(response, client: client!)
-    }
-    
     private func didFailBuildingURLRequestFor(_ request: HTTPRequestProtocol, error: Error) {
         defer {
             state = .finished
@@ -156,6 +161,10 @@ internal class HTTPRequestOperation : Operation {
         let error = HTTPError(.failedBuildingURLRequest, error: error)
         let response = HTTPRawResponse(request: request, urlRequest: nil, client: client, error: error)
         didCompleteRequest(request, response: response)
+    }
+    
+    private func didCompleteRequest(_ request: HTTPRequestProtocol, response: HTTPRawResponse) {
+        request.receiveResponse(response, client: client!)
     }
     
 }

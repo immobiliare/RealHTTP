@@ -17,7 +17,7 @@ import CoreServices
 extension Swift.Error {
     
     /// Return `true` when error is related to the connection.
-    var isConnectionError: Bool {
+    var isMissingConnection: Bool {
         switch self {
         case URLError.notConnectedToInternet,
              URLError.networkConnectionLost,
