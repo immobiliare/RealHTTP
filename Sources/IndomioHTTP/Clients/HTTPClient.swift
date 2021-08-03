@@ -11,12 +11,12 @@
 
 import Foundation
 
-public class HTTPClient: NSObject {
+public class HTTPClient: NSObject, HTTPClientProtocol {
     
     // MARK: - Public Properties
     
     /// Base URL.
-    public let baseURL: String
+    public var baseURL: String
     
     /// Service's URLSession instance to use.
     public var session: URLSession!
@@ -116,6 +116,7 @@ public class HTTPClient: NSObject {
             didCompleteRequest(request, response: response)
 
         case .retryAfter(let altRequest):
+            request.reset(retries: true)
             // Response validation failed, you can retry but we need to execute another call first.
             execute(request: altRequest).rawResponse(in: nil, { [weak self] altResponse in
                 request.reset(retries: true)
@@ -150,23 +151,6 @@ public class HTTPClient: NSObject {
     
     func didCompleteRequest(_ request: HTTPRequestProtocol, response: HTTPRawResponse) {
         request.receiveResponse(response, client: self)
-    }
-    
-    /// Validat the response with the list of validators.
-    ///
-    /// - Parameters:
-    ///   - clientValidators: validators list.
-    ///   - response: response received from server.
-    /// - Returns: HTTPResponseValidatorAction
-    private func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction {
-        for validator in validators {
-            let result = validator.validate(response: response)
-            guard case .passed = result else {
-                return result
-            }
-        }
-        
-        return .passed
     }
     
 }

@@ -21,7 +21,13 @@ public class HTTPClientQueue: HTTPClient {
     // MARK: - Public Properties
     
     /// Maximum number of rimultaneous requests.
-    public var maxSimultaneousRequest: Int
+    public var maxSimultaneousRequest: Int {
+        didSet {
+            operationQueue.maxConcurrentOperationCount = maxSimultaneousRequest
+        }
+    }
+    
+    private var operationQueue = OperationQueue()
     
     // MARK: - Initialization
     
@@ -32,4 +38,21 @@ public class HTTPClientQueue: HTTPClient {
         self.maxSimultaneousRequest = maxSimultaneousRequest
         super.init(baseURL: baseURL, configuration: configuration)
     }
+    
+    // MARK: - Public Functions
+    
+    override func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol {
+        let reqOperation = HTTPRequestOperation(client: self, request: request)
+        addOperation(reqOperation)
+        return request
+    }
+    
+    // MARK: - Private Functions
+    
+    internal func addOperation(_ operations: HTTPRequestOperation...) {
+        operations.forEach {
+            operationQueue.addOperation($0)
+        }
+    }
+    
 }
