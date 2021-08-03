@@ -16,12 +16,15 @@ import Foundation
 /// The action to execute with validator.
 ///
 /// - `failWithError`: call fails with given error.
+/// - `retryIfPossible`: retry the call; this action may be ignored if source HTTPRequest does not allows retry or
+///                      the maximum amount of retries has been reached yet.
 /// - `retryAfter`: attempt to execute another request, then the current one
 ///                 (ie. session is expired and a silent login must be accomplished
 ///                 before re-trying the current request).
 /// - `passed`: validation is passed, nothing to do.
 public enum HTTPResponseValidatorAction {
     case failWithError(Error)
+    case retryIfPossible
     case retryAfter(HTTPRequestProtocol)
     case passed
 }
@@ -40,21 +43,68 @@ public protocol HTTPResponseValidator {
 
 // MARK: - HTTPStandardValidator
 
-public struct HTTPStandardValidator: HTTPResponseValidator {
+open class HTTPStandardValidator: HTTPResponseValidator {
     
     // MARK: - Public Properties
     
     /// If `true` empty responses are tracked as valid responses if status code it's not an error.
+    /// In case of empty response validation fails with `emptyResponse` error.
     public var allowsEmptyResponses: Bool = true
     
     // MARK: - Validation
     
-    public func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction {
+    /// Validate the response and set the action to perform.
+    ///
+    /// - Parameter response: response received.
+    /// - Returns: HTTPResponseValidatorAction
+    open func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction {
         if let error = response.error {
-            return .failWithError(error)
+            if allowsRetryForError(error) {
+                // Some errors allows retry of the call.
+                // Retry option is managed by the HTTPRequest itself (if we reached the
+                // maximum amount of retries or no retries are allowed by request this
+                // request will be ignored).
+                return .retryIfPossible
+            } else {
+                // Some other fails
+                return .failWithError(error)
+            }
+        }
+        
+        if !allowsEmptyResponses && (response.data?.isEmpty ?? true) {
+            // If empty response are not allowed it fails with `.emptyResponse` code.
+            return .failWithError(HTTPError(.emptyResponse))
         }
         
         return .passed
+    }
+    
+    /// Return `true` if error received should allow retry of the call.
+    ///
+    /// At the lowest network levels, it makes sense to retry for cases of temporary outage.
+    /// Things like timeouts, can't connect to host, network connection lost.
+    ///
+    /// - Parameter error: error received.
+    /// - Returns: Bool
+    open func allowsRetryForError(_ error: Error) -> Bool {
+        if let x = error as? HTTPError {
+            return x.statusCode == .unauthorized
+        }
+        guard let urlError = error as? URLError else {
+            return false
+        }
+        
+        switch urlError.code {
+            case URLError.timedOut,
+                 URLError.cannotFindHost,
+                 URLError.cannotConnectToHost,
+                 URLError.networkConnectionLost,
+                 URLError.dnsLookupFailed:
+                return true
+                
+            default:
+                return false
+        }
     }
     
 }

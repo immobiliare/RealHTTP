@@ -78,5 +78,7 @@ public extension HTTPError {
         case failedBuildingURLRequest
         case objectDecodeFailed
         case noDataToDecode
+        case emptyResponse
+        case maxRetryAttemptsReached
     }
 }

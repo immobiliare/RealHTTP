@@ -112,15 +112,30 @@ public class HTTPClient: NSObject {
         switch validationAction {
         case .failWithError(let error):
             // Response validation failed with error, set the new error and forward it
-            response.error = HTTPError.init(.invalidResponse, error: error)
+            response.error = HTTPError(.invalidResponse, error: error)
             didCompleteRequest(request, response: response)
 
         case .retryAfter(let altRequest):
             // Response validation failed, you can retry but we need to execute another call first.
             execute(request: altRequest).rawResponse(in: nil, { [weak self] altResponse in
+                request.reset(retries: true)
                 self?.execute(request: request)
             })
             
+        case .retryIfPossible:
+            request.currentRetry += 1
+            
+            guard request.currentRetry < request.maxRetries else {
+                // Maximum number of retry attempts made.
+                response.error = HTTPError(.maxRetryAttemptsReached)
+                didCompleteRequest(request, response: response)
+                return
+            }
+            
+            // Reset the state and make another attempt
+            request.reset(retries: false)
+            execute(request: request)
+
         case .passed:
             // Passed, nothing to do
             didCompleteRequest(request, response: response)

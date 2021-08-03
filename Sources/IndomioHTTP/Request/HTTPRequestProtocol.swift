@@ -45,6 +45,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// Parameters to encode onto the request.
     var queryParameters: URLParametersData? { get set }
     
+    /// Body content.
     var content: HTTPRequestEncodableData? { get set }
     
     /// Timeout interval for request. When `nil` no timeout is set. This override the
@@ -56,6 +57,9 @@ public protocol HTTPRequestProtocol: AnyObject {
     
     /// Maximum number of retries to set.
     var maxRetries: Int { get set }
+    
+    /// Current retry attempt. 0 is the first attempt.
+    var currentRetry: Int { get set }
     
     /// This method is called right after the `URLRequest`associated with the object is created
     /// and before it's executed by the client. You can use it in order to modify some settings.
@@ -98,6 +102,12 @@ public protocol HTTPRequestProtocol: AnyObject {
     ///   - response: response.
     ///   - client: client.
     func receiveResponse(_ response: HTTPRawResponse, client: HTTPClient)
+
+        
+    /// Reset the request by removing any downloaded data or error.
+    ///
+    /// - Parameter retries: `true` to also reset retries attempts.
+    func reset(retries: Bool)
     
 }
 

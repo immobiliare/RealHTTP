@@ -32,6 +32,10 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol, Buil
     /// no retries are executed.
     open var maxRetries: Int = 0
     
+    /// Current number of retry attempt done.
+    /// NOTE: You should never modify it externally, it's managed by the `HTTPClient` instance.
+    open var currentRetry: Int = 0
+    
     /// Timeout interval.
     open var timeout: TimeInterval?
     
@@ -108,6 +112,24 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol, Buil
         changeState(.executing)
         client.execute(request: self)
         return self
+    }
+    
+    // MARK: - Others
+    
+    /// Reset the state by removing any downloaded data and make
+    /// the call as never executed. Usually it's used before
+    /// making a retry attempt.
+    public func reset(retries: Bool) {
+        stateQueue.sync {
+            state = .pending
+            
+            if retries {
+                currentRetry = 0
+            }
+            
+            _resultRaw = nil
+            _resultObject = nil
+        }
     }
     
     // MARK: - Private Functions
@@ -192,6 +214,16 @@ extension HTTPRequest {
     /// - Returns: Self
     public func method(_ httpMethod: HTTPMethod) -> Self {
         self.method = httpMethod
+        return self
+    }
+    
+    /// Set the maximum number of retries to made.
+    /// By default is 0 which means any retry will be made in case of failure.
+    ///
+    /// - Parameter maxRetries: max retires.
+    /// - Returns: Self
+    public func maxRetries(_ maxRetries: Int) -> Self {
+        self.maxRetries = maxRetries
         return self
     }
     
