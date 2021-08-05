@@ -74,8 +74,9 @@ public class HTTPClientQueue: HTTPClient {
     ///
     /// - Parameter request: request
     /// - Returns: HTTPRequestProtocol
-    override func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol {
+    public override func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol {
         let reqOperation = HTTPRequestOperation(client: self, request: request)
+        eventMonitor.addRequest(request, withTask: reqOperation.task)
         addOperation(reqOperation)
         return request
     }

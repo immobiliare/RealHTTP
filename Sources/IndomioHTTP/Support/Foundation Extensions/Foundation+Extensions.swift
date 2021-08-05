@@ -102,6 +102,22 @@ extension URLRequest {
 
 extension Data {
     
+    static func fromURL(_ fileURL: URL?, removeFile: Bool) -> Data? {
+        guard let fileURL = fileURL else { return nil }
+        
+        do {
+            let data = try Data(contentsOf: fileURL)
+            
+            if removeFile {
+                try? FileManager.default.removeItem(at: fileURL)
+            }
+            
+            return data
+        } catch {
+            return nil
+        }
+    }
+    
     /// Convert a data to a string.
     ///
     /// - Parameter encoding: encoding to use, `utf8` if not specified.

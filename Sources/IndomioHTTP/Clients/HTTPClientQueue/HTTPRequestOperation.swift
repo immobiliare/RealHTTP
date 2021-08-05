@@ -20,13 +20,13 @@ internal class HTTPRequestOperation : Operation {
     
     /// Associated session task. It will be executed (via `resume()`) when
     /// operation will be picked and started.
-    private var task : URLSessionTask!
+    internal private(set) var task : URLSessionTask!
     
     /// The request itself.
-    private var request: HTTPRequestProtocol
+    internal private(set) var request: HTTPRequestProtocol
     
     /// Associated weak reference to client. If client is `nil` operation is cancelled.
-    private weak var client: HTTPClientQueue?
+    internal private(set) weak var client: HTTPClientQueue?
     
     // default state is ready (when the operation is created)
     private var state : OperationState = .ready {
@@ -54,19 +54,7 @@ internal class HTTPRequestOperation : Operation {
         super.init()
         
         do {
-            let urlRequest = try request.urlRequest(in: client)
-            self.task = client.session.dataTask(with: urlRequest, completionHandler: { [weak self] data, urlResponse, error in
-                guard let self = self else { return }
-                
-                // Parse the response and create the object which contains all the datas.
-                var response = HTTPRawResponse(request: request,
-                                               urlRequest: urlRequest,
-                                               client: client,
-                                               response: urlResponse,
-                                               data: data,
-                                               error: error)
-                self.didCompleteRequest(request, response: &response)
-            })
+            self.task = try client.createTask(for: request)
         } catch {
             didFailBuildingURLRequestFor(request, error: error)
         }

@@ -341,7 +341,7 @@ extension HTTPRequest {
     /// - Parameter client: client where the request is running into.
     /// - Throws: throw an exception if request building process did fails.
     /// - Returns: URLRequest
-    open func urlRequest(in client: HTTPClient) throws -> URLRequest {
+    open func urlRequest(in client: HTTPClientProtocol) throws -> URLRequest {
         // Create the full URL of the request.
         let fullURLString = (client.baseURL + route)
         guard let fullURL = URL(string: fullURLString) else {
@@ -370,7 +370,7 @@ extension HTTPRequest {
         return urlRequest
     }
     
-    public func receiveResponse(_ response: HTTPRawResponse, client: HTTPClient) {
+    public func receiveResponse(_ response: HTTPRawResponse, client: HTTPClientProtocol) {
         guard isPending else {
             return // ignore any further data when request is completed yet.
         }

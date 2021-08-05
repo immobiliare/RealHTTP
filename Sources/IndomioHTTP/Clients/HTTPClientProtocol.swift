@@ -11,7 +11,7 @@
 
 import Foundation
 
-public protocol HTTPClientProtocol {
+public protocol HTTPClientProtocol: AnyObject {
     
     /// Base URL.
     var baseURL: String { get set }
@@ -33,6 +33,9 @@ public protocol HTTPClientProtocol {
     /// Requests may override this behaviour.
     var cachePolicy: URLRequest.CachePolicy { get set }
     
+    /// Event monitor.
+    var eventMonitor: HTTPClientEventMonitor! { get }
+    
     // MARK: - Public Functions
     
     /// Validate response from a request.
@@ -40,11 +43,29 @@ public protocol HTTPClientProtocol {
     /// - Parameter response: response.
     func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction
 
+    /// Create the best subclass of `URLSessionTask` to execute the request.
+
+    /// - Parameter request: request to use.
+    func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask
+    
+    @discardableResult
+    func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol
+
 }
 
 // MARK: - HTTPClientProtocol Configuration
 
 public extension HTTPClientProtocol {
+    
+    /// Create the URLSessionTask for request.
+    ///
+    /// - Parameter request: request.
+    /// - Throws: throw an exception if `URLRequest` failed to be generated.
+    /// - Returns: (URLRequest, URLSessionTask)
+    func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask {
+        let urlRequest = try request.urlRequest(in: self)
+        return session.downloadTask(with: urlRequest)
+    }
     
     /// Validate the response with the list of validators.
     ///
@@ -67,7 +88,7 @@ public extension HTTPClientProtocol {
     ///
     /// - Parameter url: base url.
     /// - Returns: Self
-    mutating func baseURL(_ url: String) -> Self {
+    func baseURL(_ url: String) -> Self {
         self.baseURL = url
         return self
     }
@@ -78,7 +99,7 @@ public extension HTTPClientProtocol {
     ///   - name: name of the header.
     ///   - value: value of the header.
     /// - Returns: Self
-    mutating func header(_ name: HTTPHeaderField, _ value: String) -> Self {
+    func header(_ name: HTTPHeaderField, _ value: String) -> Self {
         self.headers[name] = value
         return self
     }
@@ -87,7 +108,7 @@ public extension HTTPClientProtocol {
     ///
     /// - Parameter headers: headers.
     /// - Returns: Self
-    mutating func headers(_ builder: ((inout HTTPHeaders) -> Void)) -> Self {
+    func headers(_ builder: ((inout HTTPHeaders) -> Void)) -> Self {
         builder(&headers)
         return self
     }
@@ -96,7 +117,7 @@ public extension HTTPClientProtocol {
     /// If not set the `HTTPClient`'s timeout where the instance is running will be used.
     /// - Parameter timeout: timeout interval in seconds.
     /// - Returns: Self
-    mutating func timeout(_ timeout: TimeInterval) -> Self {
+    func timeout(_ timeout: TimeInterval) -> Self {
         self.timeout = timeout
         return self
     }

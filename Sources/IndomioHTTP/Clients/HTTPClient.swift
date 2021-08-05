@@ -24,6 +24,9 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     /// Headers which are part of each request made using the client.
     public var headers = HTTPHeaders.default
     
+    /// Event monitor.
+    public var eventMonitor: HTTPClientEventMonitor!
+    
     /// Timeout interval for requests. Defaults to `60` seconds.
     /// Requests may override this behaviour.
     public var timeout: TimeInterval = 60
@@ -32,7 +35,7 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     public var validators: [HTTPResponseValidator] = [
         HTTPDefaultValidator() // standard validator for http responses
     ]
-    
+        
     /// The cache policy for the request. Defaults to `.useProtocolCachePolicy`.
     /// Requests may override this behaviour.
     public var cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy
@@ -66,31 +69,21 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
         self.baseURL = baseURL
         super.init()
         
-        self.session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+        self.eventMonitor = HTTPClientEventMonitor(client: self)
+        self.session = URLSession(configuration: configuration, delegate: eventMonitor, delegateQueue: nil)
     }
     
-    // MARK: - Private Functions
+    // MARK: - Public Functions
     
     /// Execute the request.
     ///
     /// - Parameter request: request.
     /// - Returns: the same request for chaining.
     @discardableResult
-    internal func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol {        
+    public func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol {
         do {
-            let urlRequest = try request.urlRequest(in: self)
-            let task = session.dataTask(with: urlRequest) { [weak self] data, urlResponse, error in
-                guard let self = self else { return }
-                
-                // Parse the response and create the object which contains all the datas.
-                var response = HTTPRawResponse(request: request,
-                                               urlRequest: urlRequest,
-                                               client: self,
-                                               response: urlResponse,
-                                               data: data,
-                                               error: error)
-                self.didCompleteRequest(request, response: &response)
-            }
+            let task = try createTask(for: request)
+            eventMonitor.addRequest(request, withTask: task)
             task.resume()
         } catch { // Failed to compose the request itself
             didFailBuildingURLRequestFor(request, error: error)
@@ -152,10 +145,5 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     func didCompleteRequest(_ request: HTTPRequestProtocol, response: HTTPRawResponse) {
         request.receiveResponse(response, client: self)
     }
-    
-}
-
-extension HTTPClient: URLSessionDelegate {
-    
     
 }

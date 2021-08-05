@@ -27,14 +27,17 @@ public struct HTTPRawResponse {
     
     // MARK: - In (Public Properties)
     
-    /// `URLRequest` executed.
-    public let urlRequest: URLRequest?
+    /// The original `URLRequest` instance executed.
+    public let originalRequest: URLRequest?
     
+    /// The current `URLRequest` handled by the downloader.
+    public internal(set) var currentRequest: URLRequest?
+
     /// Parent executed request.
     public internal(set) weak var request: HTTPRequestProtocol?
     
     /// Destinatin client where the request has been executed.
-    public internal(set) var client: HTTPClient?
+    public internal(set) weak var client: HTTPClientProtocol?
     
     // MARK: - Initialization
     
@@ -49,10 +52,10 @@ public struct HTTPRawResponse {
     ///   - error: error parsed.
     internal init(request: HTTPRequestProtocol,
                   urlRequest: URLRequest?,
-                  client: HTTPClient,
+                  client: HTTPClientProtocol,
                   response: URLResponse? = nil, data: Data? = nil, error: Error?) {
         self.request = request
-        self.urlRequest = urlRequest
+        self.originalRequest = urlRequest
         self.client = client
         self.response = response
         self.data = data

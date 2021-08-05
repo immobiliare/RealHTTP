@@ -81,7 +81,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// - Parameters:
     ///   - request: request.
     ///   - client: client in which the request should run.
-    func urlRequest(in client: HTTPClient) throws -> URLRequest
+    func urlRequest(in client: HTTPClientProtocol) throws -> URLRequest
     
     // MARK: - Execution
     
@@ -101,7 +101,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// - Parameters:
     ///   - response: response.
     ///   - client: client.
-    func receiveResponse(_ response: HTTPRawResponse, client: HTTPClient)
+    func receiveResponse(_ response: HTTPRawResponse, client: HTTPClientProtocol)
 
         
     /// Reset the request by removing any downloaded data or error.
