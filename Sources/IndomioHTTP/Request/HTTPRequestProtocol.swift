@@ -101,7 +101,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// - Parameters:
     ///   - response: response.
     ///   - client: client.
-    func receiveResponse(_ response: HTTPRawResponse, client: HTTPClientProtocol)
+    func receiveHTTPResponse(_ response: HTTPRawResponse, client: HTTPClientProtocol)
 
         
     /// Reset the request by removing any downloaded data or error.

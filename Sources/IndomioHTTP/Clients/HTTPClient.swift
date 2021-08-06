@@ -75,25 +75,27 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     
     // MARK: - Public Functions
     
-    /// Execute the request.
+    /// Execute the request immediately.
     ///
     /// - Parameter request: request.
-    /// - Returns: the same request for chaining.
+    /// - Returns: the request itself
     @discardableResult
     public func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol {
         do {
-            let task = try createTask(for: request)
-            eventMonitor.addRequest(request, withTask: task)
-            task.resume()
-        } catch { // Failed to compose the request itself
-            didFailBuildingURLRequestFor(request, error: error)
+            let task = try createTask(for: request) // create the URLRequest and associated URLSessionTask to execute
+            eventMonitor.addRequest(request, withTask: task) // add to monitor the response
+            task.resume() // start it immediately
+        } catch {
+            // Something went wrong building request, avoid adding operation and dispatch the message
+            let response = HTTPRawResponse(error: .failedBuildingURLRequest, forRequest: request)
+            request.receiveHTTPResponse(response, client: self)
         }
         
         return request
     }
     
     // MARK: - Private Functions
-    
+    /*
     /// Called when request did complete.
     ///
     /// - Parameters:
@@ -144,6 +146,6 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     
     func didCompleteRequest(_ request: HTTPRequestProtocol, response: HTTPRawResponse) {
         request.receiveResponse(response, client: self)
-    }
+    }*/
     
 }

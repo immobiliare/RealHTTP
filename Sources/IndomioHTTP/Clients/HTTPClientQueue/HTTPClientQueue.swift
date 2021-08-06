@@ -34,6 +34,7 @@ public class HTTPClientQueue: HTTPClient {
     /// The operation queue.
     private var operationQueue = OperationQueue()
     
+    
     // MARK: - Initialization
 
     /// Initialize a new HTTP client which manage a queue of operations with given `URLSessionConfiguration` instance.
@@ -73,11 +74,20 @@ public class HTTPClientQueue: HTTPClient {
     /// enqueued in client.
     ///
     /// - Parameter request: request
-    /// - Returns: HTTPRequestProtocol
+    /// - Returns: the request itself
     public override func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol {
-        let reqOperation = HTTPRequestOperation(client: self, request: request)
-        eventMonitor.addRequest(request, withTask: reqOperation.task)
-        addOperation(reqOperation)
+        do {
+            let task = try createTask(for: request) // build URLRequest along with the URLSessionTask to execute
+            let operation = HTTPRequestOperation(task: task) // create a container for the task
+            
+            eventMonitor.addRequest(request, withTask: task) // monitor response
+            addOperations(operation) // put in queue the operation
+        } catch {
+            // Something went wrong building request, avoid adding operation and dispatch the message
+            let response = HTTPRawResponse(error: .failedBuildingURLRequest, forRequest: request)
+            request.receiveHTTPResponse(response, client: self)
+        }
+        
         return request
     }
     
@@ -86,10 +96,16 @@ public class HTTPClientQueue: HTTPClient {
     /// Add operations to the queue.
     ///
     /// - Parameter operations: operations to add.
-    internal func addOperation(_ operations: HTTPRequestOperation...) {
+    internal func addOperations(_ operations: HTTPRequestOperation...) {
         operations.forEach {
             operationQueue.addOperation($0)
         }
+    }
+    
+    internal func operationForTask(_ task: URLSessionTask) -> HTTPRequestOperation? {
+        operationQueue.operations.first {
+            ($0 as? HTTPRequestOperation)?.task == task
+        } as? HTTPRequestOperation
     }
     
 }

@@ -19,6 +19,10 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
 
     // MARK: - Public Properties
     
+    public var request: HTTPRequestProtocol {
+        self
+    }
+    
     /// Current state of the request.
     public private(set) var state: HTTPRequestState = .pending
 
@@ -370,7 +374,7 @@ extension HTTPRequest {
         return urlRequest
     }
     
-    public func receiveResponse(_ response: HTTPRawResponse, client: HTTPClientProtocol) {
+    public func receiveHTTPResponse(_ response: HTTPRawResponse, client: HTTPClientProtocol) {
         guard isPending else {
             return // ignore any further data when request is completed yet.
         }

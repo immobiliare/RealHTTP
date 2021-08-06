@@ -11,18 +11,24 @@
 
 import Foundation
 
-public class HTTPClientEventMonitor: NSObject {
+public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLSessionDownloadDelegate {
     
     // MARK: - Private Properties
     
     /// Parent client.
-    private weak var client: HTTPClientProtocol?
+    internal private(set) weak var client: HTTPClientProtocol?
+    
+    var requests: [HTTPRequestProtocol] {
+        queue.sync {
+            Array(tasksToRequest.values)
+        }
+    }
     
     /// Serial queue.
     private var queue = DispatchQueue(label: "com.httpclient.eventmonitor.queue")
     
     /// Map of the session/requests.
-    private var requestTable = [URLSessionTask: HTTPRequestProtocol]()
+    private var tasksToRequest = [URLSessionTask: HTTPRequestProtocol]()
     private var dataTable = [URLSessionTask: Data]()
 
     // MARK: - Initialization
@@ -35,31 +41,26 @@ public class HTTPClientEventMonitor: NSObject {
     
     internal func addRequest(_ request: HTTPRequestProtocol, withTask task: URLSessionTask) {
         queue.sync {
-            requestTable[task] = request
+            tasksToRequest[task] = request
         }
     }
     
     internal func removeRequest(forTask task: URLSessionTask) {
         queue.sync {
             dataTable.removeValue(forKey: task)
-            requestTable.removeValue(forKey: task)
+            tasksToRequest.removeValue(forKey: task)
         }
     }
     
     internal func request(forTask task: URLSessionTask) -> (request: HTTPRequestProtocol?, dataURL: Data?) {
         queue.sync {
             let data = dataTable[task]
-            let request = requestTable[task]
+            let request = tasksToRequest[task]
             return (request, data)
         }
     }
     
-}
 
-// MARK: - URLSessionDelegate
-
-extension HTTPClientEventMonitor: URLSessionDelegate, URLSessionTaskDelegate, URLSessionDownloadDelegate {
-    
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         print("didBecomeInvalidWithError")
     }
@@ -86,7 +87,7 @@ extension HTTPClientEventMonitor: URLSessionDelegate, URLSessionTaskDelegate, UR
     }
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        let data = Data.fromURL(location, removeFile: true)
+        let data = Data.fromURL(location)
         queue.sync {
             dataTable[downloadTask] = data
         }
@@ -94,30 +95,26 @@ extension HTTPClientEventMonitor: URLSessionDelegate, URLSessionTaskDelegate, UR
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         let (request, data) = request(forTask: task)
-        guard let request = request, let client = self.client else {
+        guard let request = request else {
             return
+        }
+        
+        if let client = self.client as? HTTPClientQueue,
+              let operation = client.operationForTask(task) {
+            operation.end() // mark the operation as finished
         }
 
         // Parse the response and create the object which contains all the datas.
-        var response = HTTPRawResponse(request: request,
-                                       urlRequest: task.originalRequest,
-                                       client: client,
-                                       response: task.response,
-                                       data: data,
-                                       error: error)
-        response.currentRequest = task.currentRequest
-        // Dispatch events
-        didCompleteRequest(request, client: client, response: &response)
+        let rawResponse = (task.response, data, error)
+        var response = HTTPRawResponse(request: request, response: rawResponse)
+        response.attachURLRequests(original: task.originalRequest, current: task.currentRequest)
         
-        // Cleanup
+        didComplete(request: request, response: &response)
+        
         removeRequest(forTask: task)
     }
     
-}
-
-// MARK: - Manage Responses for Tasks
-
-extension HTTPClientEventMonitor {
+    // MARK: - Private Functions
     
     /// Called when request did complete.
     ///
@@ -125,29 +122,46 @@ extension HTTPClientEventMonitor {
     ///   - request: request.
     ///   - urlRequest: urlRequest executed.
     ///   - rawData: raw data.
-    private func didCompleteRequest(_ request: HTTPRequestProtocol, client: HTTPClientProtocol, response: inout HTTPRawResponse) {
+    private func didComplete(request: HTTPRequestProtocol, response: inout HTTPRawResponse) {
+        guard let client = self.client else { return }
+        
         let validationAction = client.validate(response: response)
         switch validationAction {
-        case .failWithError(let error):
-            // Response validation failed with error, set the new error and forward it
+        case .failWithError(let error): // Response validation failed with error, set the new error and forward it
             response.error = HTTPError(.invalidResponse, error: error)
-            didCompleteRequest(request, client: client, response: response)
+            request.receiveHTTPResponse(response, client: client)
 
         case .retryAfter(let altRequest):
             request.reset(retries: true)
-            // Response validation failed, you can retry but we need to execute another call first.
-            client.execute(request: altRequest).rawResponse(in: nil, { altResponse in
-                request.reset(retries: true)
-                client.execute(request: request)
-            })
             
-        case .retryIfPossible:
+            if let queueClient = client as? HTTPClientQueue {
+                do {
+                    // Create a new operation for this request but link it with a dependency to the alt request
+                    // so it will be executed in order (alt -> this).
+                    let linkedOperation = try HTTPRequestOperation(task: queueClient.createTask(for: altRequest))
+                    let thisOperation = try HTTPRequestOperation(task: queueClient.createTask(for: request))
+                    thisOperation.addDependency(linkedOperation)
+                    
+                    queueClient.addOperations(linkedOperation, thisOperation)
+                } catch {
+                    response.error = HTTPError(.invalidResponse, error: error)
+                    request.receiveHTTPResponse(response, client: client)
+                }
+            } else {
+                // Response validation failed, you can retry but we need to execute another call first.
+                client.execute(request: altRequest).rawResponse(in: nil, { altResponse in
+                    request.reset(retries: true)
+                    client.execute(request: request)
+                })
+            }
+            
+        case .retryIfPossible: // Retry if max retries has not be reached
             request.currentRetry += 1
             
             guard request.currentRetry < request.maxRetries else {
                 // Maximum number of retry attempts made.
                 response.error = HTTPError(.maxRetryAttemptsReached)
-                didCompleteRequest(request, client: client, response: response)
+                request.receiveHTTPResponse(response, client: client)
                 return
             }
             
@@ -155,20 +169,9 @@ extension HTTPClientEventMonitor {
             request.reset(retries: false)
             client.execute(request: request)
 
-        case .passed:
-            // Passed, nothing to do
-            didCompleteRequest(request, client: client, response: response)
+        case .passed: // Passed, nothing to do
+            request.receiveHTTPResponse(response, client: client)
         }
     }
-    
-    func didFailBuildingURLRequestFor(_ request: HTTPRequestProtocol, client: HTTPClientProtocol, error: Error) {
-        let error = HTTPError(.failedBuildingURLRequest, error: error)
-        let response = HTTPRawResponse(request: request, urlRequest: nil, client: client, error: error)
-        didCompleteRequest(request, client: client, response: response)
-    }
-    
-    func didCompleteRequest(_ request: HTTPRequestProtocol, client: HTTPClientProtocol, response: HTTPRawResponse) {
-        request.receiveResponse(response, client: client)
-    }
-    
+
 }

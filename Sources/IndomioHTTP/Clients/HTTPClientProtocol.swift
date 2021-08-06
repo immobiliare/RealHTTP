@@ -33,9 +33,6 @@ public protocol HTTPClientProtocol: AnyObject {
     /// Requests may override this behaviour.
     var cachePolicy: URLRequest.CachePolicy { get set }
     
-    /// Event monitor.
-    var eventMonitor: HTTPClientEventMonitor! { get }
-    
     // MARK: - Public Functions
     
     /// Validate response from a request.

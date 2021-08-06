@@ -11,13 +11,23 @@
 
 import Foundation
 
+public typealias URLSessionResponse = (urlResponse: URLResponse?, data: Data?, error: Error?)
+
 /// Encapsulate the result of the execution of an `HTTPRequestProtocol` conform object.
 public struct HTTPRawResponse {
     
-    // MARK: - Out (Public Properties)
+    // MARK: - Public Properties
+    
+    /// Executed request operation (weak referenced).
+    public internal(set) weak var request: HTTPRequestProtocol?
 
-    /// Response from server.
-    public let response: URLResponse?
+    /// `URLResponse` object received from server.
+    public let urlResponse: URLResponse?
+    
+    /// Casted `HTTPURLResponse` object received from server.
+    public var httpResponse: HTTPURLResponse? {
+        urlResponse as? HTTPURLResponse
+    }
     
     /// Data received.
     public let data: Data?
@@ -25,19 +35,8 @@ public struct HTTPRawResponse {
     /// Error parsed.
     public internal(set) var error: HTTPError?
     
-    // MARK: - In (Public Properties)
-    
-    /// The original `URLRequest` instance executed.
-    public let originalRequest: URLRequest?
-    
-    /// The current `URLRequest` handled by the downloader.
-    public internal(set) var currentRequest: URLRequest?
-
-    /// Parent executed request.
-    public internal(set) weak var request: HTTPRequestProtocol?
-    
-    /// Destinatin client where the request has been executed.
-    public internal(set) weak var client: HTTPClientProtocol?
+    /// Keep the `URLRequest` instance of the original
+    public private(set) var urlRequest: (original: URLRequest?, current: URLRequest?)
     
     // MARK: - Initialization
     
@@ -47,19 +46,23 @@ public struct HTTPRawResponse {
     ///   - request: request.
     ///   - urlRequest: url request.
     ///   - client: client source.
-    ///   - response: response received.
-    ///   - data: data received.
-    ///   - error: error parsed.
-    internal init(request: HTTPRequestProtocol,
-                  urlRequest: URLRequest?,
-                  client: HTTPClientProtocol,
-                  response: URLResponse? = nil, data: Data? = nil, error: Error?) {
+    ///   - response: response received from server.
+    internal init(request: HTTPRequestProtocol, response: URLSessionResponse) {
         self.request = request
-        self.originalRequest = urlRequest
-        self.client = client
-        self.response = response
-        self.data = data
-        self.error = HTTPError.fromHTTPResponse(response: response, data: data, error: error)
+        self.urlResponse = response.urlResponse
+        self.data = response.data
+        self.error = HTTPError.fromURLResponse(response)
+    }
+    
+    internal init(error type: HTTPError.ErrorType, forRequest request: HTTPRequestProtocol) {
+        self.request = request
+        self.error = HTTPError(type)
+        self.urlResponse = nil
+        self.data = nil
+    }
+    
+    internal mutating func attachURLRequests(original: URLRequest?, current: URLRequest?) {
+        self.urlRequest = (original, current)
     }
     
 }

@@ -106,24 +106,24 @@ extension HTTPError {
     ///
     /// - Parameter httpResponse: response from http layer.
     /// - Returns: HTTPError?
-    public static func fromHTTPResponse(response: URLResponse?, data: Data?, error: Error?) -> HTTPError? {
+    public static func fromURLResponse(_ response: URLSessionResponse) -> HTTPError? {
         // If HTTP is an error or an error has received we can create the error object
-        let httpCode = HTTPStatusCode(URLResponse: response) ?? .none
-        let isError = (error != nil || httpCode.responseType != .success)
+        let httpCode = HTTPStatusCode(URLResponse: response.urlResponse) ?? .none
+        let isError = (response.error != nil || httpCode.responseType != .success)
         
         guard isError else {
             return nil
         }
         
         // Evaluate error kind
-        let cocoaErrorCode = (error as NSError?)?.code
-        let userInfo = (error as NSError?)?.userInfo
-        let isConnectionError = error?.isMissingConnection ?? false
+        let cocoaErrorCode = (response.error as NSError?)?.code
+        let userInfo = (response.error as NSError?)?.userInfo
+        let isConnectionError = response.error?.isMissingConnection ?? false
         let errorType: HTTPError.ErrorType = (isConnectionError ? .missingConnection : .network)
         
         return HTTPError(errorType,
                          code: httpCode,
-                         error: error,
+                         error: response.error,
                          userInfo: userInfo,
                          cocoaCode: cocoaErrorCode)
     }
