@@ -102,29 +102,6 @@ extension URLRequest {
 
 extension Data {
     
-    /// Extract the public key from a Data which contains a certificate.
-    ///
-    /// - Returns: SecKey?
-    func extractPublicKey() -> SecKey? {
-        
-        func extractPublicKeyFromCert(_ cert: SecCertificate, policy: SecPolicy) -> SecKey? {
-            var possibleTrust: SecTrust?
-            SecTrustCreateWithCertificates(cert, policy, &possibleTrust)
-            if let trust = possibleTrust {
-                var result: SecTrustResultType = SecTrustResultType(rawValue: UInt32(0))!
-                SecTrustEvaluate(trust, &result)
-                return SecTrustCopyPublicKey(trust)
-            }
-            return nil
-        }
-        
-        let possibleCert = SecCertificateCreateWithData(nil, self as CFData)
-        if let cert = possibleCert {
-            return extractPublicKeyFromCert(cert, policy: SecPolicyCreateBasicX509())
-        }
-        return nil
-    }
-    
     static func fromURL(_ fileURL: URL?) -> Data? {
         guard let fileURL = fileURL else { return nil }
         
