@@ -31,7 +31,7 @@ public protocol HTTPDecodableResponse {
 public extension HTTPDecodableResponse where Self: Decodable {
 
     static func decode(_ response: HTTPRawResponse) -> Result<Self, Error> {
-        guard let data = response.data else {
+        guard let data = response.content?.data else {
             return .failure(HTTPError(.emptyResponse)) // empty response
         }
         

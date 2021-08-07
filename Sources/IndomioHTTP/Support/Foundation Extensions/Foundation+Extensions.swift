@@ -285,3 +285,22 @@ internal extension Bundle {
     }
     
 }
+
+extension URL {
+    
+    func copyFileToDefaultLocation(task: URLSessionDownloadTask) -> URL? {
+        let fManager = FileManager.default
+        
+        let fileName = "\(task.taskIdentifier)"
+        let documentsDir = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first! as NSString
+        let destURL = URL(fileURLWithPath: documentsDir.appendingPathComponent(fileName))
+        
+        do {
+            try fManager.copyItem(at: self, to: destURL)
+            return destURL
+        } catch {
+            return nil
+        }
+    }
+    
+}

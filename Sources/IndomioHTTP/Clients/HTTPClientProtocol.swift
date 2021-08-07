@@ -61,7 +61,17 @@ public extension HTTPClientProtocol {
     /// - Returns: (URLRequest, URLSessionTask)
     func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask {
         let urlRequest = try request.urlRequest(in: self)
-        return session.downloadTask(with: urlRequest)
+        switch request.expectedDataType {
+        case .default:
+            return session.dataTask(with: urlRequest)
+        case .large:
+            if let resumeDataURL = request.resumeDataURL,
+               let resumeData = Data.fromURL(resumeDataURL) {
+                return session.downloadTask(withResumeData: resumeData)
+            } else {
+                return session.downloadTask(with: urlRequest)
+            }
+        }
     }
     
     /// Validate the response with the list of validators.

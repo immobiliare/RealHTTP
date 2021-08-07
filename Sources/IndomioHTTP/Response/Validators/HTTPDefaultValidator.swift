@@ -45,7 +45,7 @@ open class HTTPDefaultValidator: HTTPResponseValidator {
             }
         }
         
-        if !allowsEmptyResponses && (response.data?.isEmpty ?? true) {
+        if !allowsEmptyResponses && (response.content?.data?.isEmpty ?? true) {
             // If empty response are not allowed it fails with `.emptyResponse` code.
             return .failWithError(HTTPError(.emptyResponse))
         }

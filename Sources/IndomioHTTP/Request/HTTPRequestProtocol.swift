@@ -28,6 +28,17 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// Current state of the request (not thread-safe)
     var state: HTTPRequestState { get }
     
+    /// Type of data expected which is used to define how it should managed from
+    /// the `URLSession` subclass to use.
+    var expectedDataType: HTTPExpectedDataType { get }
+    
+    /// If you are downloading large amount of data and you need to resume it
+    /// you can specify a valid URL where data is saved and resumed.
+    /// This location is used when `expectedDataType` is set to `large`.
+    /// If no value has set a default location inside a subfolder in documents
+    /// directory is used instead.
+    var resumeDataURL: URL? { get }
+    
     /// Thread safe value which identify if a request in pending state or not.
     var isPending: Bool { get }
     
@@ -121,4 +132,21 @@ public enum HTTPRequestState {
     case pending
     case executing
     case finished
+}
+
+// MARK: - HTTPExpectedDataType
+
+/// Describe what kind of data you are expecting from the server for a response.
+/// This used to identify what kind of `URLSessionTask` subclass we should use.
+///
+/// - `default`:  Data tasks are intended for short, often interactive requests from your app to a server.
+///               Data tasks can return data to your app one piece at a time after each piece of data is received,
+///               or all at once through a completion handler.
+///               Because data tasks do not store the data to a file, they are not supported in background sessions.
+/// - `large`: Directly writes the response data to a temporary file.
+///            It supports background downloads when the app is not running.
+///            Download tasks retrieve data in the form of a file, and support background downloads while the app is not running.
+public enum HTTPExpectedDataType {
+    case `default`
+    case large
 }

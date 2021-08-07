@@ -11,7 +11,7 @@
 
 import Foundation
 
-public typealias URLSessionResponse = (urlResponse: URLResponse?, data: Data?, error: Error?)
+public typealias URLSessionResponse = (urlResponse: URLResponse?, data: HTTPRawData?, error: Error?)
 
 /// Encapsulate the result of the execution of an `HTTPRequestProtocol` conform object.
 public struct HTTPRawResponse {
@@ -30,7 +30,7 @@ public struct HTTPRawResponse {
     }
     
     /// Data received.
-    public let data: Data?
+    public let content: HTTPRawData?
     
     /// Error parsed.
     public internal(set) var error: HTTPError?
@@ -50,7 +50,7 @@ public struct HTTPRawResponse {
     internal init(request: HTTPRequestProtocol, response: URLSessionResponse) {
         self.request = request
         self.urlResponse = response.urlResponse
-        self.data = response.data
+        self.content = response.data
         self.error = HTTPError.fromURLResponse(response)
     }
     
@@ -58,11 +58,31 @@ public struct HTTPRawResponse {
         self.request = request
         self.error = HTTPError(type)
         self.urlResponse = nil
-        self.data = nil
+        self.content = nil
     }
     
     internal mutating func attachURLRequests(original: URLRequest?, current: URLRequest?) {
         self.urlRequest = (original, current)
+    }
+    
+}
+
+// MARK: - HTTPRawData
+
+/// Define what kind of data you have received.
+public enum HTTPRawData {
+    case data(Data?)
+    case file(URL)
+    
+    /// Raw data. If it's contained in a file it will
+    /// be loaded and returned.
+    public var data: Data? {
+        switch self {
+        case .data(let data):
+            return data
+        case .file(let fileURL):
+            return Data.fromURL(fileURL)
+        }
     }
     
 }

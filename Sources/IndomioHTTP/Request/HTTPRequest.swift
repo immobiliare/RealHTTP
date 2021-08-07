@@ -50,6 +50,19 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// Headers to send along the request.
     open var headers = HTTPHeaders()
     
+    /// What kind of data we should expect.
+    /// If you are creating a request for a small amount of data (ie RESTful calls) you can use
+    /// `default`. Large data as binary downloads may be handled using `large` options which support
+    /// resumable downloads and background downloads sessions.
+    /// By default `default` is used.
+    open var expectedDataType: HTTPExpectedDataType = .default
+    
+    /// The default location of response data when using `large` `expectedDataType` and the engine
+    /// is set to `URLDownloadTask`. It can be used to resume initiated downloads or to use the
+    /// background session downloads. When `expectedDataType` is set to `default` this value is
+    /// ignored (the response itself is kept in memory).
+    open var resumeDataURL: URL?
+    
     /// Query string parameters which are set with the full url of the request.
     open var queryParameters: URLParametersData?
     

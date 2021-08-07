@@ -11,7 +11,7 @@
 
 import Foundation
 
-public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLSessionDownloadDelegate {
+public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionTaskDelegate, URLSessionDownloadDelegate {
     
     // MARK: - Private Properties
     
@@ -29,7 +29,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionTas
     
     /// Map of the session/requests.
     private var tasksToRequest = [URLSessionTask: HTTPRequestProtocol]()
-    private var dataTable = [URLSessionTask: Data]()
+    private var dataTable = [URLSessionTask: HTTPRawData]()
 
     // MARK: - Initialization
     
@@ -52,7 +52,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionTas
         }
     }
     
-    internal func request(forTask task: URLSessionTask) -> (request: HTTPRequestProtocol?, dataURL: Data?) {
+    internal func request(forTask task: URLSessionTask) -> (request: HTTPRequestProtocol?, dataURL: HTTPRawData?) {
         queue.sync {
             let data = dataTable[task]
             let request = tasksToRequest[task]
@@ -75,10 +75,8 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionTas
         print("urlSessionDidFinishEvents")
         
     }
-    
-    //define all  `NSURLSessionDataDelegate` and `NSURLSessionTaskDelegate` methods here
-    //URLSessionDelegate methods
-    
+    // MARK: - URLSessionDownloadTask
+
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         if totalBytesExpectedToWrite > 0 {
             let progress = Float(totalBytesWritten) / Float(totalBytesExpectedToWrite)
@@ -87,23 +85,37 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionTas
     }
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        let data = Data.fromURL(location)
-        queue.sync {
-            dataTable[downloadTask] = data
+        guard let fileURL = location.copyFileToDefaultLocation(task: downloadTask) else {
+            // copy file from a temporary location to a valid location
+            return
         }
+        
+        queue.sync { dataTable[downloadTask] = .file(fileURL) } // set data
     }
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        didCompleteTask(task, didCompleteWithError: error)
+    }
+    
+    // MARK: - URLSessionDataTask
+    
+    public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        queue.sync { dataTable[dataTask] = .data(data) }
+    }
+    
+    // MARK: - Private Functions
+    
+    private func didCompleteTask(_ task: URLSessionTask, didCompleteWithError error: Error?) {
+        if let client = self.client as? HTTPClientQueue,
+              let operation = client.operationForTask(task) {
+            operation.end() // mark the operation as finished
+        }
+        
         let (request, data) = request(forTask: task)
         guard let request = request else {
             return
         }
         
-        if let client = self.client as? HTTPClientQueue,
-              let operation = client.operationForTask(task) {
-            operation.end() // mark the operation as finished
-        }
-
         // Parse the response and create the object which contains all the datas.
         let rawResponse = (task.response, data, error)
         var response = HTTPRawResponse(request: request, response: rawResponse)
@@ -113,8 +125,6 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionTas
         
         removeRequest(forTask: task)
     }
-    
-    // MARK: - Private Functions
     
     /// Called when request did complete.
     ///

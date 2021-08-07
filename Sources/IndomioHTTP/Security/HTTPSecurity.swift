@@ -25,8 +25,8 @@ open class HTTPSecurity: HTTPSecurityProtocol {
     /// The public keys
     var pubKeys: [SecKey]? //the public keys
     
-    /// Use pu
-    var usePublicKeys = false //use public keys or certificate validation?
+    /// Use public keys or certificate validation?
+    var usePublicKeys = false
     
     // MARK: - Initialization
     
