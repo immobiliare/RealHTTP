@@ -30,7 +30,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     /// Map of the session/requests.
     private var tasksToRequest = [URLSessionTask: HTTPRequestProtocol]()
     private var dataTable = [URLSessionTask: HTTPRawData]()
-    private var metricsTable = [URLSessionTask: URLSessionTaskMetrics]()
+    private var metricsTable = [URLSessionTask: HTTPRequestMetrics]()
 
     // MARK: - Initialization
     
@@ -54,7 +54,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         }
     }
     
-    internal func request(forTask task: URLSessionTask) -> (request: HTTPRequestProtocol?, dataURL: HTTPRawData?, metrics: URLSessionTaskMetrics?) {
+    internal func request(forTask task: URLSessionTask) -> (request: HTTPRequestProtocol?, dataURL: HTTPRawData?, metrics: HTTPRequestMetrics?) {
         queue.sync {
             let data = dataTable[task]
             let request = tasksToRequest[task]
@@ -117,7 +117,8 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
         queue.sync {
-            metricsTable[task] = metrics
+            let info = HTTPRequestMetrics(source: metrics, task: task)
+            metricsTable[task] = info
         }
     }
     
