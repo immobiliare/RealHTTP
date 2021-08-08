@@ -33,7 +33,7 @@ public struct HTTPMetric {
                 return nil
             }
             
-            return Stage(kind, startDate: start, endDate: end)
+            return Stage(kind, interval: DateInterval(start: start, end: end))
         }
         
         self.transactionMetrics = metrics
@@ -54,7 +54,8 @@ public struct HTTPMetric {
            let index = stages.firstIndex(of: response),
            request.interval.duration > 0 {
             
-            let duration = Stage(.server, startDate: response.interval.start, endDate: request.interval.end)
+            let interval = DateInterval(start: request.interval.end, end: response.interval.start)
+            let duration = Stage(.server, interval: interval)
             stages.insert(duration, at: index)
         }
 
@@ -70,6 +71,8 @@ public extension HTTPMetric {
     /// A single stage of the metrics.
     struct Stage: Equatable {
         
+        // MARK: - Public Properties
+        
         /// Type of stage.
         public let kind: Kind
         
@@ -77,16 +80,20 @@ public extension HTTPMetric {
         public let interval: DateInterval
         
         /// Start date of the stage.
-        public let startDate: Date
+        public var startDate: Date {
+            interval.start
+        }
         
         /// End date of the stage.
-        public let endDate: Date
+        public var endDate: Date {
+            interval.end
+        }
         
-        internal init(_ kind: Kind, startDate: Date, endDate: Date) {
+        // MARK: - Initialization
+        
+        internal init(_ kind: Kind, interval: DateInterval) {
             self.kind = kind
-            self.startDate = startDate
-            self.endDate = endDate
-            self.interval = DateInterval(start: endDate, end: startDate)
+            self.interval = interval
         }
         
         public static func == (lhs: HTTPMetric.Stage, rhs: HTTPMetric.Stage) -> Bool {
