@@ -37,13 +37,28 @@ import Foundation
 ///                                                                                              total   465.5ms
 /// ```
 public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
-    public var printer: (String) -> Void = { NSLog($0) }
+    public typealias Columns = (left: Int, middle: Int, right: Int)
     
-    let columns = (left: 18, middle: 82, right: 8)
-
-    public init() {
-
+    // MARK: - Private Properties
+    
+    /// Formatting options
+    private let columns: Columns
+    
+    /// Printer functions
+    public var printer: (String) -> Void = {
+        print($0)
     }
+
+    // MARK: - Initialization
+    
+    /// Initialize with given columns formatting options.
+    ///
+    /// - Parameter columns: options for columns, left, middle and right.
+    public init(columns: Columns = (left: 18, middle: 82, right: 8)) {
+        self.columns = columns
+    }
+    
+    // MARK: - Public Functions
 
     public func render(with stats: HTTPRequestMetrics) {
         var buffer: [String] = []
@@ -53,7 +68,7 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
             buffer.append(renderHeader(with: metric))
             buffer.append(renderMeta(with: metric))
             let total = totalDateInterval(from: metric)
-            for line in metric.stages.filter({ $0.type != .total }) {
+            for line in metric.stages.filter({ $0.kind != .total }) {
                 buffer.append(renderDuration(line: line, total: total))
             }
             if let total = total {
@@ -63,9 +78,11 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
 
         printer(buffer.joined(separator: "\n"))
     }
+    
+    // MARK: - Private Functions
 
-    func totalDateInterval(from metric: HTTPMetric) -> DateInterval? {
-        if let total = metric.stages.filter({ $0.type == .total }).first {
+   private func totalDateInterval(from metric: HTTPMetric) -> DateInterval? {
+        if let total = metric.stages.filter({ $0.kind == .total }).first {
             return total.interval
         } else if let first = metric.stages.first  {
             // calculate total from all available Durations
@@ -78,7 +95,7 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
         return nil
     }
 
-    func renderHeader(with metric: HTTPMetric) -> String {
+    private func renderHeader(with metric: HTTPMetric) -> String {
         let method = metric.transactionMetrics.request.httpMethod ?? "???"
         let url = metric.transactionMetrics.request.url?.absoluteString ?? "???"
 
@@ -92,14 +109,14 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
         return "\(method) \(url) -> \(responseLine), through \(metric.transactionMetrics.resourceFetchType.name)"
     }
 
-    func renderDuration(line: HTTPMetric.Stage, total: DateInterval?) -> String {
-        let name = line.type.name.padding(toLength: columns.left, withPad: " ", startingAt: 0)
+    private func renderDuration(line: HTTPMetric.Stage, total: DateInterval?) -> String {
+        let name = line.kind.name.padding(toLength: columns.left, withPad: " ", startingAt: 0)
         let plot = total.flatMap({ visualize(interval: line.interval, total: $0, within: self.columns.middle) }) ?? ""
         let time = line.interval.duration.ms.leftPadding(toLength: columns.right, withPad: " ")
         return "\(name)\(plot)\(time)"
     }
 
-    func visualize(interval: DateInterval, total: DateInterval, within: Int = 100) -> String {
+    private func visualize(interval: DateInterval, total: DateInterval, within: Int = 100) -> String {
         precondition(total.intersects(total), "supplied duration does not intersect with the total duration")
         let width = within - 2
         if interval.duration == 0 {
@@ -123,7 +140,7 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
         return "|\(line.joined())|"
     }
 
-    func renderMeta(with metric: HTTPMetric) -> String {
+    private func renderMeta(with metric: HTTPMetric) -> String {
         let networkProtocolName = metric.transactionMetrics.networkProtocolName ?? "???"
         let meta = [
             "protocol: \(networkProtocolName)",
@@ -133,17 +150,25 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
         return meta.joined(separator: " ")
     }
 
-    func renderMetricSummary(for interval: DateInterval) -> String {
+    private func renderMetricSummary(for interval: DateInterval) -> String {
         let width = columns.left + columns.middle + columns.right
         return "total   \(interval.duration.ms)".leftPadding(toLength: width, withPad: " ")
     }
+    
 }
 
+// MARK: - TimeInterval Extension
+
 private extension TimeInterval {
+    
+    /// Milliseconds formatting
     var ms: String {
-        return String(format: "%.1fms", self * 1000)
+        String(format: "%.1fms", self * 1000)
     }
+    
 }
+
+// MARK: - String Extension
 
 private extension String {
     

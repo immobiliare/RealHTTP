@@ -28,24 +28,25 @@ public struct HTTPMetric {
     ///
     /// - Parameter metrics: metrics.
     internal init(transactionMetrics metrics: HTTPMeasurableProtocol) {
-        self.transactionMetrics = metrics
-
-        func getStage(_ kind: Stage.Kind, _ start: Date?, _ end: Date?) -> Stage? {
+        func stage(_ kind: Stage.Kind, _ start: Date?, _ end: Date?) -> Stage? {
             guard let start = start, let end = end else {
                 return nil
             }
             
-            return Stage(type: kind, interval: DateInterval(start: start, end: end))
+            return Stage(kind, startDate: start, endDate: end)
         }
+        
+        self.transactionMetrics = metrics
 
         // Evaluate the stages of this request
-        var stages = [Stage]()
-        stages.append( getStage(.domainLookup, metrics.domainLookupStartDate, metrics.domainLookupEndDate))
-        stages.append( getStage(.connect, metrics.connectStartDate, metrics.connectEndDate))
-        stages.append( getStage(.secureConnection, metrics.secureConnectionStartDate, metrics.secureConnectionEndDate))
-        stages.append( getStage(.request, metrics.requestStartDate, metrics.requestEndDate))
-        stages.append( getStage(.response, metrics.responseStartDate, metrics.responseEndDate))
-        stages.append( getStage(.total, metrics.domainLookupStartDate, metrics.responseEndDate))
+        var stages: [Stage] = [
+            stage(.domainLookup, metrics.domainLookupStartDate, metrics.domainLookupEndDate),
+            stage(.connect, metrics.connectStartDate, metrics.connectEndDate),
+            stage(.secureConnection, metrics.secureConnectionStartDate, metrics.secureConnectionEndDate),
+            stage(.request, metrics.requestStartDate, metrics.requestEndDate),
+            stage(.response, metrics.responseStartDate, metrics.responseEndDate),
+            stage(.total, metrics.domainLookupStartDate, metrics.responseEndDate)
+        ].compactMap { $0 }
 
         // Calculate the total time of the request
         if let request = stages.findStage(.request),
@@ -53,8 +54,7 @@ public struct HTTPMetric {
            let index = stages.firstIndex(of: response),
            request.interval.duration > 0 {
             
-            let interval = DateInterval(start: request.interval.end, end: response.interval.start)
-            let duration = Stage(type: .server, interval: interval)
+            let duration = Stage(.server, startDate: response.interval.start, endDate: request.interval.end)
             stages.insert(duration, at: index)
         }
 
@@ -71,13 +71,26 @@ public extension HTTPMetric {
     struct Stage: Equatable {
         
         /// Type of stage.
-        public let type: Kind
+        public let kind: Kind
         
         /// Duration of the stage
         public let interval: DateInterval
         
-        public static func ==(lhs: HTTPMetric.Stage, rhs: HTTPMetric.Stage) -> Bool {
-            return rhs.type == lhs.type && rhs.interval == rhs.interval
+        /// Start date of the stage.
+        public let startDate: Date
+        
+        /// End date of the stage.
+        public let endDate: Date
+        
+        internal init(_ kind: Kind, startDate: Date, endDate: Date) {
+            self.kind = kind
+            self.startDate = startDate
+            self.endDate = endDate
+            self.interval = DateInterval(start: endDate, end: startDate)
+        }
+        
+        public static func == (lhs: HTTPMetric.Stage, rhs: HTTPMetric.Stage) -> Bool {
+            return rhs.kind == lhs.kind && rhs.interval == rhs.interval
         }
     }
     
@@ -118,7 +131,7 @@ public extension HTTPMetric.Stage {
 private extension Array where Element == HTTPMetric.Stage {
     
     func findStage(_ stage: HTTPMetric.Stage.Kind) -> Element? {
-        return self.filter({ $0.type == stage }).first
+        return self.filter({ $0.kind == stage }).first
     }
     
 }
