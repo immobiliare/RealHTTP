@@ -23,7 +23,7 @@ open class HTTPDefaultValidator: HTTPResponseValidator {
     
     /// If `true` empty responses are tracked as valid responses if status code it's not an error.
     /// In case of empty response validation fails with `emptyResponse` error.
-    public var allowsEmptyResponses: Bool = true
+    public var allowsEmptyResponses = true
     
     // MARK: - Validation
     
@@ -33,7 +33,7 @@ open class HTTPDefaultValidator: HTTPResponseValidator {
     /// - Returns: HTTPResponseValidatorAction
     open func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction {
         if let error = response.error {
-            if allowsRetryForError(error) {
+            if shouldAllowRetryWithError(error) {
                 // Some errors allows retry of the call.
                 // Retry option is managed by the HTTPRequest itself (if we reached the
                 // maximum amount of retries or no retries are allowed by request this
@@ -60,10 +60,7 @@ open class HTTPDefaultValidator: HTTPResponseValidator {
     ///
     /// - Parameter error: error received.
     /// - Returns: Bool
-    open func allowsRetryForError(_ error: Error) -> Bool {
-        if let x = error as? HTTPError {
-            return x.statusCode == .unauthorized
-        }
+    open func shouldAllowRetryWithError(_ error: Error) -> Bool {
         guard let urlError = error as? URLError else {
             return false
         }
