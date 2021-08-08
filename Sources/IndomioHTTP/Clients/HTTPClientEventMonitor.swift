@@ -11,7 +11,7 @@
 
 import Foundation
 
-public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionTaskDelegate, URLSessionDownloadDelegate {
+public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionDownloadDelegate, URLSessionTaskDelegate {
     
     // MARK: - Private Properties
     
@@ -59,33 +59,26 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             return (request, data)
         }
     }
-    
 
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         print("didBecomeInvalidWithError")
     }
     
     
-    public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+   /* public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         print("didReceive")
         
-    }
+    }*/
     
     public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
         print("urlSessionDidFinishEvents")
         
     }
     // MARK: - URLSessionDownloadTask
-
-    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-        if totalBytesExpectedToWrite > 0 {
-            let progress = Float(totalBytesWritten) / Float(totalBytesExpectedToWrite)
-            print("Progress \(downloadTask) \(progress)")
-        }
-    }
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        guard let fileURL = location.copyFileToDefaultLocation(task: downloadTask) else {
+        guard let request = request(forTask: downloadTask).request,
+              let fileURL = location.copyFileToDefaultLocation(task: downloadTask, forRequest: request) else {
             // copy file from a temporary location to a valid location
             return
         }
@@ -97,13 +90,49 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         didCompleteTask(task, didCompleteWithError: error)
     }
     
+    // MARK: - Upload Progress
+    
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+        didProgressTask(task, kind: .upload, expectedLength: totalBytesExpectedToSend, currentLength: totalBytesSent)
+    }
+    
+    // MARK: - Download Progress
+
+    public func urlSession(_ session: Foundation.URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        didProgressTask(downloadTask, kind: .download, expectedLength: totalBytesExpectedToWrite, currentLength: totalBytesWritten)
+    }
+
+    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {
+        didResumeDownloadTask(downloadTask, offset: fileOffset, totalLength: expectedTotalBytes)
+    }
+
+    
     // MARK: - URLSessionDataTask
     
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        queue.sync { dataTable[dataTask] = .data(data) }
+        queue.sync {
+            dataTable[dataTask] = .data(data)
+        }
     }
     
     // MARK: - Private Functions
+    
+    private func didResumeDownloadTask(_ task: URLSessionTask, offset: Int64, totalLength: Int64) {
+        var progress = HTTPProgress(info: task.progress, percentage: 0)
+        progress.kind = .download
+        progress.resumedOffset = offset
+
+        request(forTask: task).request?.receiveHTTPProgress(progress)
+    }
+    
+    private func didProgressTask(_ task: URLSessionTask, kind: HTTPProgress.Kind, expectedLength: Int64, currentLength: Int64) {
+        let slice = Float(1.0)/Float(expectedLength)
+        let percentage = slice*Float(currentLength)
+     
+        var progress = HTTPProgress(info: task.progress, percentage: percentage)
+        progress.kind = kind
+        request(forTask: task).request?.receiveHTTPProgress(progress)
+    }
     
     private func didCompleteTask(_ task: URLSessionTask, didCompleteWithError error: Error?) {
         if let client = self.client as? HTTPClientQueue,

@@ -11,11 +11,11 @@
 
 import Foundation
 import Combine
-
 /// Defines the generic request you can execute in a client.
 open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     public typealias HTTPRequestResult = Result<Object, Error>
     public typealias ResultCallback = ((HTTPRequestResult) -> Void)
+    public typealias ProgressCallback = ((HTTPProgress) -> Void)
 
     // MARK: - Public Properties
     
@@ -57,6 +57,10 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// By default `default` is used.
     open var expectedDataType: HTTPExpectedDataType = .default
     
+    /// If task is monitorable (`expectedDataType` is `large`) and data is available
+    /// here you can found the latest progress stats.
+    public private(set) var progress: HTTPProgress?
+    
     /// The default location of response data when using `large` `expectedDataType` and the engine
     /// is set to `URLDownloadTask`. It can be used to resume initiated downloads or to use the
     /// background session downloads. When `expectedDataType` is set to `default` this value is
@@ -95,10 +99,11 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// Inner storage of the result.
     private var _resultObject: HTTPRequestResult?
     private var _resultRaw: HTTPRawResponse?
-    
+
     /// Registered callbacks
     private var resultCallback: (queue: DispatchQueue?, callback: ResultCallback)?
     private var rawResultCallback: (queue: DispatchQueue?, callback: DataResultCallback)?
+    private var progressCallback: (queue: DispatchQueue?, callback: ProgressCallback)?
 
     /// Sync queue.
     public let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
@@ -216,6 +221,14 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         stateQueue.sync {
             rawResultCallback = (queue, callback)
             dispatchEvents()
+        }
+        return self
+    }
+    
+    @discardableResult
+    public func progress(in queue: DispatchQueue? = .main, _ callback: @escaping ProgressCallback) -> Self {
+        stateQueue.sync {
+            progressCallback = (queue, callback)
         }
         return self
     }
@@ -401,6 +414,18 @@ extension HTTPRequest {
             self._resultRaw = response
             self._resultObject = decodedObj
             dispatchEvents()
+        }
+    }
+    
+    public func receiveHTTPProgress(_ progress: HTTPProgress) {
+        self.progress = progress
+        
+        if let queue = progressCallback?.queue {
+            queue.async { [weak self] in
+                self?.progressCallback?.callback(progress)
+            }
+        } else {
+            progressCallback?.callback(progress)
         }
     }
     

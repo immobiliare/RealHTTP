@@ -32,6 +32,10 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// the `URLSession` subclass to use.
     var expectedDataType: HTTPExpectedDataType { get }
     
+    /// If task is monitorable (`expectedDataType` is `large`) and data is available
+    /// here you can found the latest progress stats.
+    var progress: HTTPProgress? { get }
+    
     /// If you are downloading large amount of data and you need to resume it
     /// you can specify a valid URL where data is saved and resumed.
     /// This location is used when `expectedDataType` is set to `large`.
@@ -113,8 +117,12 @@ public protocol HTTPRequestProtocol: AnyObject {
     ///   - response: response.
     ///   - client: client.
     func receiveHTTPResponse(_ response: HTTPRawResponse, client: HTTPClientProtocol)
-
         
+    /// Called when progress of upload/download is running.
+    ///
+    /// - Parameter progress: state of the operation.
+    func receiveHTTPProgress(_ progress: HTTPProgress)
+
     /// Reset the request by removing any downloaded data or error.
     ///
     /// - Parameter retries: `true` to also reset retries attempts.
