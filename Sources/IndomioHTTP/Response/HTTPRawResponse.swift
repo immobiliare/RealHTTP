@@ -32,6 +32,9 @@ public struct HTTPRawResponse {
     /// Data received.
     public let content: HTTPRawData?
     
+    /// Metrics collected for request.
+    public internal(set) var metrics: URLSessionTaskMetrics?
+
     /// Error parsed.
     public internal(set) var error: HTTPError?
     

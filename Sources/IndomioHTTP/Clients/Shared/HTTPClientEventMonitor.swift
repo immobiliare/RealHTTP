@@ -30,6 +30,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     /// Map of the session/requests.
     private var tasksToRequest = [URLSessionTask: HTTPRequestProtocol]()
     private var dataTable = [URLSessionTask: HTTPRawData]()
+    private var metricsTable = [URLSessionTask: URLSessionTaskMetrics]()
 
     // MARK: - Initialization
     
@@ -49,14 +50,16 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         queue.sync {
             dataTable.removeValue(forKey: task)
             tasksToRequest.removeValue(forKey: task)
+            metricsTable.removeValue(forKey: task)
         }
     }
     
-    internal func request(forTask task: URLSessionTask) -> (request: HTTPRequestProtocol?, dataURL: HTTPRawData?) {
+    internal func request(forTask task: URLSessionTask) -> (request: HTTPRequestProtocol?, dataURL: HTTPRawData?, metrics: URLSessionTaskMetrics?) {
         queue.sync {
             let data = dataTable[task]
             let request = tasksToRequest[task]
-            return (request, data)
+            let metrics = metricsTable[task]
+            return (request, data, metrics)
         }
     }
     
@@ -112,6 +115,12 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         }
     }
     
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+        queue.sync {
+            metricsTable[task] = metrics
+        }
+    }
+    
     // MARK: - Private Functions
     
     private func didReceiveSessionError(_ error: Error?) {
@@ -158,7 +167,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             operation.end() // mark the operation as finished
         }
         
-        let (request, data) = request(forTask: task)
+        let (request, data, metrics) = request(forTask: task)
         guard let request = request else {
             return
         }
@@ -167,6 +176,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         let rawResponse = (task.response, data, error)
         var response = HTTPRawResponse(request: request, response: rawResponse)
         response.attachURLRequests(original: task.originalRequest, current: task.currentRequest)
+        response.metrics = metrics
         
         didComplete(request: request, response: &response)
         

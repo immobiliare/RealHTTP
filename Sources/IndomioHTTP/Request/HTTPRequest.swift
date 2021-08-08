@@ -25,7 +25,10 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// Keep the response received for this request.
     /// It's `nil` until the state of the request is `finished`.
     public private(set) var response: HTTPRawResponse?
-            
+    
+    /// Decoded object if any.
+    public private(set) var responseObject: Object?
+
     /// Route to the endpoint.
     open var route: String
 
@@ -78,13 +81,6 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// Request modifier callback.
     open var urlRequestModifier: HTTPURLRequestModifierCallback?
         
-    /// The current result of the request. If not executed yet it's `nil`.
-    public var result: HTTPRequestResult? {
-        stateQueue.sync {
-            return _resultObject
-        }
-    }
-    
     /// Thread safe property which return if the promise is currently in a `pending` or `executing` state.
     /// A pending promise it's a promise which is not resolved yet.
     public var isPending: Bool {
@@ -94,10 +90,6 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     }
     
     // MARK: - Private Properties
-    
-    /// Inner storage of the result.
-    private var _resultObject: HTTPRequestResult?
-    private var _resultRaw: HTTPRawResponse?
 
     /// Registered callbacks
     internal var resultCallback: (queue: DispatchQueue?, callback: ResultCallback)?
@@ -149,8 +141,8 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
                 currentRetry = 0
             }
             
-            _resultRaw = nil
-            _resultObject = nil
+            response = nil
+            responseObject = nil
         }
     }
     
@@ -176,7 +168,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         }
         
         // Raw Response
-        if let rawResult = _resultRaw, let rawResultCallback = self.rawResultCallback  {
+        if let rawResult = self.response, let rawResultCallback = self.rawResultCallback  {
             if let queue = rawResultCallback.queue {
                 queue.async {
                     rawResultCallback.callback(rawResult)
@@ -187,13 +179,13 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         }
         
         // Decoded Response
-        if let result = _resultObject, let resultCallback = self.resultCallback {
+        if let result = responseObject, let resultCallback = self.resultCallback {
             if let queue = resultCallback.queue {
                 queue.async {
-                    resultCallback.callback(result)
+                    resultCallback.callback(.success(result))
                 }
             } else {
-                resultCallback.callback(result)
+                resultCallback.callback(.success(result))
             }
         }
     }
@@ -385,8 +377,12 @@ extension HTTPRequest {
         stateQueue.sync {
             self.state = .finished
             // Keep in cache our data decoded and raw
-            self._resultRaw = response
-            self._resultObject = decodedObj
+            self.response = response
+            if case .success(let obj) = decodedObj {
+                self.responseObject = obj
+            } else {
+                self.responseObject = nil
+            }
             dispatchEvents()
         }
     }
