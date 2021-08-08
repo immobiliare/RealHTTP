@@ -33,6 +33,10 @@ public protocol HTTPClientProtocol: AnyObject {
     /// Requests may override this behaviour.
     var cachePolicy: URLRequest.CachePolicy { get set }
     
+    /// Allows you to set the proper security authentication methods.
+    /// Requests may override this behaviour.
+    var security: HTTPSecurityProtocol? { get set }
+    
     // MARK: - Public Functions
     
     /// Validate response from a request.

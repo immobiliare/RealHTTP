@@ -12,12 +12,17 @@
 import Foundation
 
 public protocol HTTPSecurityProtocol {
-    
-    /// Validate security trust.
+        
+    /// Receive challange for authentication.
     ///
     /// - Parameters:
-    ///   - trust: trust.
-    ///   - domain: domain to validate.
-    func isValid(trust: SecTrust, forDomain domain: String?) -> Bool
+    ///   - challenge: challange.
+    ///   - request: request.
+    ///   - task: task associated with request.
+    ///   - completionHandler: completion handler.
+    func receiveChallenge(_ challenge: URLAuthenticationChallenge,
+                          forRequest request: HTTPRequestProtocol, task: URLSessionTask,
+                          completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void)
 
+    
 }

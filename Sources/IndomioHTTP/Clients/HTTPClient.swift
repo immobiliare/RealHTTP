@@ -24,6 +24,9 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     /// Headers which are part of each request made using the client.
     public var headers = HTTPHeaders.default
     
+    /// Security settings.
+    public var security: HTTPSecurityProtocol?
+    
     /// Event monitor.
     public var eventMonitor: HTTPClientEventMonitor!
     
@@ -93,59 +96,5 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
         
         return request
     }
-    
-    // MARK: - Private Functions
-    /*
-    /// Called when request did complete.
-    ///
-    /// - Parameters:
-    ///   - request: request.
-    ///   - urlRequest: urlRequest executed.
-    ///   - rawData: raw data.
-    private func didCompleteRequest(_ request: HTTPRequestProtocol, response: inout HTTPRawResponse) {
-        let validationAction = validate(response: response)
-        switch validationAction {
-        case .failWithError(let error):
-            // Response validation failed with error, set the new error and forward it
-            response.error = HTTPError(.invalidResponse, error: error)
-            didCompleteRequest(request, response: response)
-
-        case .retryAfter(let altRequest):
-            request.reset(retries: true)
-            // Response validation failed, you can retry but we need to execute another call first.
-            execute(request: altRequest).rawResponse(in: nil, { [weak self] altResponse in
-                request.reset(retries: true)
-                self?.execute(request: request)
-            })
-            
-        case .retryIfPossible:
-            request.currentRetry += 1
-            
-            guard request.currentRetry < request.maxRetries else {
-                // Maximum number of retry attempts made.
-                response.error = HTTPError(.maxRetryAttemptsReached)
-                didCompleteRequest(request, response: response)
-                return
-            }
-            
-            // Reset the state and make another attempt
-            request.reset(retries: false)
-            execute(request: request)
-
-        case .passed:
-            // Passed, nothing to do
-            didCompleteRequest(request, response: response)
-        }
-    }
-    
-    func didFailBuildingURLRequestFor(_ request: HTTPRequestProtocol, error: Error) {
-        let error = HTTPError(.failedBuildingURLRequest, error: error)
-        let response = HTTPRawResponse(request: request, urlRequest: nil, client: self, error: error)
-        didCompleteRequest(request, response: response)
-    }
-    
-    func didCompleteRequest(_ request: HTTPRequestProtocol, response: HTTPRawResponse) {
-        request.receiveResponse(response, client: self)
-    }*/
     
 }

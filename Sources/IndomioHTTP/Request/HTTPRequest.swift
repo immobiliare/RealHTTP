@@ -50,6 +50,9 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// Headers to send along the request.
     open var headers = HTTPHeaders()
     
+    /// Security settings.
+    open var security: HTTPSecurityProtocol?
+    
     /// What kind of data we should expect.
     /// If you are creating a request for a small amount of data (ie RESTful calls) you can use
     /// `default`. Large data as binary downloads may be handled using `large` options which support
@@ -255,6 +258,15 @@ extension HTTPRequest {
     /// - Returns: Self
     public func maxRetries(_ maxRetries: Int) -> Self {
         self.maxRetries = maxRetries
+        return self
+    }
+    
+    /// Setup the security for this request.
+    ///
+    /// - Parameter security: security.
+    /// - Returns: Self
+    public func security(_ security: HTTPSecurityProtocol) -> Self {
+        self.security = security
         return self
     }
     

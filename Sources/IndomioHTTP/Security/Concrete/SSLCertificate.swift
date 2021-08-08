@@ -12,7 +12,7 @@
 import Foundation
 
 /// Represent a single certificate.
-open class SSLCert {
+open class SSLCertificate {
 
     // MARK: - Public Properties
     
@@ -53,7 +53,7 @@ open class SSLCert {
     ///
     /// - Parameter URLs: URLs list.
     /// - Returns: [SSLCert]
-    public static func fromFileURLs(_ URLs: [URL]) -> [SSLCert] {
+    public static func fromFileURLs(_ URLs: [URL]) -> [SSLCertificate] {
         URLs.compactMap( { .init(fileURL: $0 )})
     }
     

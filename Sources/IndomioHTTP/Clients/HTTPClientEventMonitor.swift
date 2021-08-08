@@ -59,21 +59,19 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             return (request, data)
         }
     }
+    
+    // MARK: - URLSession Delegate
 
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
-        print("didBecomeInvalidWithError")
+        didReceiveSessionError(error)
     }
     
+    // MARK: - Security Support
     
-   /* public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        print("didReceive")
-        
-    }*/
-    
-    public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-        print("urlSessionDidFinishEvents")
-        
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        didChallangeAuthTask(task, challenge: challenge, completionHandler: completionHandler)
     }
+    
     // MARK: - URLSessionDownloadTask
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
@@ -106,8 +104,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         didResumeDownloadTask(downloadTask, offset: fileOffset, totalLength: expectedTotalBytes)
     }
 
-    
-    // MARK: - URLSessionDataTask
+    // MARK: - URLSessionDataTask (Memory)
     
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         queue.sync {
@@ -116,6 +113,27 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     }
     
     // MARK: - Private Functions
+    
+    private func didReceiveSessionError(_ error: Error?) {
+        for request in Array(tasksToRequest.values) { // invalidate all requests
+            var response = HTTPRawResponse(error: .sessionError, error: error, forRequest: request)
+            didComplete(request: request, response: &response)
+        }
+    }
+    
+    private func didChallangeAuthTask(_ task: URLSessionTask, challenge: URLAuthenticationChallenge,
+                                      completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        
+        guard let request = request(forTask: task).request,
+              let security = request.security ?? client?.security else { // use request's security or client security
+            // if not security is settings for both client and request we can use the default handling
+            completionHandler(.performDefaultHandling, nil)
+            return
+        }
+        
+
+        security.receiveChallenge(challenge, forRequest: request, task: task, completionHandler: completionHandler)
+    }
     
     private func didResumeDownloadTask(_ task: URLSessionTask, offset: Int64, totalLength: Int64) {
         var progress = HTTPProgress(info: task.progress, percentage: 0)

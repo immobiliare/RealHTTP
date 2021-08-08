@@ -76,6 +76,10 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// Current retry attempt. 0 is the first attempt.
     var currentRetry: Int { get set }
     
+    /// Allows you to set the proper security authentication methods.
+    /// If not set the parent's client is used instead.
+    var security: HTTPSecurityProtocol? { get set }
+    
     /// This method is called right after the `URLRequest`associated with the object is created
     /// and before it's executed by the client. You can use it in order to modify some settings.
     var urlRequestModifier: HTTPURLRequestModifierCallback? { get set }

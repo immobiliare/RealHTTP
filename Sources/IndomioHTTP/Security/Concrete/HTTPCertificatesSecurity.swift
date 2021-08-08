@@ -12,7 +12,7 @@
 import Foundation
 
 /// HTTPSecurity is used to make SSL pinning.
-open class HTTPSecurity: HTTPSecurityProtocol {
+open class HTTPCertificatesSecurity: HTTPSecurityProtocol {
     
     // MARK: - Public Properties
 
@@ -20,10 +20,10 @@ open class HTTPSecurity: HTTPSecurityProtocol {
     open var validatedDomainName = true
     
     /// The certificates.
-    var certificates: [Data]? //the certificates
+    var certificates: [Data]?
     
     /// The public keys
-    var pubKeys: [SecKey]? //the public keys
+    var pubKeys: [SecKey]?
     
     /// Use public keys or certificate validation?
     var usePublicKeys = false
@@ -35,7 +35,7 @@ open class HTTPSecurity: HTTPSecurityProtocol {
     /// - Parameters:
     ///   - certs: SSL Certificates to use.
     ///   - usePublicKeys: true to use public keys.
-    public init(certs: [SSLCert], usePublicKeys: Bool) {
+    public init(certs: [SSLCertificate], usePublicKeys: Bool) {
         self.usePublicKeys = usePublicKeys
         
         if self.usePublicKeys {
@@ -63,13 +63,28 @@ open class HTTPSecurity: HTTPSecurityProtocol {
             URL(fileURLWithPath: $0 as String)
         })
         
-        let certificates = SSLCert.fromFileURLs(fileURLs)
+        let certificates = SSLCertificate.fromFileURLs(fileURLs)
         self.init(certs: certificates, usePublicKeys: usePublicKeys)
     }
     
     // MARK: - Conformance
     
-    public func isValid(trust: SecTrust, forDomain domain: String?) -> Bool {
+    open func receiveChallenge(_ challenge: URLAuthenticationChallenge, forRequest request: HTTPRequestProtocol, task: URLSessionTask,
+                                 completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        
+        guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+              let trust = challenge.protectionSpace.serverTrust,
+              isValid(trust: trust, forDomain: challenge.protectionSpace.host) else {
+            completionHandler(.cancelAuthenticationChallenge, nil)
+            return
+        }
+        
+        completionHandler(.useCredential, URLCredential(trust: trust))
+    }
+    
+    // MARK: - Public Functions
+
+    open func isValid(trust: SecTrust, forDomain domain: String?) -> Bool {
         SecTrustSetPolicies(trust, trustPolicyForDomain(domain))
 
         if usePublicKeys {
@@ -80,9 +95,9 @@ open class HTTPSecurity: HTTPSecurityProtocol {
             return false
         }
     }
-    
+        
     // MARK: - Private Functions
-    
+
     /// Creste SecPolicy for given domain.
     ///
     /// - Parameter domain: domain.

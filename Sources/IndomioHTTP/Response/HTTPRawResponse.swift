@@ -54,9 +54,9 @@ public struct HTTPRawResponse {
         self.error = HTTPError.fromURLResponse(response)
     }
     
-    internal init(error type: HTTPError.ErrorType, forRequest request: HTTPRequestProtocol) {
+    internal init(error type: HTTPError.ErrorType, error: Error? = nil, forRequest request: HTTPRequestProtocol) {
         self.request = request
-        self.error = HTTPError(type)
+        self.error = HTTPError(type, error: error)
         self.urlResponse = nil
         self.content = nil
     }

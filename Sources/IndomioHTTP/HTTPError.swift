@@ -79,6 +79,7 @@ public extension HTTPError {
     /// - `objectDecodeFailed`: object decoding failed
     /// - `emptyResponse`: empty response received from server
     /// - `maxRetryAttemptsReached`: the maximum number of retries for request has been reached
+    /// - `sessionError`: error related to the used session instances (may be a systemic error or it was invalidated)
     enum ErrorType {
         case invalidURL(URLConvertible)
         case multipartInvalidFile(URL)
@@ -93,6 +94,7 @@ public extension HTTPError {
         case objectDecodeFailed
         case emptyResponse
         case maxRetryAttemptsReached
+        case sessionError
     }
     
 }
