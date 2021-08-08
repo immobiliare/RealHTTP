@@ -23,7 +23,7 @@ open class HTTPCertificatesSecurity: HTTPSecurityProtocol {
     var certificates: [Data]?
     
     /// The public keys
-    var pubKeys: [SecKey]?
+    var publicKeys: [SecKey]?
     
     /// Use public keys or certificate validation?
     var usePublicKeys = false
@@ -33,13 +33,13 @@ open class HTTPCertificatesSecurity: HTTPSecurityProtocol {
     /// Initialize a new HTTPSecurity instance with given certificates.
     ///
     /// - Parameters:
-    ///   - certs: SSL Certificates to use.
-    ///   - usePublicKeys: true to use public keys.
-    public init(certs: [SSLCertificate], usePublicKeys: Bool) {
+    ///   - certificates: SSL Certificates to use.
+    ///   - usePublicKeys: true to use public keys, `false` is the default option.
+    public init(certificates: [SSLCertificate], usePublicKeys: Bool = false) {
         self.usePublicKeys = usePublicKeys
         
         if self.usePublicKeys {
-            self.pubKeys = certs.compactMap { cert in
+            self.publicKeys = certificates.compactMap { cert in
                 if let data = cert.certData , cert.publicKey == nil  {
                     cert.publicKey = data.extractPublicKey()
                 }
@@ -49,7 +49,7 @@ open class HTTPCertificatesSecurity: HTTPSecurityProtocol {
                 return publicKey
             }
         } else {
-            self.certificates = certs.compactMap {
+            self.certificates = certificates.compactMap {
                 $0.certData
             }
         }
@@ -64,7 +64,7 @@ open class HTTPCertificatesSecurity: HTTPSecurityProtocol {
         })
         
         let certificates = SSLCertificate.fromFileURLs(fileURLs)
-        self.init(certs: certificates, usePublicKeys: usePublicKeys)
+        self.init(certificates: certificates, usePublicKeys: usePublicKeys)
     }
     
     // MARK: - Conformance
@@ -141,7 +141,7 @@ open class HTTPCertificatesSecurity: HTTPSecurityProtocol {
     }
     
     private func isValidPublicKeys(trust: SecTrust, domain: String?) -> Bool {
-        guard let keys = pubKeys else {
+        guard let keys = publicKeys else {
             return false
         }
         

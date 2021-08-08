@@ -102,6 +102,10 @@ public class HTTPClientQueue: HTTPClient {
         }
     }
     
+    /// Return the operation associated with a given task.
+    ///
+    /// - Parameter task: task.
+    /// - Returns: HTTPRequestOperation?
     internal func operationForTask(_ task: URLSessionTask) -> HTTPRequestOperation? {
         operationQueue.operations.first {
             ($0 as? HTTPRequestOperation)?.task == task

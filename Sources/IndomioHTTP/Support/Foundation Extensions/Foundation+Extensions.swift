@@ -182,7 +182,7 @@ extension String {
             return contentType as String
         }
 
-        return "application/octet-stream"
+        return HTTPContentType.octetStream.rawValue
     }
     
 }

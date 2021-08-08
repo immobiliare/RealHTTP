@@ -19,10 +19,6 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
 
     // MARK: - Public Properties
     
-    public var request: HTTPRequestProtocol {
-        self
-    }
-    
     /// Current state of the request.
     public private(set) var state: HTTPRequestState = .pending
 
@@ -104,9 +100,9 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     private var _resultRaw: HTTPRawResponse?
 
     /// Registered callbacks
-    private var resultCallback: (queue: DispatchQueue?, callback: ResultCallback)?
-    private var rawResultCallback: (queue: DispatchQueue?, callback: DataResultCallback)?
-    private var progressCallback: (queue: DispatchQueue?, callback: ProgressCallback)?
+    internal var resultCallback: (queue: DispatchQueue?, callback: ResultCallback)?
+    internal var rawResultCallback: (queue: DispatchQueue?, callback: DataResultCallback)?
+    internal var progressCallback: (queue: DispatchQueue?, callback: ProgressCallback)?
 
     /// Sync queue.
     public let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
@@ -174,7 +170,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     }
     
     /// Dispatch events call registered events.
-    private func dispatchEvents() {
+    internal func dispatchEvents() {
         guard state == .finished else {
             return
         }
@@ -200,40 +196,6 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
                 resultCallback.callback(result)
             }
         }
-    }
-    
-    /// link with the raw response.
-    ///
-    /// - Parameter callback: callback.
-    /// - Returns: Self
-    @discardableResult
-    public func response(in queue: DispatchQueue? = .main, _ callback: @escaping ResultCallback) -> Self {
-        stateQueue.sync {
-            resultCallback = (queue, callback)
-            dispatchEvents()
-        }
-        return self
-    }
-    
-    /// Attempt to execute the request to get raw response data.
-    ///
-    /// - Parameter callback: callback.
-    /// - Returns: Self
-    @discardableResult
-    public func rawResponse(in queue: DispatchQueue? = .main, _ callback: @escaping DataResultCallback) -> Self {
-        stateQueue.sync {
-            rawResultCallback = (queue, callback)
-            dispatchEvents()
-        }
-        return self
-    }
-    
-    @discardableResult
-    public func progress(in queue: DispatchQueue? = .main, _ callback: @escaping ProgressCallback) -> Self {
-        stateQueue.sync {
-            progressCallback = (queue, callback)
-        }
-        return self
     }
     
 }

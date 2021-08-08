@@ -37,7 +37,7 @@ open class JSONData: HTTPRequestEncodableData {
     
     public func encodeParametersIn(request: inout URLRequest) throws {
         if request.headers[.contentType] == nil {
-            request.headers[.contentType] = "application/json"
+            request.headers[.contentType] = HTTPContentType.json.rawValue
         }
         
         do {
@@ -87,7 +87,7 @@ open class EncodableJSON<Object: Encodable>: HTTPRequestEncodableData {
     
     public func encodeParametersIn(request: inout URLRequest) throws {
         if request.headers[.contentType] == nil {
-            request.headers[.contentType] = "application/json"
+            request.headers[.contentType] = HTTPContentType.json.rawValue
         }
         
         request.httpBody = try encoder.encode(object)

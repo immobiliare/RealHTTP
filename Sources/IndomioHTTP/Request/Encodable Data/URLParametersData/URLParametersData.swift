@@ -61,7 +61,7 @@ public class URLParametersData: HTTPRequestEncodableData {
         switch destination {
         case .httpBody:
             if request.headers[.contentType] == nil {
-                request.headers[.contentType] = "application/x-www-form-urlencoded; charset=utf-8"
+                request.headers[.contentType] = "\(HTTPContentType.formUrlEncoded.rawValue); charset=utf-8"
             }
             
             request.httpBody = encodeParameters(parameters).data(using: .utf8)

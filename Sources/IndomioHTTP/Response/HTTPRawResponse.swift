@@ -70,6 +70,8 @@ public struct HTTPRawResponse {
 // MARK: - HTTPRawData
 
 /// Define what kind of data you have received.
+/// - `data`: data available in memory (used when `expectedDataType` is set to `default`.
+/// - `file`: used when data is written on disk (used when `expectedDataType` is set to `large`).
 public enum HTTPRawData {
     case data(Data?)
     case file(URL)
