@@ -15,7 +15,6 @@ import Foundation
 import Combine
 #endif
 
-
 /// Defines the generic request you can execute in a client.
 open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     public typealias HTTPRequestResult = Result<Object, Error>
@@ -23,10 +22,6 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     public typealias ProgressCallback = ((HTTPProgress) -> Void)
     
     // MARK: - Public Properties
-    
-    public var request: HTTPRequestProtocol {
-        self
-    }
     
     /// Current state of the request.
     public private(set) var state: HTTPRequestState = .pending
@@ -36,9 +31,10 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     public private(set) var response: HTTPRawResponse?
     
     /// Decoded object if any.
+    /// It's thread safe.
     public var object: Object? {
         stateQueue.sync {
-            switch responseObject {
+            switch responseResult {
             case .success(let obj): return obj
             default: return nil
             }
@@ -115,15 +111,21 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         }
     }
     
+    // MARK: - Observers
+    
+    /// Registered callbacks for decoded object events.
+    public private(set) var objectObservers = EventObserver<HTTPRequestResult>()
+    
+    /// Registered callbacks for raw data events.
+    public private(set) var rawDataObservers = EventObserver<HTTPRawResponse>()
+    
+    /// Registered callbacks for download/upload progress events.
+    public private(set) var progressObservers = EventObserver<HTTPProgress>()
+
     // MARK: - Private Properties
-
-    /// Registered callbacks
-    internal var resultCallback: (queue: DispatchQueue, callback: ResultCallback)?
-    internal var rawResultCallback: (queue: DispatchQueue, callback: DataResultCallback)?
-    internal var progressCallback: (queue: DispatchQueue, callback: ProgressCallback)?
-
+    
     /// Decoded object if any.
-    private var responseObject: HTTPRequestResult?
+    private var responseResult: HTTPRequestResult?
     
     /// Sync queue.
     internal let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
@@ -175,7 +177,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
             }
             
             response = nil
-            responseObject = nil
+            responseResult = nil
         }
     }
     
@@ -187,7 +189,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     private func changeState(_ newState: HTTPRequestState) {
         stateQueue.sync {
             state = newState
-            
+        
             if newState == .finished {
                 dispatchEvents()
             }
@@ -201,18 +203,15 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         }
         
         // Raw Response
-        if let rawResponse = self.response, let callback = self.rawResultCallback  {
-            callback.queue.async {
-                callback.callback(rawResponse)
-            }
+        if let rawResponse = self.response {
+            rawDataObservers.callWithValue(rawResponse)
         }
         
         // Decoded Response
-        if let result = responseObject, let callback = self.resultCallback {
-            callback.queue.async {
-                callback.callback(result)
-            }
+        if let result = responseResult {
+            objectObservers.callWithValue(result)
         }
+        
     }
     
 }
@@ -403,7 +402,7 @@ extension HTTPRequest {
             self.state = .finished
             // Keep in cache our data decoded and raw
             self.response = response
-            self.responseObject = decodedObj
+            self.responseResult = decodedObj
 
             if case .failure(let decodeError) = decodedObj {
                 self.response?.error = HTTPError(.objectDecodeFailed, error: decodeError)
@@ -411,17 +410,76 @@ extension HTTPRequest {
 
             dispatchEvents()
         }
+        
     }
     
     public func receiveHTTPProgress(_ progress: HTTPProgress) {
         self.progress = progress
         
-        if let queue = progressCallback?.queue {
-            queue.async { [weak self] in
-                self?.progressCallback?.callback(progress)
+        progressObservers.callWithValue(progress)
+    }
+    
+}
+
+// MARK: - EventObserver
+
+/// Keep a list of all observers registered for a particular callback.
+public class EventObserver<Object> {
+    public typealias Observer = (queue: DispatchQueue, callback: ((Object) -> Void))
+    
+    // MARK: - Private Properties
+    
+    private var nextToken: UInt64 = 0
+    private var observersMap = [UInt64: Observer]()
+    private var stateQueue = DispatchQueue(label: "com.eventobserver.\(UUID().uuidString)")
+    
+    // MARK: - Public Properties
+    
+    /// List of active observers.
+    public var observers: [Observer] {
+        stateQueue.sync {
+            Array(observersMap.values)
+        }
+    }
+    
+    /// Add a new observer and return the associated token identifier.
+    ///
+    /// - Parameter observer: observer to add.
+    /// - Returns: UInt64
+    public func add(_ observer: Observer) -> UInt64 {
+        stateQueue.sync {
+            nextToken = nextToken.addingReportingOverflow(1).partialValue
+            observersMap[nextToken] = observer
+            return nextToken
+        }
+    }
+    
+    /// Remove observer with given token.
+    ///
+    /// - Parameter token: token.
+    public func remove(_ token: UInt64) {
+        stateQueue.sync {
+            _ = observersMap.removeValue(forKey: token)
+        }
+    }
+    
+    /// Remove all observers.
+    public func removeAll() {
+        stateQueue.sync {
+            observersMap.removeAll()
+        }
+    }
+    
+    // MARK: - Private Functions
+    
+    /// Call all observers with given value.
+    ///
+    /// - Parameter object: value to dispatch.
+    internal func callWithValue(_ object: Object) {
+        for observer in observers {
+            observer.queue.async {
+                observer.callback(object)
             }
-        } else {
-            progressCallback?.callback(progress)
         }
     }
     

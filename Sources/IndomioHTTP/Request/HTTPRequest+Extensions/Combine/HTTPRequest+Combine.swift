@@ -34,8 +34,8 @@ public extension HTTPRequest {
     ///   - client: client in which the request will be executed.
     ///   - queue: queue where the result is called, by default is `main`.
     /// - Returns: HTTPObjectPublisher
-    func objectPublisher(client: HTTPClientProtocol, queue: DispatchQueue = .main) -> Combine.Publishers.HTTPObjectPublisher<Object> {
-        Combine.Publishers.HTTPObjectPublisher(self, client: client, queue: queue)
+    func resultPublisher(client: HTTPClientProtocol, queue: DispatchQueue = .main) -> Combine.Publishers.HTTPResultPublisher<Object> {
+        Combine.Publishers.HTTPResultPublisher(self, client: client, queue: queue)
     }
     
     /// Create a new publisher which execute and return the raw response of the call.

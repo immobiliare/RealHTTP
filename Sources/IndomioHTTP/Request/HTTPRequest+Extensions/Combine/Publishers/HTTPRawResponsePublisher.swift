@@ -58,6 +58,7 @@ private final class HTTPRawResponseSubscription<S: Subscriber>: Subscription whe
     var client: HTTPClientProtocol
     var httpRequest: HTTPRequestProtocol
     var queue: DispatchQueue
+    var observerToken: UInt64?
     
     // MARK: - Initialization
     
@@ -71,13 +72,18 @@ private final class HTTPRawResponseSubscription<S: Subscriber>: Subscription whe
     // MARK: - Conformance to Subscription
     
     func request(_ demand: Subscribers.Demand) {
-        client.execute(request: httpRequest).rawResponse(in: queue) { [weak self] result in
-            _ = self?.subscriber?.receive(result)
+        observerToken = httpRequest.rawDataObservers.add((queue, { [weak self] rawResponse in
+            _ = self?.subscriber?.receive(rawResponse)
             self?.subscriber?.receive(completion: .finished)
-        }
+        }))
+        
+        client.execute(request: httpRequest)
     }
     
     func cancel() {
+        if let token = observerToken {
+            httpRequest.rawDataObservers.remove(token)
+        }
         subscriber = nil
     }
     

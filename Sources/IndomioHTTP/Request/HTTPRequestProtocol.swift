@@ -84,6 +84,9 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// and before it's executed by the client. You can use it in order to modify some settings.
     var urlRequestModifier: HTTPURLRequestModifierCallback? { get set }
     
+    /// Observers registered for raw data responses.
+    var rawDataObservers: EventObserver<HTTPRawResponse> { get }
+    
     // MARK: - Initialization
     
     /// Initialize a new request with given parameters.
@@ -132,6 +135,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// - Parameter retries: `true` to also reset retries attempts.
     func reset(retries: Bool)
     
+
 }
 
 // MARK: - HTTPRequestState

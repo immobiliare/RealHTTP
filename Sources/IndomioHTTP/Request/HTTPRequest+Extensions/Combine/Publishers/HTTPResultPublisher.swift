@@ -13,11 +13,11 @@ import Foundation
 #if canImport(Combine)
 import Combine
 
-// MARK: - HTTPObjectPublisher
+// MARK: - HTTPResultPublisher
 
 extension Combine.Publishers {
     
-    public struct HTTPObjectPublisher<Object: HTTPDecodableResponse>: Publisher {
+    public struct HTTPResultPublisher<Object: HTTPDecodableResponse>: Publisher {
         public typealias Output = Result<Object, Error>
         public typealias Failure = Never
         
@@ -38,7 +38,7 @@ extension Combine.Publishers {
         // MARK: - Conformance to Publisher
         
         public func receive<S>(subscriber: S) where S : Subscriber, Never == S.Failure, Result<Object, Error> == S.Input {
-            let subscription = HTTPObjectSubscription(subscriber: subscriber,
+            let subscription = HTTPResultSubscription(subscriber: subscriber,
                                                           client: client,
                                                           httpRequest: request,
                                                           queue: queue)
@@ -49,9 +49,9 @@ extension Combine.Publishers {
     
 }
 
-// MARK: - HTTPObjectPublisher
+// MARK: - HTTPResultSubscription
 
-private final class HTTPObjectSubscription<S: Subscriber, Object: HTTPDecodableResponse>: Subscription where S.Input == Result<Object, Error>, S.Failure == Never {
+private final class HTTPResultSubscription<S: Subscriber, Object: HTTPDecodableResponse>: Subscription where S.Input == Result<Object, Error>, S.Failure == Never {
     
     // MARK: - Private Properties
 
@@ -72,7 +72,7 @@ private final class HTTPObjectSubscription<S: Subscriber, Object: HTTPDecodableR
     // MARK: - Conformance to Subscription
     
     func request(_ demand: Subscribers.Demand) {
-        httpRequest.run(in: client).response(in: queue) { [weak self] result in
+        httpRequest.run(in: client).result(in: queue) { [weak self] result in
             _ = self?.subscriber?.receive(result)
             self?.subscriber?.receive(completion: .finished)
         }

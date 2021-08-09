@@ -16,34 +16,37 @@ public extension HTTPRequest {
     /// link with the raw response.
     ///
     /// - Parameter callback: callback.
+    /// - Parameter queue: queue in which the event should be dispatched.
     /// - Returns: Self
     @discardableResult
-    func response(in queue: DispatchQueue = .main, _ callback: @escaping ResultCallback) -> Self {
-        stateQueue.sync {
-            resultCallback = (queue, callback)
-            dispatchEvents()
-        }
+    
+    func result(in queue: DispatchQueue = .main, _ callback: @escaping ResultCallback) -> Self {
+        _ = objectObservers.add((queue, callback))
+        dispatchEvents()
         return self
     }
     
     /// Attempt to execute the request to get raw response data.
     ///
     /// - Parameter callback: callback.
+    ///   - queue: queue in which the event should be dispatched.
     /// - Returns: Self
     @discardableResult
     func rawResponse(in queue: DispatchQueue = .main, _ callback: @escaping DataResultCallback) -> Self {
-        stateQueue.sync {
-            rawResultCallback = (queue, callback)
-            dispatchEvents()
-        }
+        _ = rawDataObservers.add((queue, callback))
+        dispatchEvents()
         return self
     }
     
+    /// Add a new observer to omonitor the request's progression.
+    ///
+    /// - Parameters:
+    ///   - queue: queue in which the event should be dispatched.
+    ///   - callback: callback to call.
+    /// - Returns: Self
     @discardableResult
     func progress(in queue: DispatchQueue = .main, _ callback: @escaping ProgressCallback) -> Self {
-        stateQueue.sync {
-            progressCallback = (queue, callback)
-        }
+        _ = progressObservers.add((queue, callback))
         return self
     }
     

@@ -65,7 +65,6 @@ public extension HTTPClientProtocol {
     /// - Returns: (URLRequest, URLSessionTask)
     func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask {
         let urlRequest = try request.urlRequest(in: self)
-        print(urlRequest)
         switch request.expectedDataType {
         case .default:
             return session.dataTask(with: urlRequest)
