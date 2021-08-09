@@ -117,7 +117,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     public private(set) var objectObservers = EventObserver<HTTPRequestResult>()
     
     /// Registered callbacks for raw data events.
-    public private(set) var rawDataObservers = EventObserver<HTTPRawResponse>()
+    public private(set) var responseObservers = EventObserver<HTTPRawResponse>()
     
     /// Registered callbacks for download/upload progress events.
     public private(set) var progressObservers = EventObserver<HTTPProgress>()
@@ -204,7 +204,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         
         // Raw Response
         if let rawResponse = self.response {
-            rawDataObservers.callWithValue(rawResponse)
+            responseObservers.callWithValue(rawResponse)
         }
         
         // Decoded Response

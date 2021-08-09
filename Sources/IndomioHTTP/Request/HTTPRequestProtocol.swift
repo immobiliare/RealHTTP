@@ -85,7 +85,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     var urlRequestModifier: HTTPURLRequestModifierCallback? { get set }
     
     /// Observers registered for raw data responses.
-    var rawDataObservers: EventObserver<HTTPRawResponse> { get }
+    var responseObservers: EventObserver<HTTPRawResponse> { get }
     
     // MARK: - Initialization
     
@@ -113,7 +113,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     ///   - queue: queue in which the call is executed, `nil` to use the same queue of the caller.
     ///   - callback: callback.
     @discardableResult
-    func rawResponse(in queue: DispatchQueue, _ callback: @escaping DataResultCallback) -> Self
+    func setResponse(_ queue: DispatchQueue, _ callback: @escaping DataResultCallback) -> Self
     
     // MARK: - Private
     
@@ -135,7 +135,6 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// - Parameter retries: `true` to also reset retries attempts.
     func reset(retries: Bool)
     
-
 }
 
 // MARK: - HTTPRequestState

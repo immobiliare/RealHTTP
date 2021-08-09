@@ -13,27 +13,26 @@ import Foundation
 
 public extension HTTPRequest {
     
-    /// link with the raw response.
+    /// Add a new observer to get info about the raw response.
     ///
     /// - Parameter callback: callback.
     /// - Parameter queue: queue in which the event should be dispatched.
     /// - Returns: Self
     @discardableResult
-    
-    func result(in queue: DispatchQueue = .main, _ callback: @escaping ResultCallback) -> Self {
+    func setResult(_ queue: DispatchQueue = .main, _ callback: @escaping ResultCallback) -> Self {
         _ = objectObservers.add((queue, callback))
         dispatchEvents()
         return self
     }
     
-    /// Attempt to execute the request to get raw response data.
+    /// Add a new observer to get info about the result response.
     ///
     /// - Parameter callback: callback.
     ///   - queue: queue in which the event should be dispatched.
     /// - Returns: Self
     @discardableResult
-    func rawResponse(in queue: DispatchQueue = .main, _ callback: @escaping DataResultCallback) -> Self {
-        _ = rawDataObservers.add((queue, callback))
+    func setResponse(_ queue: DispatchQueue = .main, _ callback: @escaping DataResultCallback) -> Self {
+        _ = responseObservers.add((queue, callback))
         dispatchEvents()
         return self
     }
@@ -45,7 +44,7 @@ public extension HTTPRequest {
     ///   - callback: callback to call.
     /// - Returns: Self
     @discardableResult
-    func progress(in queue: DispatchQueue = .main, _ callback: @escaping ProgressCallback) -> Self {
+    func setProgress(_ queue: DispatchQueue = .main, _ callback: @escaping ProgressCallback) -> Self {
         _ = progressObservers.add((queue, callback))
         return self
     }

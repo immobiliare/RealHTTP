@@ -72,7 +72,7 @@ private final class HTTPRawResponseSubscription<S: Subscriber>: Subscription whe
     // MARK: - Conformance to Subscription
     
     func request(_ demand: Subscribers.Demand) {
-        observerToken = httpRequest.rawDataObservers.add((queue, { [weak self] rawResponse in
+        observerToken = httpRequest.responseObservers.add((queue, { [weak self] rawResponse in
             _ = self?.subscriber?.receive(rawResponse)
             self?.subscriber?.receive(completion: .finished)
         }))
@@ -82,7 +82,7 @@ private final class HTTPRawResponseSubscription<S: Subscriber>: Subscription whe
     
     func cancel() {
         if let token = observerToken {
-            httpRequest.rawDataObservers.remove(token)
+            httpRequest.responseObservers.remove(token)
         }
         subscriber = nil
     }
