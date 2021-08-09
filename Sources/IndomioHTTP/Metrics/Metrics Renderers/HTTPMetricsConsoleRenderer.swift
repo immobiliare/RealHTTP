@@ -174,11 +174,12 @@ private extension String {
     
     func leftPadding(toLength: Int, withPad character: Character) -> String {
         let newLength = self.count
-        if newLength < toLength {
-            return String(repeatElement(character, count: toLength - newLength)) + self
-        } else {
-            return self.substring(from: index(self.startIndex, offsetBy: newLength - toLength))
+        guard newLength < toLength else {
+            let i = index(startIndex, offsetBy: newLength - toLength)
+            return String(self[i..<endIndex])
         }
+
+        return String(repeatElement(character, count: toLength - newLength)) + self
     }
     
 }

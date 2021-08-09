@@ -62,6 +62,13 @@ public struct HTTPMetric {
         self.stages = stages
     }
     
+    /// Get specific stage from metrics.
+    public subscript(stage: Stage.Kind) -> Stage? {
+        stages.first(where: {
+            $0.kind == stage
+        })
+    }
+    
 }
 
 // MARK: - HTTPMetric.Stage

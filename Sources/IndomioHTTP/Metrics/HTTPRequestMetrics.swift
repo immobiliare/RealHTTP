@@ -42,9 +42,11 @@ public struct HTTPRequestMetrics {
         }
     }
     
+    // MARK: - Public Functions
+    
     /// Render with custom renderer.
     ///
-    /// - Parameter renderer: renderer, if not set the default console renderer is used.
+    /// - Parameter renderer: renderer, if not set the default HTTPMetricsConsoleRenderer is used.
     public func render(with renderer: HTTPMetricsRenderer = HTTPMetricsConsoleRenderer()) {
         renderer.render(with: self)
     }
