@@ -10,23 +10,24 @@
 //
 
 import Foundation
-
 #if canImport(Combine)
 import Combine
 
 public extension HTTPRequest {
     
-    /*
-     // NOTE: Evaluating alternative with Future for single results.
-     
-     func run(in client: HTTPClient) -> AnyPublisher<Object, Error> {
+    /// Return a `Future` instance to catch the result of the operation.
+    ///
+    /// - Parameters:
+    ///   - client: client in which the request will be executed.
+    ///   - queue: queue where the result is called, by default is `main`.
+    /// - Returns: AnyPublisher<Object, Error>
+     func future(in client: HTTPClient, queue: DispatchQueue = .main) -> AnyPublisher<Object, Error> {
         return Future { [weak self] fulfill in
-            self?.run(in: client).response({ result in
+            self?.run(in: client).setResult(queue, { result in
                 fulfill(result)
             })
         }.eraseToAnyPublisher()
     }
-     */
     
     /// Create a new publisher which execute and return the result of the call.
     ///
