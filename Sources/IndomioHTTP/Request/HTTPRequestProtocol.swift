@@ -110,7 +110,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     ///   - queue: queue in which the call is executed, `nil` to use the same queue of the caller.
     ///   - callback: callback.
     @discardableResult
-    func rawResponse(in queue: DispatchQueue?, _ callback: @escaping DataResultCallback) -> Self
+    func rawResponse(in queue: DispatchQueue, _ callback: @escaping DataResultCallback) -> Self
     
     // MARK: - Private
     

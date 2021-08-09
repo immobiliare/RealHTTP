@@ -36,8 +36,15 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     public private(set) var response: HTTPRawResponse?
     
     /// Decoded object if any.
-    public private(set) var responseObject: Object?
-
+    public var object: Object? {
+        stateQueue.sync {
+            switch responseObject {
+            case .success(let obj): return obj
+            default: return nil
+            }
+        }
+    }
+    
     /// Route to the endpoint.
     open var route: String
 
@@ -80,7 +87,11 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// is set to `URLDownloadTask`. It can be used to resume initiated downloads or to use the
     /// background session downloads. When `expectedDataType` is set to `default` this value is
     /// ignored (the response itself is kept in memory).
-    open var resumeDataURL: URL?
+    open var resumeDataURL: URL? {
+        didSet {
+            expectedDataType = (resumeDataURL == nil ? .default : .large)
+        }
+    }
     
     /// Query string parameters which are set with the full url of the request.
     open var queryParameters: URLParametersData?
@@ -107,12 +118,15 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     // MARK: - Private Properties
 
     /// Registered callbacks
-    internal var resultCallback: (queue: DispatchQueue?, callback: ResultCallback)?
-    internal var rawResultCallback: (queue: DispatchQueue?, callback: DataResultCallback)?
-    internal var progressCallback: (queue: DispatchQueue?, callback: ProgressCallback)?
+    internal var resultCallback: (queue: DispatchQueue, callback: ResultCallback)?
+    internal var rawResultCallback: (queue: DispatchQueue, callback: DataResultCallback)?
+    internal var progressCallback: (queue: DispatchQueue, callback: ProgressCallback)?
 
+    /// Decoded object if any.
+    private var responseObject: HTTPRequestResult?
+    
     /// Sync queue.
-    public let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
+    internal let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
     
     // MARK: - Initialization
     
@@ -133,7 +147,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// - Parameter client: client instance.
     /// - Throws: throw an exception if something went wrong.
     /// - Returns: Self
-    public func run(in client: HTTPClient) -> Self {
+    public func run(in client: HTTPClientProtocol) -> Self {
         guard isPending else {
             return self // already started
         }
@@ -187,24 +201,16 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         }
         
         // Raw Response
-        if let rawResult = self.response, let rawResultCallback = self.rawResultCallback  {
-            if let queue = rawResultCallback.queue {
-                queue.async {
-                    rawResultCallback.callback(rawResult)
-                }
-            } else {
-                rawResultCallback.callback(rawResult)
+        if let rawResponse = self.response, let callback = self.rawResultCallback  {
+            callback.queue.async {
+                callback.callback(rawResponse)
             }
         }
         
         // Decoded Response
-        if let result = responseObject, let resultCallback = self.resultCallback {
-            if let queue = resultCallback.queue {
-                queue.async {
-                    resultCallback.callback(.success(result))
-                }
-            } else {
-                resultCallback.callback(.success(result))
+        if let result = responseObject, let callback = self.resultCallback {
+            callback.queue.async {
+                callback.callback(result)
             }
         }
     }
@@ -397,11 +403,12 @@ extension HTTPRequest {
             self.state = .finished
             // Keep in cache our data decoded and raw
             self.response = response
-            if case .success(let obj) = decodedObj {
-                self.responseObject = obj
-            } else {
-                self.responseObject = nil
+            self.responseObject = decodedObj
+
+            if case .failure(let decodeError) = decodedObj {
+                self.response?.error = HTTPError(.objectDecodeFailed, error: decodeError)
             }
+
             dispatchEvents()
         }
     }

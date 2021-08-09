@@ -18,7 +18,7 @@ public extension HTTPRequest {
     /// - Parameter callback: callback.
     /// - Returns: Self
     @discardableResult
-    func response(in queue: DispatchQueue? = .main, _ callback: @escaping ResultCallback) -> Self {
+    func response(in queue: DispatchQueue = .main, _ callback: @escaping ResultCallback) -> Self {
         stateQueue.sync {
             resultCallback = (queue, callback)
             dispatchEvents()
@@ -31,7 +31,7 @@ public extension HTTPRequest {
     /// - Parameter callback: callback.
     /// - Returns: Self
     @discardableResult
-    func rawResponse(in queue: DispatchQueue? = .main, _ callback: @escaping DataResultCallback) -> Self {
+    func rawResponse(in queue: DispatchQueue = .main, _ callback: @escaping DataResultCallback) -> Self {
         stateQueue.sync {
             rawResultCallback = (queue, callback)
             dispatchEvents()
@@ -40,7 +40,7 @@ public extension HTTPRequest {
     }
     
     @discardableResult
-    func progress(in queue: DispatchQueue? = .main, _ callback: @escaping ProgressCallback) -> Self {
+    func progress(in queue: DispatchQueue = .main, _ callback: @escaping ProgressCallback) -> Self {
         stateQueue.sync {
             progressCallback = (queue, callback)
         }
