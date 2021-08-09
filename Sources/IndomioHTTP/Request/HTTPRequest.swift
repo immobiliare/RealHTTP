@@ -10,14 +10,23 @@
 //
 
 import Foundation
+
+#if canImport(Combine)
 import Combine
+#endif
+
+
 /// Defines the generic request you can execute in a client.
 open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     public typealias HTTPRequestResult = Result<Object, Error>
     public typealias ResultCallback = ((HTTPRequestResult) -> Void)
     public typealias ProgressCallback = ((HTTPProgress) -> Void)
-
+    
     // MARK: - Public Properties
+    
+    public var request: HTTPRequestProtocol {
+        self
+    }
     
     /// Current state of the request.
     public private(set) var state: HTTPRequestState = .pending
@@ -61,7 +70,11 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     
     /// If task is monitorable (`expectedDataType` is `large`) and data is available
     /// here you can found the latest progress stats.
+    #if canImport(Combine)
+    @Published public private(set) var progress: HTTPProgress?
+    #else
     public private(set) var progress: HTTPProgress?
+    #endif
     
     /// The default location of response data when using `large` `expectedDataType` and the engine
     /// is set to `URLDownloadTask`. It can be used to resume initiated downloads or to use the
@@ -79,6 +92,8 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     open var cachePolicy: URLRequest.CachePolicy?
     
     /// Request modifier callback.
+    /// You can implement your own logic to modify a generated `URLRequest` for the request
+    /// running in a specified `HTTPClientProtocol` instance.
     open var urlRequestModifier: HTTPURLRequestModifierCallback?
         
     /// Thread safe property which return if the promise is currently in a `pending` or `executing` state.
@@ -135,6 +150,10 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// making a retry attempt.
     public func reset(retries: Bool) {
         stateQueue.sync {
+            guard state != .executing else {
+                return
+            }
+            
             state = .pending
             
             if retries {
@@ -237,7 +256,7 @@ extension HTTPRequest {
     ///
     /// - Parameter attempts: attempts.
     /// - Returns: Self
-    public func retry(_ attempts: Int) -> Self {
+    public func maxRetry(_ attempts: Int) -> Self {
         self.maxRetries = attempts
         return self
     }

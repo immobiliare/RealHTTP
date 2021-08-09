@@ -13,11 +13,10 @@ import Foundation
 
 #if canImport(Combine)
 import Combine
-#endif
 
 public extension HTTPRequest {
     
-    func publisher(in client: HTTPClient) -> AnyPublisher<Object, Error> {
+    func run(in client: HTTPClient) -> AnyPublisher<Object, Error> {
         return Future { [weak self] fulfill in
             self?.run(in: client).response({ result in
                 fulfill(result)
@@ -26,3 +25,7 @@ public extension HTTPRequest {
     }
     
 }
+
+#endif
+
+

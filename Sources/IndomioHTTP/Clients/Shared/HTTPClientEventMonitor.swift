@@ -173,11 +173,13 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             return
         }
         
-        // Parse the response and create the object which contains all the datas.
+        // Parse the response and create the object which contains all the datas including
+        // metrics, requests and curl description.
         let rawResponse = (task.response, data, error)
         var response = HTTPRawResponse(request: request, response: rawResponse)
         response.attachURLRequests(original: task.originalRequest, current: task.currentRequest)
         response.metrics = metrics
+        response.cURLDescription = request.cURLDescription(whenIn: client)
         
         didComplete(request: request, response: &response)
         

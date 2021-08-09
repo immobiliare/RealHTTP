@@ -38,6 +38,9 @@ public struct HTTPRawResponse {
     /// Error parsed.
     public internal(set) var error: HTTPError?
     
+    /// cURL description of the original request who generate this response.
+    public internal(set) var cURLDescription: String?
+    
     /// Keep the `URLRequest` instance of the original
     public private(set) var urlRequest: (original: URLRequest?, current: URLRequest?)
     
