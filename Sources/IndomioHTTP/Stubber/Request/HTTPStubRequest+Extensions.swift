@@ -25,21 +25,6 @@ extension Data: MockRequestDataConvertible {
     public var data: Data? { self }
 }
 
-extension HTTPStubRequest {
-    
-    public struct MatchingOptions: OptionSet {
-        public let rawValue: Int
-
-        static let ignoreQueryParams = MatchingOptions(rawValue: 1 << 0)
-        static let all: MatchingOptions = [.ignoreQueryParams]
-        
-        public init(rawValue: Int) {
-            self.rawValue = rawValue
-        }
-    }
-    
-}
-
 // MARK: - MockResponseDataType
 
 extension HTTPStubRequest {

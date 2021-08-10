@@ -19,7 +19,7 @@ public struct HTTPStubRequest: Equatable {
     public let responseType: MockResponseDataType
     
     /// Once set this value is returned instead of the data set.
-    public let requestError: Error?
+    public let failError: Error?
     
     /// The HTTP status code to return with the response.
     public let statusCode: HTTPStatusCode
@@ -40,10 +40,8 @@ public struct HTTPStubRequest: Equatable {
     public var headers: HTTPHeaders?
     
     /// Matching options for request.
-    public var matchingOptions: MatchingOptions = []
-    
-    public var urlRequest: URLRequest? = nil
-    
+    public var matchRules = [HTTPStubMatcher]()
+        
     // MARK: - Initialization
     
     /// Create a mock for a given data type to return.
@@ -61,28 +59,7 @@ public struct HTTPStubRequest: Equatable {
         self.statusCode = code
         self.content = content
         self.headers = headers
-        self.requestError = nil
-    }
-    
-    /// Create a mock for a given URL.
-    ///
-    /// - Parameters:
-    ///   - url: The URL to match for and to return the mocked data for.
-    ///   - options: Matching options for request (you can, for example, ginore query params)
-    ///   - response: Type of data to return.
-    ///   - code: http status code of the response.
-    ///   - content: content of the response based upon the http method of the request.
-    ///   - headers: headers to set along with the data inside the response.
-    public init(url: URLConvertible, options: MatchingOptions = [],
-                response: MockResponseDataType, code: HTTPStatusCode,
-                content: [HTTPMethod: MockRequestDataConvertible?],
-                headers: HTTPHeaders?) {
-        self.matchingOptions = options
-        self.responseType = response
-        self.statusCode = code
-        self.content = content
-        self.headers = headers
-        self.requestError = nil
+        self.failError = nil
     }
     
     public static func == (lhs: HTTPStubRequest, rhs: HTTPStubRequest) -> Bool {

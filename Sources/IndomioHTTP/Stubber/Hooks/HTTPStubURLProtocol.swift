@@ -43,7 +43,74 @@ public class HTTPStubURLProtocol: URLProtocol {
     }
     
     public override func startLoading() {
+        var request = self.request
         
+        // Get the cookie storage that applies to this request.
+        var cookieStorage = HTTPCookieStorage.shared
+        if let session = task?.value(forKey: "session") as? URLSession,
+           let configurationCookieStorage = session.configuration.httpCookieStorage {
+            cookieStorage = configurationCookieStorage
+        }
+        
+        // Get the cookies that apply to this URL and add them to the request headers.
+        if let url = request.url, let cookies = cookieStorage.cookies(for: url) {
+            if request.allHTTPHeaderFields == nil {
+                request.allHTTPHeaderFields = [String: String]()
+            }
+            request.allHTTPHeaderFields!.merge(HTTPCookie.requestHeaderFields(with: cookies)) { (current, _) in
+                current
+            }
+        }
+        
+        // Find the stubbed response for this request.
+        guard let stubRequest = HTTPStubber.shared.suitableStubForRequest(request),
+              let httpMethod = request.method,
+              let stubContent = stubRequest.content[httpMethod],
+              let url = request.url else {
+            // If not found we throw an error
+            client?.urlProtocol(self, didFailWithError: HTTPStubberErrors.matchStubNotFound(request))
+            return
+        }
+        
+        let headers = stubRequest.headers?.asDictionary ?? [:]
+        let cookiesToSet = HTTPCookie.cookies(withResponseHeaderFields: headers, for: url)
+        cookieStorage.setCookies(cookiesToSet, for: url, mainDocumentURL: url)
+
+        if let failureError = stubRequest.failError { // request should fail with given error
+            client?.urlProtocol(self, didFailWithError: failureError)
+            return
+        }
+        
+        let statusCode = stubRequest.statusCode
+        let response = HTTPURLResponse(url: url,
+                                       statusCode: statusCode.rawValue,
+                                       httpVersion: nil,
+                                       headerFields: headers)
+        
+        // Handle redirects
+        let isRedirect =
+            statusCode.responseType == .redirection &&
+            (statusCode != .notModified && statusCode != .useProxy)
+        
+        if isRedirect {
+            guard let location = stubRequest.headers?["Location"],
+                  let url = URL(string: location),
+                  let cookies = cookieStorage.cookies(for: url) else {
+                return
+            }
+            
+            // Includes redirection call to client.
+            var redirect = URLRequest(url: url)
+            redirect.allHTTPHeaderFields = HTTPCookie.requestHeaderFields(with: cookies)
+            client?.urlProtocol(self, wasRedirectedTo: redirect, redirectResponse: response!)
+        }
+        
+        // Send response
+        client?.urlProtocol(self, didReceive: response!, cacheStoragePolicy: .notAllowed)
+        if let data = stubContent?.data {
+            client?.urlProtocol(self, didLoad: data)
+        }
+        client?.urlProtocolDidFinishLoading(self)
     }
     
     public override func stopLoading() {

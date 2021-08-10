@@ -105,4 +105,10 @@ public class HTTPStubber {
         registeredHooks.first(where: { $0 == hook }) != nil
     }
     
+    // MARK: - Internal Functions
+    
+    internal func suitableStubForRequest(_ request: URLRequest) -> HTTPStubRequest? {
+        nil
+    }
+    
 }
