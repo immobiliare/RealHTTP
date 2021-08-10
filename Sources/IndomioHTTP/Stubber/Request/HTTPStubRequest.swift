@@ -11,7 +11,7 @@
 
 import Foundation
 
-public struct MockRequest {
+public struct HTTPStubRequest: Equatable {
     
     // MARK: - Public Properties
     
@@ -42,6 +42,8 @@ public struct MockRequest {
     /// Matching options for request.
     public var matchingOptions: MatchingOptions = []
     
+    public var urlRequest: URLRequest? = nil
+    
     // MARK: - Initialization
     
     /// Create a mock for a given data type to return.
@@ -71,7 +73,7 @@ public struct MockRequest {
     ///   - code: http status code of the response.
     ///   - content: content of the response based upon the http method of the request.
     ///   - headers: headers to set along with the data inside the response.
-    public init(url: URL, options: MatchingOptions = [],
+    public init(url: URLConvertible, options: MatchingOptions = [],
                 response: MockResponseDataType, code: HTTPStatusCode,
                 content: [HTTPMethod: MockRequestDataConvertible?],
                 headers: HTTPHeaders?) {
@@ -81,6 +83,10 @@ public struct MockRequest {
         self.content = content
         self.headers = headers
         self.requestError = nil
+    }
+    
+    public static func == (lhs: HTTPStubRequest, rhs: HTTPStubRequest) -> Bool {
+        false
     }
     
 }

@@ -25,7 +25,7 @@ extension Data: MockRequestDataConvertible {
     public var data: Data? { self }
 }
 
-extension MockRequest {
+extension HTTPStubRequest {
     
     public struct MatchingOptions: OptionSet {
         public let rawValue: Int
@@ -42,7 +42,7 @@ extension MockRequest {
 
 // MARK: - MockResponseDataType
 
-extension MockRequest {
+extension HTTPStubRequest {
     
     public enum MockResponseDataType {
         case json
@@ -69,7 +69,7 @@ extension MockRequest {
 
 // MARK: - ImageFormat
 
-extension MockRequest {
+extension HTTPStubRequest {
     
     public enum ImageFormat {
         case jpg
