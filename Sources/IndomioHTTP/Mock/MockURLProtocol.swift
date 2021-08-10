@@ -13,6 +13,24 @@ import Foundation
 
 public final class MockURLProtocol: URLProtocol {
     
+    // MARK: - Private Properties
+    
+    private var responseWorkItem: DispatchWorkItem?
+
+    // MARK: - Overrides
+    
+    public override func startLoading() {
+        
+    }
+    
+    public override func stopLoading() {
+        responseWorkItem?.cancel()
+    }
+    
+    public override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+    
     
     
 }
