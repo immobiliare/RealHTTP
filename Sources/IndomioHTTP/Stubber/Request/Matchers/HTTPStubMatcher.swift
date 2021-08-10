@@ -11,8 +11,14 @@
 
 import Foundation
 
+public enum HTTPMatcherLocation {
+    case body
+    case headers
+    case url
+}
+
 public protocol HTTPStubMatcher {
     
-    func request(_ request: URLRequest, matchStub stub: HTTPStubRequest) -> Bool
+    func matches(request: URLRequest, forStub stub: HTTPStubRequest) -> Bool
     
 }

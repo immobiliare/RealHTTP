@@ -47,10 +47,10 @@ public class HTTPStubURLProtocol: URLProtocol {
         
         // Get the cookie storage that applies to this request.
         var cookieStorage = HTTPCookieStorage.shared
-        if let session = task?.value(forKey: "session") as? URLSession,
+       /* if let session = task?.value(forKey: "session") as? URLSession,
            let configurationCookieStorage = session.configuration.httpCookieStorage {
             cookieStorage = configurationCookieStorage
-        }
+        }*/
         
         // Get the cookies that apply to this URL and add them to the request headers.
         if let url = request.url, let cookies = cookieStorage.cookies(for: url) {
@@ -63,25 +63,24 @@ public class HTTPStubURLProtocol: URLProtocol {
         }
         
         // Find the stubbed response for this request.
-        guard let stubRequest = HTTPStubber.shared.suitableStubForRequest(request),
-              let httpMethod = request.method,
-              let stubContent = stubRequest.content[httpMethod],
-              let url = request.url else {
+        guard  let httpMethod = request.method,
+               let stubResponse = HTTPStubber.shared.suitableStubForRequest(request)?.responses[httpMethod],
+               let url = request.url else {
             // If not found we throw an error
             client?.urlProtocol(self, didFailWithError: HTTPStubberErrors.matchStubNotFound(request))
             return
         }
         
-        let headers = stubRequest.headers?.asDictionary ?? [:]
+        let headers = stubResponse.headers?.asDictionary ?? [:]
         let cookiesToSet = HTTPCookie.cookies(withResponseHeaderFields: headers, for: url)
         cookieStorage.setCookies(cookiesToSet, for: url, mainDocumentURL: url)
 
-        if let failureError = stubRequest.failError { // request should fail with given error
+        if let failureError = stubResponse.failError { // request should fail with given error
             client?.urlProtocol(self, didFailWithError: failureError)
             return
         }
         
-        let statusCode = stubRequest.statusCode
+        let statusCode = stubResponse.statusCode
         let response = HTTPURLResponse(url: url,
                                        statusCode: statusCode.rawValue,
                                        httpVersion: nil,
@@ -93,7 +92,7 @@ public class HTTPStubURLProtocol: URLProtocol {
             (statusCode != .notModified && statusCode != .useProxy)
         
         if isRedirect {
-            guard let location = stubRequest.headers?["Location"],
+            guard let location = stubResponse.headers?["Location"],
                   let url = URL(string: location),
                   let cookies = cookieStorage.cookies(for: url) else {
                 return
@@ -107,7 +106,7 @@ public class HTTPStubURLProtocol: URLProtocol {
         
         // Send response
         client?.urlProtocol(self, didReceive: response!, cacheStoragePolicy: .notAllowed)
-        if let data = stubContent?.data {
+        if let data = stubResponse.body?.data {
             client?.urlProtocol(self, didLoad: data)
         }
         client?.urlProtocolDidFinishLoading(self)

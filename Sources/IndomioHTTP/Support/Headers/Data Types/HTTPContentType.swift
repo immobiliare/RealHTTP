@@ -53,6 +53,9 @@ public enum HTTPContentType: String {
     /// HyperText Markup Language (HTML)
     case html = "text/html"
 
+    /// HyperText Markup Language (HTML) with charset spec
+    case htmlWithCharset = "text/html ; charset=utf-8"
+
     /// iCalendar format
     case iCal = "text/calendar"
 
@@ -64,6 +67,9 @@ public enum HTTPContentType: String {
 
     /// JSON format
     case json = "application/json"
+    
+    /// JSON format with charset spec
+    case jsonWithCharset = "application/json; charset=utf-8"
 
     /// Musical Instrument Digital Interface (MIDI)
     case midi = "audio/midi"

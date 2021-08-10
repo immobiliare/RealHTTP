@@ -108,7 +108,9 @@ public class HTTPStubber {
     // MARK: - Internal Functions
     
     internal func suitableStubForRequest(_ request: URLRequest) -> HTTPStubRequest? {
-        nil
+        stubbedRequests.first {
+            $0.suitableFor(request)
+        }
     }
     
 }

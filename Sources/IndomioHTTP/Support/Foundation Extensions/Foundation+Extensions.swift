@@ -62,6 +62,26 @@ extension URLRequest {
         set { httpMethod = newValue?.rawValue }
     }
     
+    /// Get the data of the body, read it from stream if necessary.
+    public var body: Data? {
+        guard let stream = httpBodyStream else {
+            return httpBody // not a stream
+        }
+        
+        var data = Data()
+        stream.open()
+        let bufferSize = 4096
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+        while stream.hasBytesAvailable {
+            let read = stream.read(buffer, maxLength: bufferSize)
+            data.append(buffer, count: read)
+        }
+        
+        buffer.deallocate()
+        stream.close()
+        return data
+    }
+    
 }
 
 // MARK: - Data
