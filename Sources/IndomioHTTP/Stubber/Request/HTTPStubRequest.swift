@@ -11,6 +11,8 @@
 
 import Foundation
 
+// MARK: - HTTPSubRequest
+
 public class HTTPStubRequest: Equatable {
     
     // MARK: - Public Properties
@@ -52,6 +54,8 @@ public class HTTPStubRequest: Equatable {
     
 }
 
+// MARK: - HTTPSubRequest Match Extensions
+
 extension HTTPStubRequest {
     
     public func matchURL(regex pattern: String, options: NSRegularExpression.Options = []) -> Self {
@@ -62,13 +66,37 @@ extension HTTPStubRequest {
         return match(matcher)
     }
     
-    public func stub(_ method: HTTPMethod, json string: String) -> Self {
-        var response = HTTPStubResponse()
+}
+
+// MARK: - HTTPSubRequest Stub Extensions
+
+extension HTTPStubRequest {
+    
+    /// Add stub response for specified http method with a json raw string.
+    /// Content type is set to `.json` automatically.
+    ///
+    /// - Parameters:
+    ///   - method: the http method which trigger this stubbed response.
+    ///   - code: code to use, by default is `ok` (200).
+    ///   - string: raw json string to include.
+    /// - Returns: Self
+    public func stub(_ method: HTTPMethod, code: HTTPStatusCode = .ok, delay: TimeInterval? = nil,
+                     json string: String) -> Self {
+        let response = HTTPStubResponse()
         response.contentType = .jsonWithCharset
         response.statusCode = .ok
         response.body = string
+        response.responseDelay = delay
         responses[method] = response
         return self
     }
+    
+//    public func stub(_ method: HTTPMethod, code: HTTPStatusCode = .ok, json fileURL: URL) -> Self {
+//        guard fileURL.isFileURL, FileManager.default.fileExists(atPath: fileURL.path) else {
+//            fatalError("Required file for stub does not exist")
+//        }
+//
+//        var response = HTTPStubResponse().
+//    }
     
 }

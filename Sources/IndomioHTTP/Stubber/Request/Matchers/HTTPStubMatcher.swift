@@ -13,7 +13,8 @@ import Foundation
 
 public enum HTTPMatcherLocation {
     case body
-    case headers
+    case headersValue
+    case headersKey
     case url
 }
 

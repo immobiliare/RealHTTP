@@ -11,7 +11,7 @@
 
 import Foundation
 
-public struct HTTPStubResponse {
+public class HTTPStubResponse {
     
     /// The HTTP status code to return with the response.
     public var statusCode: HTTPStatusCode = .none
@@ -26,7 +26,7 @@ public struct HTTPStubResponse {
     public var body: MockRequestDataConvertible? = nil
     
     /// The headers to send back with the response.
-    public var headers: HTTPHeaders? = nil
+    public var headers =  HTTPHeaders()
     
     /// Allow response caching. Usually you dont want to have a cached response
     /// so the default behaviour is set to `notAllowed`.
@@ -34,7 +34,7 @@ public struct HTTPStubResponse {
     
     /// You can define a delay to return the reponse.
     /// If `nil` no delay is applied.
-    public var responseDelay: DispatchTimeInterval? = nil
+    public var responseDelay: TimeInterval? = nil
     
     
     // MARK: - Initialization
@@ -49,5 +49,43 @@ public struct HTTPStubResponse {
     }
     
     public init() { }
+    
+}
+
+// MARK: - HTTPStubResponse Builder
+
+public extension HTTPStubResponse {
+    
+    func status(_ code: HTTPStatusCode) -> Self {
+        self.statusCode = code
+        return self
+    }
+    
+    func failWith(code: HTTPStatusCode?, error: Error?) -> Self {
+        self.statusCode = code ?? .none
+        self.failError = error
+        return self
+    }
+    
+    func header(_ field: HTTPHeaderField, value: String) -> Self {
+        self.headers[field] = value
+        return self
+    }
+    
+    func headers(_ builder: ((inout HTTPHeaders) -> Void)) -> Self {
+        builder(&headers)
+        return self
+    }
+    
+    func body(contentType: HTTPContentType, fileURL: URL) -> Self {
+        self.contentType = contentType
+        self.body = Data.fromURL(fileURL)
+        return self
+    }
+    
+    func delay(_ interval: TimeInterval) -> Self {
+        self.responseDelay = interval
+        return self
+    }
     
 }
