@@ -1,5 +1,5 @@
 //
-//  IndomioNetwork
+//  IndomioHTTP
 //
 //  Created by the Mobile Team @ ImmobiliareLabs
 //  Email: mobile@immobiliare.it
@@ -30,7 +30,7 @@ extension HTTPHeader {
     /// Create the default `User-Agent` header.
     /// See <https://tools.ietf.org/html/rfc7231#section-5.5.3>.
     public static let defaultUserAgent: HTTPHeader = {
-        let libraryVersion = "IndomioNetwork/\(LibraryVersion)"
+        let libraryVersion = "IndomioHTTP/\(LibraryVersion)"
         let mainBundle = Bundle.main
         let value = "\(mainBundle.executableName)/\(mainBundle.appVersion) (\(mainBundle.bundleID); build:\(mainBundle.appBuild); \(mainBundle.osNameIdentifier)) \(libraryVersion)"
         return .userAgent(value)

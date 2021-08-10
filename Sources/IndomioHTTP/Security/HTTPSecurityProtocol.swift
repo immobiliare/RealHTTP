@@ -1,5 +1,5 @@
 //
-//  IndomioNetwork
+//  IndomioHTTP
 //
 //  Created by the Mobile Team @ ImmobiliareLabs
 //  Email: mobile@immobiliare.it

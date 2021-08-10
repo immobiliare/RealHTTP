@@ -1,5 +1,5 @@
 //
-//  IndomioNetwork
+//  IndomioHTTP
 //
 //  Created by the Mobile Team @ ImmobiliareLabs
 //  Email: mobile@immobiliare.it
@@ -11,5 +11,5 @@
 
 import Foundation
 
-/// Current IndomioNetwork version.
+/// Current IndomioHTTP version.
 let LibraryVersion = "1.0.0"
