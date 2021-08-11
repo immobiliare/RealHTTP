@@ -34,13 +34,14 @@ public class HTTPStubber {
 
     // MARK: - Private Properties
     
-    private var registeredHooks: [HTTPStubberHook] = []
+    private var registeredHooks: [HTTPStubHookProtocol] = []
     private let queue = DispatchQueue(label: "httpstubber.queue.concurrent", attributes: .concurrent)
 
     // MARK: - Initialization
     
     private init() {
-        registerHook(URLSessionHook())
+        registerHook(URLHook()) // webviews
+        registerHook(URLSessionHook()) // other net calls
     }
     
     // MARK: - Enable/Disable Stubber
@@ -160,7 +161,7 @@ public class HTTPStubber {
     /// Register a new hook.
     ///
     /// - Parameter hook: hook to register.
-    public func registerHook(_ hook: HTTPStubberHook) {
+    public func registerHook(_ hook: HTTPStubHookProtocol) {
         guard isHookRegistered(hook) == false else {
             return
         }
@@ -172,7 +173,7 @@ public class HTTPStubber {
     ///
     /// - Parameter hook: hook to check.
     /// - Returns: Bool
-    private func isHookRegistered(_ hook: HTTPStubberHook) -> Bool {
+    private func isHookRegistered(_ hook: HTTPStubHookProtocol) -> Bool {
         registeredHooks.first(where: { $0 == hook }) != nil
     }
     

@@ -13,7 +13,7 @@ import Foundation
 
 /// The following hook allows you to register an `URLProtocol` which manage responses to
 /// the `URLSession` architecture.
-final class URLSessionHook: HTTPStubberHook {
+final class URLSessionHook: HTTPStubHookProtocol {
     
     func load() {
         guard let method = class_getInstanceMethod(originalClass(), originalSelector()),
@@ -39,7 +39,7 @@ final class URLSessionHook: HTTPStubberHook {
         [HTTPStubURLProtocol.self]
     }
     
-    func isEqual(to other: HTTPStubberHook) -> Bool {
+    func isEqual(to other: HTTPStubHookProtocol) -> Bool {
         if let theOther = other as? URLSessionHook {
             return theOther == self
         }

@@ -14,7 +14,7 @@ import Foundation
 
 /// The following protocol defines a subclass of `URLProtocol` which manage
 /// the response for `URLSession`.
-public protocol HTTPStubberHook {
+public protocol HTTPStubHookProtocol {
     
     /// Load an hook.
     func load()
@@ -24,13 +24,13 @@ public protocol HTTPStubberHook {
     
     /// Compare to another hook instance.
     /// - Parameter other: other hook instance.
-    func isEqual(to other: HTTPStubberHook) -> Bool
+    func isEqual(to other: HTTPStubHookProtocol) -> Bool
 
 }
 
-extension HTTPStubberHook where Self: Equatable {
+extension HTTPStubHookProtocol where Self: Equatable {
     
-    func isEqual(to other: HTTPStubberHook) -> Bool {
+    func isEqual(to other: HTTPStubHookProtocol) -> Bool {
         if let theOther = other as? Self {
             return theOther == self
         }
@@ -39,6 +39,6 @@ extension HTTPStubberHook where Self: Equatable {
     
 }
 
-func ==(lhs: HTTPStubberHook, rhs: HTTPStubberHook) -> Bool {
+func ==(lhs: HTTPStubHookProtocol, rhs: HTTPStubHookProtocol) -> Bool {
     lhs.isEqual(to: rhs)
 }
