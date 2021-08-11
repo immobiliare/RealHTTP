@@ -18,29 +18,23 @@ public class HTTPStubRequest: Equatable {
     // MARK: - Public Properties
     
     /// Matching options for request.
+    ///
+    /// NOTE:
+    /// Matchers are evaluted in AND, so all matchers must be valid in order to make the stub valid for a request.
     public var matchers = [HTTPStubMatcherProtocol]()
-    
+        
     /// Response to produce for each http method which match this request.
     public var responses = [HTTPMethod: HTTPStubResponse]()
         
     // MARK: - Initialization
     
-    public init() {
-    }
-
-    public func stub(_ method: HTTPMethod, _ response: HTTPStubResponse) -> Self {
-        responses[method] = response
-        return self
-    }
-    
-    public func match(_ matcher: HTTPStubMatcherProtocol) -> Self {
-        matchers.append(matcher)
-        return self
-    }
-    
+    public init() {}
+        
     public static func == (lhs: HTTPStubRequest, rhs: HTTPStubRequest) -> Bool {
         false
     }
+    
+    // MARK: - Private Functions
     
     internal func suitableFor(_ urlRequest: URLRequest) -> Bool {
         for matcher in matchers {

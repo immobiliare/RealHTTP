@@ -40,8 +40,8 @@ public class HTTPStubJSONMatcher<T: Decodable & Hashable>: HTTPStubMatcherProtoc
     // MARK: - Initialization
     
     public init(matchObject object: T) {
-      self.decoder = JSONDecoder()
-      self.object = object
+        self.decoder = JSONDecoder()
+        self.object = object
     }
     
     // MARK: - Conformance
