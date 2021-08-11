@@ -46,7 +46,7 @@ public class HTTPStubJSONMatcher<T: Decodable & Hashable>: HTTPStubMatcherProtoc
     
     // MARK: - Conformance
     
-    public func matches(request: URLRequest, forStub stub: HTTPStubRequest) -> Bool {
+    public func matches(request: URLRequest, for source: HTTPMatcherSource) -> Bool {
         guard let data = request.body,
               let decodedObject = try? self.decoder.decode(T.self, from: data) else {
             return false

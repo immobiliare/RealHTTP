@@ -42,7 +42,7 @@ public class HTTPURITemplateMatcher: HTTPStubMatcherProtocol {
     
     // MARK: - Conformance
     
-    public func matches(request: URLRequest, forStub stub: HTTPStubRequest) -> Bool {
+    public func matches(request: URLRequest, for source: HTTPMatcherSource) -> Bool {
         if let URLString = request.url?.absoluteString {
             if template.extract(URLString) != nil {
                 return true

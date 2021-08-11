@@ -18,8 +18,21 @@ public enum HTTPMatcherLocation {
     case url
 }
 
+/// Defines a generic sender for matching.
+public protocol HTTPMatcherSource { }
+
+extension HTTPStubRequest: HTTPMatcherSource {}
+extension HTTPStubIgnoreRule: HTTPMatcherSource {}
+
+// MARK: - HTTPStubMatcherProtocol
+
 public protocol HTTPStubMatcherProtocol {
     
-    func matches(request: URLRequest, forStub stub: HTTPStubRequest) -> Bool
+    /// Validate if source can match received request.
+    ///
+    /// - Parameters:
+    ///   - request: request instance received.
+    ///   - source: source of data.
+    func matches(request: URLRequest, for source: HTTPMatcherSource) -> Bool
     
 }

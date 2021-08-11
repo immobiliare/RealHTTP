@@ -23,6 +23,10 @@ public class HTTPStubber {
     
     /// Currently registered stub requests.
     public private(set) var stubbedRequests = [HTTPStubRequest]()
+    
+    /// List of ignore rules. Any triggered request which is matched
+    /// will be ignored by the stub engine.
+    public private(set) var ignoreRules = [HTTPStubIgnoreRule]()
 
     // MARK: - Private Properties
     
@@ -65,23 +69,48 @@ public class HTTPStubber {
     /// No duplicates are allowed, existing instances will be replaced.
     ///
     /// - Parameter request: request to add.
-    public func addStub(_ request: HTTPStubRequest) {
-        removeStub(request)
+    /// - Returns: Self
+    public func add(stub request: HTTPStubRequest) -> Self {
+        remove(stub: request)
         stubbedRequests.append(request)
+        return self
+    }
+    
+    /// Add new ignore rule.
+    ///
+    /// - Parameter rule: rule.
+    /// - Returns: Self
+    public func add(ignore rule: HTTPStubIgnoreRule) -> Self {
+        ignoreRules.append(rule)
+        return self
     }
     
     /// Remove an existing stub request.
     ///
     /// - Parameter request: request to remove.
-    public func removeStub(_ request: HTTPStubRequest) {
+    public func remove(stub request: HTTPStubRequest) {
         if let index = stubbedRequests.firstIndex(of: request) {
             stubbedRequests.remove(at: index)
+        }
+    }
+    
+    /// Remove an ignore rule.
+    ///
+    /// - Parameter rule: rule to remove.
+    public func remove(ignore rule: HTTPStubIgnoreRule) {
+        if let index = ignoreRules.firstIndex(of: rule) {
+            ignoreRules.remove(at: index)
         }
     }
     
     /// Remove all registered stubs.
     public func removeAllStubs() {
         stubbedRequests.removeAll()
+    }
+    
+    /// Remove all registered ignore rules.
+    public func removeAllIgnoreRules() {
+        ignoreRules.removeAll()
     }
     
     // MARK: - Register/Unregister Hooks

@@ -44,7 +44,7 @@ public class HTTPStubRegExMatcher: HTTPStubMatcherProtocol {
     
     // MARK: - Conformances
     
-    public func matches(request: URLRequest, forStub stub: HTTPStubRequest) -> Bool {
+    public func matches(request: URLRequest, for source: HTTPMatcherSource) -> Bool {
         switch location {
         case .url:
             return regex.hasMatches(request.url?.absoluteString)

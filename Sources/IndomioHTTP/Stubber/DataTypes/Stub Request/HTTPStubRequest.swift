@@ -38,7 +38,7 @@ public class HTTPStubRequest: Equatable {
     
     internal func suitableFor(_ urlRequest: URLRequest) -> Bool {
         for matcher in matchers {
-            if matcher.matches(request: urlRequest, forStub: self) == false {
+            if matcher.matches(request: urlRequest, for: self) == false {
                 return false
             }
         }

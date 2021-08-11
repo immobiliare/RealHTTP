@@ -284,7 +284,26 @@ internal extension Bundle {
 
 extension URL {
     
-    func copyFileToDefaultLocation(task: URLSessionDownloadTask, forRequest request: HTTPRequestProtocol) -> URL? {
+    // MARK: - Public Functions
+
+    /// Returns the base URL string build with the scheme, host and path.
+    /// For example:
+    /// "https://www.apple.com/v1/test?param=test"
+    /// would be "https://www.apple.com/v1/test"
+    public var baseString: String? {
+        guard let scheme = scheme, let host = host else { return nil }
+        return scheme + "://" + host + path
+    }
+
+    // MARK: - Internal Functions
+    
+    /// Copy the temporary file for location in a non deletable path.
+    ///
+    /// - Parameters:
+    ///   - task: task.
+    ///   - request: request.
+    /// - Returns: URL?
+    internal func copyFileToDefaultLocation(task: URLSessionDownloadTask, forRequest request: HTTPRequestProtocol) -> URL? {
         let fManager = FileManager.default
         
         var destURL: URL? = request.resumeDataURL

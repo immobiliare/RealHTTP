@@ -68,4 +68,18 @@ extension HTTPStubRequest {
         match(HTTPURITemplateMatcher(URI: uriTemplate))
     }
     
+    /// Configure the stub request to match a specific URL optionally ignoring query parameters.
+    /// If URL is not valid no rule will be added.
+    ///
+    /// - Parameters:
+    ///   - URL: URL target.
+    ///   - ignoreQueryParameters: true to ignore query parameters from matcher.
+    /// - Returns: Self
+    public func match(URL: URLConvertible, ignoreQueryParameters: Bool) -> Self {
+        guard let matcher = HTTPURLMatcher(URL: URL, ignoreQuery: ignoreQueryParameters) else {
+            return self
+        }
+        return match(matcher)
+    }
+    
 }

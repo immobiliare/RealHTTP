@@ -31,7 +31,7 @@ open class HTTPStubBodyMatcher: HTTPStubMatcherProtocol {
     
     // MARK: - Conformance
     
-    public func matches(request: URLRequest, forStub stub: HTTPStubRequest) -> Bool {
+    public func matches(request: URLRequest, for source: HTTPMatcherSource) -> Bool {
         guard let data = request.body else {
             return false
         }
