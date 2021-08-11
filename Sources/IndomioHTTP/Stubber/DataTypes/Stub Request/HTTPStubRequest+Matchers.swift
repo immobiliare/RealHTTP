@@ -73,10 +73,10 @@ extension HTTPStubRequest {
     ///
     /// - Parameters:
     ///   - URL: URL target.
-    ///   - ignoreQueryParameters: true to ignore query parameters from matcher.
+    ///   - options: comparison options for URL matcher.
     /// - Returns: Self
-    public func match(URL: URLConvertible, ignoreQueryParameters: Bool) -> Self {
-        guard let matcher = HTTPURLMatcher(URL: URL, ignoreQuery: ignoreQueryParameters) else {
+    public func match(URL: URLConvertible, options: HTTPURLMatcher.Options = .default) -> Self {
+        guard let matcher = HTTPURLMatcher(URL: URL, options: options) else {
             return self
         }
         return match(matcher)

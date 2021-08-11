@@ -29,7 +29,10 @@ public class HTTPStubIgnoreRule: Equatable {
     
     // MARK: - Initialization
     
-    public init(matchers: [HTTPStubMatcherProtocol] = []) {
+    /// Initialize with matchers list.
+    ///
+    /// - Parameter matchers: matchers.
+    public init(_ matchers: HTTPStubMatcherProtocol...) {
         self.matchers = matchers
     }
     
@@ -49,10 +52,10 @@ public class HTTPStubIgnoreRule: Equatable {
     ///
     /// - Parameters:
     ///   - URL: URL target.
-    ///   - ignoreQueryParameters: true to ignore query parameters from matcher.
+    ///   - options: comparison options for URL matcher.
     /// - Returns: Self
-    public func match(url: String, ignoreQueryParameters: Bool) -> Self {
-        guard let matcher = HTTPURLMatcher(URL: url, ignoreQuery: ignoreQueryParameters) else {
+    public func match(url: String, options: HTTPURLMatcher.Options = .default) -> Self {
+        guard let matcher = HTTPURLMatcher(URL: url, options: options) else {
             return self
         }
         return match(matcher)

@@ -75,18 +75,10 @@ public class HTTPStubber {
     ///
     /// - Parameter request: request to add.
     /// - Returns: Self
+    @discardableResult
     public func add(stub request: HTTPStubRequest) -> Self {
         remove(stub: request)
         stubbedRequests.append(request)
-        return self
-    }
-    
-    /// Add new ignore rule.
-    ///
-    /// - Parameter rule: rule.
-    /// - Returns: Self
-    public func add(ignore rule: HTTPStubIgnoreRule) -> Self {
-        ignoreRules.append(rule)
         return self
     }
     
@@ -99,6 +91,56 @@ public class HTTPStubber {
         }
     }
     
+    /// Remove all registered stubs.
+    public func removeAllStubs() {
+        stubbedRequests.removeAll()
+    }
+    
+    // MARK: - Manage Ignore Rules
+    
+    
+    /// Add new ignore rule.
+    ///
+    /// - Parameter rule: rule.
+    /// - Returns: Self
+    @discardableResult
+    public func add(ignore rule: HTTPStubIgnoreRule) -> Self {
+        ignoreRules.append(rule)
+        return self
+    }
+    
+    /// Create and add a new rule to ignore a specific URL.
+    /// If URL is invalid no rules will be added to the list of ignore rules.
+    ///
+    /// - Parameters:
+    ///   - url: url to ignore.
+    ///   - options: options for matching, by default is set to `.default`.
+    /// - Returns: Self
+    @discardableResult
+    public func add(ignoreURL url: String, options: HTTPURLMatcher.Options = .default) -> Self {
+        guard let matcher = HTTPURLMatcher(URL: url, options: options) else {
+            return self
+        }
+        
+        return add(ignore: HTTPStubIgnoreRule(matcher))
+    }
+    
+    /// Create and add a new rule to ignore urls which maches the regular expression provided.
+    /// If regular expression is wrong no rules will be added to the list of ignore rules.
+    ///
+    /// - Parameters:
+    ///   - regex: regular expression pattern.
+    ///   - options: regular expression matching options.
+    /// - Returns: Self
+    @discardableResult
+    public func add(ignoreURLRegex regex: String, options: NSRegularExpression.Options = []) -> Self {
+        guard let matcher = HTTPStubRegExMatcher(regex: regex, options: options, in: .url) else {
+            return self
+        }
+        
+        return add(ignore: HTTPStubIgnoreRule(matcher))
+    }
+    
     /// Remove an ignore rule.
     ///
     /// - Parameter rule: rule to remove.
@@ -106,11 +148,6 @@ public class HTTPStubber {
         if let index = ignoreRules.firstIndex(of: rule) {
             ignoreRules.remove(at: index)
         }
-    }
-    
-    /// Remove all registered stubs.
-    public func removeAllStubs() {
-        stubbedRequests.removeAll()
     }
     
     /// Remove all registered ignore rules.
@@ -161,9 +198,10 @@ public class HTTPStubber {
             return suitableStubForRequest(request) != nil
         case .optout:
             return queue.sync {
-                !ignoreRules.contains(where: {
+                let shouldIgnore = ignoreRules.contains(where: {
                     $0.matches(request)
                 })
+                return !shouldIgnore
             }
         }
     }
