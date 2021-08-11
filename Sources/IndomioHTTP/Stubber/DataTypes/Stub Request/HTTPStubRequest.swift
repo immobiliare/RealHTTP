@@ -36,7 +36,11 @@ public class HTTPStubRequest: Equatable {
     
     // MARK: - Private Functions
     
-    internal func suitableFor(_ urlRequest: URLRequest) -> Bool {
+    /// Check if url request matches the matchers.
+    ///
+    /// - Parameter urlRequest: url request.
+    /// - Returns: Bool
+    internal func match(_ urlRequest: URLRequest) -> Bool {
         for matcher in matchers {
             if matcher.matches(request: urlRequest, for: self) == false {
                 return false

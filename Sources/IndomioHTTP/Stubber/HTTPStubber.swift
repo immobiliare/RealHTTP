@@ -21,6 +21,10 @@ public class HTTPStubber {
     /// Is the stubber running and intercepting request?
     public private(set) var isEnabled = false
     
+    /// The mode defines how unknown URLs are handled.
+    /// Defaults to `optout` which means requests without a mock will fail.
+    public var unhandledMode: UnhandledMode = .optout
+    
     /// Currently registered stub requests.
     public private(set) var stubbedRequests = [HTTPStubRequest]()
     
@@ -31,6 +35,7 @@ public class HTTPStubber {
     // MARK: - Private Properties
     
     private var registeredHooks: [HTTPStubberHook] = []
+    private let queue = DispatchQueue(label: "httpstubber.queue.concurrent", attributes: .concurrent)
 
     // MARK: - Initialization
     
@@ -136,10 +141,51 @@ public class HTTPStubber {
     
     // MARK: - Internal Functions
     
+    /// Return suitable request which can manage the url request passed.
+    ///
+    /// - Parameter request: url request to check.
+    /// - Returns: HTTPSubRequest?
     internal func suitableStubForRequest(_ request: URLRequest) -> HTTPStubRequest? {
         stubbedRequests.first {
-            $0.suitableFor(request)
+            $0.match(request)
         }
+    }
+    
+    /// Return `true` if request should be handled by the stubber.
+    ///
+    /// - Parameter request: request to check.
+    /// - Returns: Bool
+    public func shouldHandle(_ request: URLRequest) -> Bool {
+        switch unhandledMode {
+        case .optin:
+            return suitableStubForRequest(request) != nil
+        case .optout:
+            return queue.sync {
+                !ignoreRules.contains(where: {
+                    $0.matches(request)
+                })
+            }
+        }
+    }
+    
+}
+
+// MARK: - HTTPStubber.UnhandledMode
+
+extension HTTPStubber {
+    
+    /// The mode defines how unknown URLs are handled.
+    /// 
+    /// - `optout`: only URLs registered wich matches the matchers are ignored for mocking.
+    ///             - Registered mocked URL: mocked.
+    ///             - Registered ignored URL: ignored by the stubber, default process is applied as if the stubber is disabled.
+    ///             - Any other URL: Raises an error.
+    /// - `optin`: Only registered mocked URLs are mocked, all others pass through.
+    ///             - Registered mocked URL: mocked.
+    ///             - Any other URL: ignored by the stubber, default process is applied as if the stubber is disabled.
+    public enum UnhandledMode {
+        case optout
+        case optin
     }
     
 }

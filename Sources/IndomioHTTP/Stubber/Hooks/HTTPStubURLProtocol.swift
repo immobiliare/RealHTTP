@@ -41,7 +41,8 @@ public class HTTPStubURLProtocol: URLProtocol {
             return false
         }
         
-        return true
+        // Pass filter for ignore urls
+        return HTTPStubber.shared.shouldHandle(request)
     }
     
     public override class func canonicalRequest(for request: URLRequest) -> URLRequest {

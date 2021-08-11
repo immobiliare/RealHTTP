@@ -76,4 +76,16 @@ public class HTTPStubIgnoreRule: Equatable {
         lhs.uuid == rhs.uuid
     }
     
+    // MARK: - Internal Functions
+    
+    internal func matches(_ urlRequest: URLRequest) -> Bool {
+        for matcher in matchers {
+            if matcher.matches(request: urlRequest, for: self) == false {
+                return false
+            }
+        }
+        
+        return true
+    }
+    
 }
