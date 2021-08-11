@@ -103,7 +103,7 @@ public class HTTPStubURLProtocol: URLProtocol {
     }
     
     public override func stopLoading() {
-        
+        responseWorkItem?.cancel()
     }
     
     // MARK: - Private Functions
@@ -130,16 +130,12 @@ public class HTTPStubURLProtocol: URLProtocol {
             statusCode.responseType == .redirection &&
             (statusCode != .notModified && statusCode != .useProxy)
         
-        if isRedirect {
-            guard let location = stubResponse.headers["Location"],
-                  let url = URL(string: location),
-                  let cookies = cookies.cookies(for: url) else {
-                return
-            }
-            
+        if isRedirect, let location = stubResponse.body?.data?.redirectLocation {
             // Includes redirection call to client.
-            var redirect = URLRequest(url: url)
-            redirect.allHTTPHeaderFields = HTTPCookie.requestHeaderFields(with: cookies)
+            var redirect = URLRequest(url: location)
+            if let cookiesInRedirect = cookies.cookies(for: url) {
+                redirect.allHTTPHeaderFields = HTTPCookie.requestHeaderFields(with: cookiesInRedirect)
+            }
             client?.urlProtocol(self, wasRedirectedTo: redirect, redirectResponse: response!)
         }
         

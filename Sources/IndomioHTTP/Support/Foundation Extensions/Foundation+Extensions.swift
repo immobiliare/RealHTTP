@@ -88,6 +88,10 @@ extension URLRequest {
 
 extension Data {
     
+    /// Create a new Data with the contents of file at given url.
+    ///
+    /// - Parameter fileURL: file location, must be local and must be exists, otherwise it will return nil.
+    /// - Returns: Data?
     static func fromURL(_ fileURL: URL?) -> Data? {
         guard let fileURL = fileURL else { return nil }
         
@@ -323,6 +327,24 @@ extension URL {
         } catch {
             return nil
         }
+    }
+    
+}
+
+// MARK: - Data Extension for HTTP Stub
+
+extension Data {
+    
+    /// Returns the redirect location from the raw HTTP response if exists.
+    internal var redirectLocation: URL? {
+        let locationComponent = String(data: self, encoding: String.Encoding.utf8)?.components(separatedBy: "\n").first(where: { (value) -> Bool in
+            return value.contains("Location:")
+        })
+        
+        guard let redirectLocationString = locationComponent?.components(separatedBy: "Location:").last, let redirectLocation = URL(string: redirectLocationString.trimmingCharacters(in: NSCharacterSet.whitespaces)) else {
+            return nil
+        }
+        return redirectLocation
     }
     
 }
