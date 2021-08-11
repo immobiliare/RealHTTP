@@ -97,4 +97,25 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
         return request
     }
     
+    /// Execute the request synchronously.
+    ///
+    /// - Parameter request: request.
+    /// - Returns: HTTPRawResponse
+    public func executeSync(request: HTTPRequestProtocol) -> HTTPRawResponse {
+       let sem = DispatchSemaphore(value: 0)
+
+        var rawResponse: HTTPRawResponse!
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self = self else { return }
+
+            request.setResponse(.global(qos: .background)) {
+                rawResponse = $0
+                sem.signal()
+            }
+            self.execute(request: request)
+        }
+        _ = sem.wait(timeout: .now() + 30)
+        return rawResponse
+    }
+    
 }

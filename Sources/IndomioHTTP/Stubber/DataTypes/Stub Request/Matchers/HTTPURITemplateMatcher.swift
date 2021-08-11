@@ -18,7 +18,6 @@ import Foundation
 ///
 /// to match the following URLs:
 ///
-/// - https://github.com/kylef/WebLinking.swift
 /// - https://github.com/kylef/{repository}
 /// - /kylef/{repository}
 /// - /kylef/URITemplate.swift

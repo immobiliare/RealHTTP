@@ -128,7 +128,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     private var responseResult: HTTPRequestResult?
     
     /// Sync queue.
-    internal let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
+   internal let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
     
     // MARK: - Initialization
     
@@ -157,6 +157,19 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         changeState(.executing)
         client.execute(request: self)
         return self
+    }
+    
+    /// Run the request into destination client synchrously.
+    ///
+    /// - Parameter client: client instance.
+    /// - Returns: HTTPRawResponse?
+    public func runSync(in client: HTTPClientProtocol) -> HTTPRawResponse? {
+        guard isPending else {
+            return response // already started
+        }
+        
+        changeState(.executing)
+        return client.executeSync(request: self)
     }
     
     // MARK: - Others

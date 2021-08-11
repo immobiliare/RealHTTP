@@ -11,8 +11,11 @@
 
 import Foundation
 
+/// This define the structure of a client where you can execute your HTTP requests.
 public protocol HTTPClientProtocol: AnyObject {
     
+    // MARK: - Public Properties
+
     /// Base URL.
     var baseURL: String { get set }
     
@@ -37,21 +40,35 @@ public protocol HTTPClientProtocol: AnyObject {
     /// Requests may override this behaviour.
     var security: HTTPSecurityProtocol? { get set }
     
-    // MARK: - Public Functions
+    // MARK: - Validation of Response
     
     /// Validate response from a request.
     ///
     /// - Parameter response: response.
     func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction
 
+    // MARK: - Requests Builder
+
     /// Create the best subclass of `URLSessionTask` to execute the request.
 
     /// - Parameter request: request to use.
     func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask
     
+    // MARK: - Executing Requests
+    
+    /// Execute network request asynchrously.
+    ///
+    /// - Parameter request: request to execute.
     @discardableResult
+    
     func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol
-
+    
+    /// Execute network request synchrously.
+    ///
+    /// - Parameter request: request to execute.
+    @discardableResult
+    func executeSync(request: HTTPRequestProtocol) -> HTTPRawResponse
+    
 }
 
 // MARK: - HTTPClientProtocol Configuration
