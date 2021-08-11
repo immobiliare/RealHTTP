@@ -25,7 +25,7 @@ public class HTTPStubIgnoreRule: Equatable {
     
     /// Matcher which validate the ignore rule. When all matchers are valid
     /// the request will be ignored.
-    public let matchers: [HTTPStubMatcherProtocol]
+    public private(set) var matchers: [HTTPStubMatcherProtocol]
     
     // MARK: - Initialization
     
@@ -35,12 +35,41 @@ public class HTTPStubIgnoreRule: Equatable {
     
     // MARK: - Public Functions
     
-    public func match(url: String, ignoreQuery: Bool) -> Self {
+    /// Add specified matcher to the list of matchers for request.
+    ///
+    /// - Parameter matcher: matcher to add.
+    /// - Returns: Self
+    public func match(_ matcher: HTTPStubMatcherProtocol) -> Self {
+        matchers.append(matcher)
         return self
     }
     
+    /// Configure the ignore rule to match a specific URL optionally ignoring query parameters.
+    /// If URL is not valid no rule will be added.
+    ///
+    /// - Parameters:
+    ///   - URL: URL target.
+    ///   - ignoreQueryParameters: true to ignore query parameters from matcher.
+    /// - Returns: Self
+    public func match(url: String, ignoreQueryParameters: Bool) -> Self {
+        guard let matcher = HTTPURLMatcher(URL: url, ignoreQuery: ignoreQueryParameters) else {
+            return self
+        }
+        return match(matcher)
+    }
+    
+    /// Configure the ignore rule to use a regular expression matcher to intercept URLs.
+    ///
+    /// - Parameters:
+    ///   - pattern: pattern for validation.
+    ///   - options: options for regular expression.
+    /// - Returns: Self
     public func match(urlRegex pattern: String, options: NSRegularExpression.Options = []) -> Self {
-        return self
+        guard let matcher = HTTPStubRegExMatcher(regex: pattern, options: options, in: .url) else {
+            return self
+        }
+        
+        return match(matcher)
     }
     
     public static func == (lhs: HTTPStubIgnoreRule, rhs: HTTPStubIgnoreRule) -> Bool {
