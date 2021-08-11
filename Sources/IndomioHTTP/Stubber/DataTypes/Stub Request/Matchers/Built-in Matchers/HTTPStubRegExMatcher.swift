@@ -11,7 +11,7 @@
 
 import Foundation
 
-public class HTTPStubRegExMatcher: HTTPStubMatcher {
+public class HTTPStubRegExMatcher: HTTPStubMatcherProtocol {
     
     // MARK: - Public Properties
     

@@ -18,7 +18,7 @@ public class HTTPStubRequest: Equatable {
     // MARK: - Public Properties
     
     /// Matching options for request.
-    public var matchers = [HTTPStubMatcher]()
+    public var matchers = [HTTPStubMatcherProtocol]()
     
     /// Response to produce for each http method which match this request.
     public var responses = [HTTPMethod: HTTPStubResponse]()
@@ -33,7 +33,7 @@ public class HTTPStubRequest: Equatable {
         return self
     }
     
-    public func match(_ matcher: HTTPStubMatcher) -> Self {
+    public func match(_ matcher: HTTPStubMatcherProtocol) -> Self {
         matchers.append(matcher)
         return self
     }

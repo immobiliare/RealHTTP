@@ -18,7 +18,7 @@ public enum HTTPMatcherLocation {
     case url
 }
 
-public protocol HTTPStubMatcher {
+public protocol HTTPStubMatcherProtocol {
     
     func matches(request: URLRequest, forStub stub: HTTPStubRequest) -> Bool
     
