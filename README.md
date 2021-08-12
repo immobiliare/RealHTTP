@@ -27,6 +27,10 @@ Our goal is make an easy to use and effortless http client for Swift.
 This is how you can make a simple http request:
 
 ```swift
-
-
+let client = HTTPClient(baseURL: "...")
+let login = HTTPRequest<User>(.post, "/login")
+            .json(["username": username, "password": pwd])
+login.run(in: client).response { loggedUser in
+    // do something
+}
 ```
