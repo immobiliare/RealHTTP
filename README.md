@@ -51,7 +51,7 @@ Check out the Documentation section below!
 
 ## Documentation
 
-- Introduction
+- [Introduction](./Documentation/Introduction.md)
     - Making Requests
     - Response Handling
     - Response Validation
@@ -82,10 +82,9 @@ Check out the Documentation section below!
 
 IndomioHTTP can be installed in any platform which supports Swift 5.4+ ON:
 
-iOS 13+
-Xcode 12.5+
-Swift 5.4+
-
+iOS 13+  
+Xcode 12.5+  
+Swift 5.4+  
 
 ## Installation
 
