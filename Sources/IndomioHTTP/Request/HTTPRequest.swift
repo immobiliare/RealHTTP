@@ -111,6 +111,13 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         }
     }
     
+    /// Describe the priority of the operation.
+    /// It may acts as a suggestion for HTTP/2 based services (priority frames / dependency weighting)
+    /// for simple `HTTPClient` instances.
+    /// In case of `HTTPQueueClient` it also act as priority level for queue concurrency.
+    /// See the doc for more infos; by default is set to `.normal`.
+    public var priority: HTTPRequestPriority = .normal
+    
     // MARK: - Observers
     
     /// Registered callbacks for decoded object events.

@@ -79,6 +79,7 @@ public class HTTPClientQueue: HTTPClient {
         do {
             let task = try createTask(for: request) // build URLRequest along with the URLSessionTask to execute
             let operation = HTTPRequestOperation(task: task) // create a container for the task
+            operation.queuePriority = request.priority.queuePriority
             
             eventMonitor.addRequest(request, withTask: task) // monitor response
             addOperations(operation) // put in queue the operation
@@ -90,7 +91,7 @@ public class HTTPClientQueue: HTTPClient {
         
         return request
     }
-    
+        
     // MARK: - Private Functions
     
     /// Add operations to the queue.

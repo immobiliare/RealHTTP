@@ -82,17 +82,22 @@ public extension HTTPClientProtocol {
     /// - Returns: (URLRequest, URLSessionTask)
     func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask {
         let urlRequest = try request.urlRequest(in: self)
+        var task: URLSessionTask!
         switch request.expectedDataType {
         case .default:
-            return session.dataTask(with: urlRequest)
+            task = session.dataTask(with: urlRequest)
         case .large:
             if let resumeDataURL = request.resumeDataURL,
                let resumeData = Data.fromURL(resumeDataURL) {
-                return session.downloadTask(withResumeData: resumeData)
+                task = session.downloadTask(withResumeData: resumeData)
             } else {
-                return session.downloadTask(with: urlRequest)
+                task = session.downloadTask(with: urlRequest)
             }
         }
+        
+        /// Keep in mind it's just a suggestion for HTTP/2 based services.
+        task.priority = request.priority.urlTaskPriority
+        return task
     }
     
     /// Validate the response with the list of validators.
