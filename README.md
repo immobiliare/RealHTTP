@@ -9,6 +9,7 @@ Our goal is make an easy to use and effortless http client for Swift.
 - Chainable Request/Responses
 - Combine Support (Async/Await in progress)
 - Retry/timeout control
+- URI Template support for parameter's build
 - URL/JSON Parameter Encoding
 - Multipart file upload along with form values
 - Built-in JSON decoding via Codable
@@ -22,7 +23,7 @@ Our goal is make an easy to use and effortless http client for Swift.
 - HTTP Chainable Response Validators
 - Built-in advanced HTTP Stubber
 
-## What You Get (HTTP Client)
+## Simple HTTP Client
 
 This is how you can make a simple http request:
 
@@ -45,6 +46,30 @@ login.run(in: client)
         // raw response
      }
 ```
+## Simple HTTP Stubber
+
+IndomioHTTP also offer a built-in http stubber useful to mock your network calls for unit testing.  
+This is a simple URI matching stub:
+
+```swift
+var stubLogin = HTTPStubRequest()
+                .match(URI: "https://github.com/malcommac/{repository}")
+                .stub(for: .post, delay: 5, json: mockLoginJSON))
+
+HTTPStubber.shared.add(stub: stubLogin)
+HTTPStubber.shared.enable()
+```
+
+HTTPStubber also support different matchers (regex matcher for url/body, URI template matcher, JSON matcher and more).  
+This is an example to match Codable entity for a stub:
+
+```swift
+var stubLogin = HTTPStubRequest()
+            .match(object: User(userID: 34, fullName: "Mark"))
+            .stub(for: .post, delay: 5, json: mockLoginJSON)
+```
+
+## ... And More!
 
 But there's lots more features you can use with IndomioHTTP.  
 Check out the Documentation section below!
@@ -77,6 +102,8 @@ Check out the Documentation section below!
     - Introduction
     - Add a new stubber request
         - Configure request
+        - Create Matcher
+        - Built-in Matchers
     - Add ignore rule
 ## Requirements
 
