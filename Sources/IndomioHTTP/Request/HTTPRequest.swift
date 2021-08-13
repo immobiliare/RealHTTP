@@ -11,9 +11,13 @@
 
 import Foundation
 
-#if canImport(Combine)
-import Combine
-#endif
+// MARK: - HTTPRawRequest
+
+// When you don't need to get a decoded object but you want to read the raw response
+// you can use this typealias to skip the decode part and get the raw data coming from server.
+public typealias HTTPRawRequest = HTTPRequest<HTTPRawResponse>
+
+// MARK: - HTTPRequest (Decode)
 
 /// Defines the generic request you can execute in a client.
 open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
@@ -144,9 +148,25 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// - Parameters:
     ///   - method: method for http.
     ///   - route: route name.
-    required public init(_ method: HTTPMethod = .get, _ route: String = "") {
+    required
+    public init(_ method: HTTPMethod = .get, _ route: String = "") {
         self.method = method
         self.route = route
+    }
+    
+    /// Initialize a new request with given URI template and variables.
+    /// The `route` property will be assigned expanding the variables over the template
+    /// according to the RFC6570 (<https://tools.ietf.org/html/rfc6570>) protocol.
+    ///
+    /// - Parameters:
+    ///   - method: method of the http.
+    ///   - template: URI template as specified by RFC6570.
+    ///   - variables: variables to expand.
+    required
+    public init(_ method: HTTPMethod = .get, URI template: String, variables: [String: Any]) {
+        self.method = method
+        let template = URITemplate(template: template)
+        self.route = template.expand(variables)
     }
     
     // MARK: - Execute Request

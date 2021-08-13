@@ -101,6 +101,16 @@ public protocol HTTPRequestProtocol: AnyObject {
     ///   - method: HTTP method for the request, by default is `.get`.
     ///   - route: route to compose with the base url of the `HTTPClient` where the request is running.
     init(_ method: HTTPMethod, _ route: String)
+    
+    /// Initialize a new request with given URI template and variables.
+    /// The `route` property will be assigned expanding the variables over the template
+    /// according to the RFC6570 (<https://tools.ietf.org/html/rfc6570>) protocol.
+    ///
+    /// - Parameters:
+    ///   - method: method of the http.
+    ///   - template: URI template as specified by RFC6570.
+    ///   - variables: variables to expand.
+    init(_ method: HTTPMethod, URI template: String, variables: [String: Any])
 
     // MARK: - Public Functions
     

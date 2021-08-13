@@ -11,7 +11,26 @@
 
 import Foundation
 
+// MARK: - Typealias for URLSession Response
+
+/// This is just a typealias for raw reponse coming from underlying URLSession instance.
 public typealias URLSessionResponse = (urlResponse: URLResponse?, data: HTTPRawData?, error: Error?)
+
+// MARK: - HTTPRequest<HTTPRawResponse> ~> HTTPRawRequest
+
+// Sometimes you don't need to get a decoded object and you just need of the raw
+// response. Conforming `HTTPRawResponse` to the `HTTPDecodableResponse` allows you
+// to create an `HTTPRequest<HTTPRawResponse>` where the decoded type is the raw response
+// itself.
+// In order to simplify the naming instead of creating `HTTPRequest<HTTPRawResponse>` you
+// can use the typealias `HTTPRawRequest`.
+extension HTTPRawResponse: HTTPDecodableResponse {
+    public static func decode(_ response: HTTPRawResponse) -> Result<HTTPRawResponse, Error> {
+        .success(response)
+    }
+}
+
+// MARK: - HTTPRawResponse
 
 /// Encapsulate the result of the execution of an `HTTPRequestProtocol` conform object.
 public struct HTTPRawResponse {

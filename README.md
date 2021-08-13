@@ -6,22 +6,18 @@ Our goal is make an easy to use and effortless http client for Swift.
 ## Feature Highlights
 
 - Sync/Async & Queued Requests
-- Chainable Request/Responses
-- Combine Support (Async/Await in progress)
-- Retry/timeout control
+- Elegant Request Builder with Chainable Response
+- Combine Support *(soon Async/Await!)*
+- Retry/timeout, Validators Control
 - URI Template support for parameter's build
-- URL/JSON Parameter Encoding
-- Multipart file upload along with form values
-- Built-in JSON decoding via Codable
-- Elegant & Type-Safe request builder
+- URL/JSON, Multipart Form/File Upload
+- JSON decoding via Codable
 - Upload/Download progress tracker
-- Readable URL Metrics tracker
-- Export cURL request description
-- SSL Pinning
-- Basic/Digest Authentication via URLCredentials
+- URL Metrics Tracker
+- cURL Description
+- SSL Pinning, Basic/Digest Authentication
 - TSL Certificate and Public Key Pinning
-- HTTP Chainable Response Validators
-- Built-in advanced HTTP Stubber
+- Advanced HTTP Stub
 
 ## Simple HTTP Client
 
@@ -40,16 +36,16 @@ Therefore you can create a custom `HTTPClient` to execute all your's webservice 
 
 ```swift
 let jokeAPIClient = HTTPClient(baseURL: "https://official-joke-api.appspot.com")
-let jokesRequest = HTTPRequest<User>(.get, "/random_jokes")
-           .json(["category": category, "count": countJokes])
+let jokesReq = HTTPRequest<User>(.get, "/random_jokes")
+               .json(["category": category, "count": countJokes]) // json parameter encoding!
 
 // Instead of callbacks we can also use Combine RX publishers.
-jokesRequest.resultPublisher(in: jokeAPIClient).sink { joke in
+jokesReq.resultPublisher(in: jokeAPIClient).sink { joke in
     // decoded Joke object
 }
 
 // Get only the raw server response
-jokesRequest.responsePublisher(in: ).sink { raw in
+jokesReq.responsePublisher(in: ).sink { raw in
     // raw response (with metrics, raw data...)
 }
 ```
@@ -79,9 +75,9 @@ var stubLogin = HTTPStubRequest()
                .stub(for: .post, delay: 5, json: mockLoginJSON)
 ```
 
-## ... And More!
+## ... and More!
 
-But there's lots more features you can use with IndomioHTTP. 
+But there's lots more features you can use with IndomioHTTP.  
 Check out the Documentation section below to learn more!
 
 ## Documentation
