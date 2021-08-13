@@ -83,15 +83,17 @@ Check out the Documentation section below to learn more!
 ## Documentation
 
 - [Introduction](./Documentation/Introduction.md)
-    - Architecture Components
-    - HTTP Client
-        - Introduction
-        - Create a new client
-        - Create a queue client
-        - Configure data validators
-        - The default validator (`HTTPDefaultValidator`)
-        - Client basic configuration
-        - Security settings (SSL/TSL)
+    - [Architecture Components](./Documentation/Introduction.md#architecture)
+    - [HTTP Client](./Documentation/HTTPClient.md)
+        - [Introduction](./Documentation/HTTPClient.md#introduction)
+        - [Create a new client](./Documentation/HTTPClient.md#newclient)
+        - [Create a queue client](./Documentation/HTTPClient.md#queueclient)
+        - [Configure data validators](./Documentation/HTTPClient.md#validators)
+        - [The default validator](./Documentation/HTTPClient.md#defaultvalidator)
+        - [Client basic configuration](./Documentation/HTTPClient.md#configureclient)
+        - [Security settings (SSL/TSL)](./Documentation/HTTPClient.md#security)
+        - [Configure security (SSL/TSL)](./Documentation/HTTPClient.md#configuresecurity)
+        - [Allows all certificates](./Documentation/HTTPClient.md#allowsallcerts)
     - Making Requests
     - Response Handling
     - Response Validation

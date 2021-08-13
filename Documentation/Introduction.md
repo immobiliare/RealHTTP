@@ -1,6 +1,6 @@
 # Introduction
 
-TOC:
+**TABLE OF CONTENTS**
 
 - Introduction
 - Architecture Components

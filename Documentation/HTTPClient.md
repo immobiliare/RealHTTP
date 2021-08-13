@@ -1,6 +1,6 @@
 # HTTP Client
 
-TOC:
+**TOC**
 
 - Introduction
 - Create a new client

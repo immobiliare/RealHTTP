@@ -13,7 +13,7 @@ import Foundation
 
 /// Parameters for an `HTTPRequestProtocol`
 public typealias HTTPURLRequestModifierCallback = ((inout URLRequest) throws -> Void)
-public typealias HTTPRequestParametersDict = [String: AnyObject]
+public typealias HTTPRequestParametersDict = [String: Any]
 public typealias HTTPParameters = [String: Any]
 
 // MARK: - HTTPRequestProtocol

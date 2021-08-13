@@ -311,15 +311,12 @@ extension HTTPRequest {
         return self
     }
     
-    /// Set the retry attempts for request.
+    /// Add/replace the header for the request.
     ///
-    /// - Parameter attempts: attempts.
+    /// - Parameters:
+    ///   - name: name of the field to set.
+    ///   - value: value of the field.
     /// - Returns: Self
-    public func maxRetry(_ attempts: Int) -> Self {
-        self.maxRetries = attempts
-        return self
-    }
-    
     public func header(_ name: HTTPHeaderField, _ value: String) -> Self {
         self.headers[name] = value
         return self
@@ -336,9 +333,9 @@ extension HTTPRequest {
     
     /// Set the request timeout interval.
     /// If not set the `HTTPClient`'s timeout where the instance is running will be used.
-    /// - Parameter timeout: timeout interval in seconds.
+    /// - Parameter timeout: timeout interval in seconds, `nil` to ignore timeout.
     /// - Returns: Self
-    public func timeout(_ timeout: TimeInterval) -> Self {
+    public func timeout(_ timeout: TimeInterval?) -> Self {
         self.timeout = timeout
         return self
     }
@@ -394,8 +391,23 @@ extension HTTPRequest {
     ///
     /// - Parameter queryParams: query parameters.
     /// - Returns: Self
-    public func query(_ queryParams: [String: AnyObject]) -> Self {
+    public func query(_ queryParams: [String: Any]) -> Self {
         self.queryParameters = URLParametersData(in: .queryString, parameters: queryParams)
+        return self
+    }
+    
+    /// Set the encoding style for objects in query parameters.
+    /// NOTE: You must have set the query parameters object first with `.queryParameters` or `query()` function
+    /// otherwise the value will be empty.
+    ///
+    /// - Parameters:
+    ///   - array: array encoding style.
+    ///   - bool: bool encoding style.
+    /// - Returns: Self
+    public func queryEncodingStyle(array: URLParametersData.ArrayEncodingStyle = .withBrackets,
+                                   bool: URLParametersData.BoolEncodingStyle = .asNumbers) -> Self {
+        queryParameters?.arrayEncoding = array
+        queryParameters?.boolEncoding = bool
         return self
     }
     
