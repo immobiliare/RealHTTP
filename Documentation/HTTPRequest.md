@@ -1,16 +1,18 @@
 # HTTP Request
 
 - Introduction
-- Run Requests
 - Configure a Request
-- Chainable Configuration
+    - Decodable Request
+    - Chainable Configuration
     - Set Request Headers
     - Set Request Content
     - Set Query Parameters
     - Set JSON Body
     - Set Form URL Encoded
     - Set Multipart Form
-
+- Modify an URLRequest
+- Execute Request
+- Data Observers
 ## Introduction
 
 IndomioHTTP provides a variety of convenience methods for making HTTP requests.  
@@ -29,21 +31,6 @@ You can create 2 kind of requests:
 - `HTTPRequest<Object: HTTPDecodableResponse>`: allows you to directly perform the call and execute parsing to return a valid businnes object.
 
 > NOTE: Both the objects have the same properties and methods (in fact the first one is just a typealias for `HTTPRequest<HTTPRawResponse>`).
-
-## Run Requests
-
-To execute a request you can use the `run()` function. 
-There are 3 different mode to execute a request:
-
-- `run(in: HTTPClientProtocol)`: execute the request inside the session of an `HTTPClient` instance.
-- `runSync(in: HTTPClientProtocol)`: run the call synchronously (blocking the caller thread, useful for testing purpose) inside the session of an `HTTPClient` instance.
-
-The same methods are also available when you don't need of a client and you want to execute them into the `HTTPClient.shared` instance:
-
-- `run()`
-- `runSync()`
-
-> NOTE: `*sync()` versions block the caller thread
 
 ## Configure a Request
 
@@ -75,6 +62,67 @@ If you want you can init a new request by using the URI Template too (conform to
 let req = HTTPRawRequest(.get, URI: "http://www.apple.com/{type}/{value}", 
                          variables: ["type": "mac", "value": 15]) // expand variables
 req.run() // execute with absolute url in shared client
+```
+
+## Decodable Request (Custom and Codable)
+
+`HTTPRequest` has a generics which defines what kind of object should return at the end of the network call. Every object which is conform to the `HTTPDecodableResponse` protocol can be returned as output of the request.
+
+`HTTPDecodableResponse` declare the following function:
+
+```swift
+public protocol HTTPDecodableResponse {
+    static func decode(_ response: HTTPRawResponse) -> Result<Self, Error>
+}
+```
+
+Implementing this method in your own object you can parse the raw response from a request and transform it to your desidered business object.  
+
+This is an example which use SwiftyJSON to decode an `User` struct; this is very useful when your decoding must be heavily customized and the use of Codable is not suggested:
+
+```swift
+import SwiftyJSON
+
+struct User: HTTPDecodableResponse {
+    public let userID: String
+    public let name: String
+    public let email: String
+
+    static func decode(_ response: HTTPRawResponse) -> Result<Self, Error> {
+        let json = JSON(response.content.data)
+        guard let userID = json["userid"].string else {
+            return .failure(.other, "Cannot decode User, missing required userid")
+        }
+
+        let user = User(userID: userID, name: json["name"].stringValue, email: json["email"].stringValue)
+        return .success(user)
+    }
+
+}
+```
+
+Of course if you don't need to customize your parsing methods, IndomioHTTP also support `Codable` by default.  
+Any object conform to `Codable` protocol can be assigned to `HTTPRequest` and its decoding is made automatically:
+
+```swift
+struct User: Codable {
+    public let userID: String
+    public let name: String
+    public let email: String
+}
+```
+
+so in both cases you can just run your request:
+
+```swift
+HTTPRequest<User>().method(.post).route("agents/login").json("user": user, "pwd": pwd).onResult { result in
+    switch result {
+        case .success(let user):
+            print("Logged as \(user.email)")
+        case .failure(let error):
+            print("Failed with error: \(error.localizedDescription))
+    }
+}
 ```
 
 ## Chainable Configuration
@@ -236,4 +284,90 @@ let req = HTTPRequest<FormResponse>()
                 $0.add(data: someData, name: "binary_data") // attach raw binary data
                 $0.add(stream: stream, name: "blob") // support InputStream content
           }
+```
+
+## Modify an URLRequest
+
+When IndomioHTTP create an `URLRequest` for an `HTTPRequest` in a client you may have the need to make some further changes.  
+In order to accomplish it you can provide a custom callback to `urlRequestModifier`:
+
+```swift
+let req = HTTPRequest<SomeObj>(...)
+req.urlRequestModifier = { urlRequest in
+    // urlRequest is received as inout object you can modify
+}
+```
+
+## Execute Request
+
+Once your request has configured you can use `run` functions to execute it.  
+There are 3 different mode to execute a request:
+
+- `run(in: HTTPClientProtocol)`: execute the request inside the session of an `HTTPClient` instance.
+- `runSync(in: HTTPClientProtocol)`: run the call synchronously (blocking the caller thread, useful for testing purpose) inside the session of an `HTTPClient` instance.
+
+The same methods are also available when you don't need of a client and you want to execute them into the `HTTPClient.shared` instance:
+
+- `run()`
+- `runSync()`
+
+> NOTE: `*sync()` versions block the caller thread
+
+
+### Data Observers
+
+You can monitor 3 different data from a request:
+
+- The **raw response** (`HTTPRawResponse`) which contains all the data received from server (including metrics data)
+- The **result object** (specified `HTTPDecodableResponse` conform object) which contains decoded data from server (or `nil` if an error has occurred).
+- The **progress** of upload/download: for large data set you can monitor the progress of the operation (via `progress` property, an `HTTPProgress` object).
+
+Each observer is basically a callback called by the request.  
+
+You can add a new observer via callbacks or using the Combine's publishers (it's up to you!):
+
+```swift
+req.run(in: client)
+   .onResult { result in
+        // Deal with Result<YourObject,Error>
+    }.onResponse { raw in
+        // deal with HTTPRawResponse
+    }.onProgress { progress in
+        // called multiple times with updated HTTProgress
+    }
+```
+
+Each callback also require a `queue` parameter which define the `DispatchQueue` where the callback must be executed. If not specified, as in the example above, the `.main` queue is used.  
+Callback can be chained multiple times, so you can call `onResult` for the same request in different point of codes and you will get the result automatically.
+
+You can also use the Combine's publishers.
+
+This track the decoded object:
+
+```swift
+// Execute the request (if needed) and create the publisher to get decoded result
+req.resultPublisher(in: client).sink { result in
+    switch result {
+        case .success(let obj):
+            // decoded object
+        case .failure(let err):
+            // error occurred
+    }
+}.store(in: &...)
+```
+
+This track the raw response:
+
+```swift
+req.responsePublisher(in: client).sink { rawResponse in
+    // deal with raw response         
+}.store(in: &...)
+```
+
+You can also monitor the `progress` property which is a `@Published` object:
+
+```swift
+req.$progress.sink { progress in
+     print("Progress: \(progress?.percentage ?? 0)%")
+}.store(in: &...)
 ```
