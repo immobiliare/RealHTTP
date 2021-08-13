@@ -150,19 +150,33 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     }
     
     // MARK: - Execute Request
-
+    
+    /// Run request asynchrously in shared client.
+    ///
+    /// - Returns: Self
+    public func run() -> Self {
+        run(in: nil)
+    }
+    
+    /// Run request synchroously in shared client.
+    ///
+    /// - Returns: HTTPRawResponse?
+    public func runSync() -> HTTPRawResponse? {
+        runSync(in: nil)
+    }
+    
     /// Run the request into the destination client.
     ///
     /// - Parameter client: client instance.
     /// - Throws: throw an exception if something went wrong.
     /// - Returns: Self
-    public func run(in client: HTTPClientProtocol) -> Self {
+    public func run(in client: HTTPClientProtocol?) -> Self {
         guard isPending else {
             return self // already started
         }
         
         changeState(.executing)
-        client.execute(request: self)
+        (client ?? HTTPClient.shared).execute(request: self)
         return self
     }
     
@@ -170,13 +184,13 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     ///
     /// - Parameter client: client instance.
     /// - Returns: HTTPRawResponse?
-    public func runSync(in client: HTTPClientProtocol) -> HTTPRawResponse? {
+    public func runSync(in client: HTTPClientProtocol?) -> HTTPRawResponse? {
         guard isPending else {
             return response // already started
         }
         
         changeState(.executing)
-        return client.executeSync(request: self)
+        return (client ?? HTTPClient.shared).executeSync(request: self)
     }
     
     // MARK: - Others
@@ -383,7 +397,9 @@ extension HTTPRequest {
     /// - Returns: URLRequest
     open func urlRequest(in client: HTTPClientProtocol) throws -> URLRequest {
         // Create the full URL of the request.
-        let fullURLString = (client.baseURL + route)
+        // If route contains an absolute path avoid to compose it with the client's based URL but
+        // deals it as absolute string to set.
+        let fullURLString = (!route.isRelative ? route : (client.baseURL + route))
         guard let fullURL = URL(string: fullURLString) else {
             throw HTTPError(.invalidURL(fullURLString)) // failed to produce a valid url
         }

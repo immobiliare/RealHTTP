@@ -111,6 +111,20 @@ public protocol HTTPRequestProtocol: AnyObject {
     ///   - client: client in which the request should run.
     func urlRequest(in client: HTTPClientProtocol) throws -> URLRequest
     
+    // MARK: - Run Request
+    
+    /// Run request asynchronously.
+    ///
+    /// - Parameter client: destination client, if `nil` the `shared`'s `HTTPClient` instance is used.
+    @discardableResult
+    func run(in client: HTTPClientProtocol?) -> Self
+    
+    /// Run request synchronously.
+    ///
+    /// - Parameter client: destination client, if `nil` the `shared`'s `HTTPClient` instance is used.
+    @discardableResult
+    func runSync(in client: HTTPClientProtocol?) -> HTTPRawResponse?
+    
     // MARK: - Execution
     
     /// Execute a call (if needed) and get the raw response.
@@ -140,7 +154,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     ///
     /// - Parameter retries: `true` to also reset retries attempts.
     func reset(retries: Bool)
-    
+
 }
 
 // MARK: - HTTPRequestState

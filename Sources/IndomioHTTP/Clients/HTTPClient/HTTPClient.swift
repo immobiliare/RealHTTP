@@ -15,6 +15,9 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     
     // MARK: - Public Properties
     
+    /// Shared client for http request.
+    public static let shared = HTTPClient()
+    
     /// Base URL.
     public var baseURL: String
     

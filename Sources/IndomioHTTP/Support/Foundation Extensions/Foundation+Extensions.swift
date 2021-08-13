@@ -286,6 +286,30 @@ internal extension Bundle {
     
 }
 
+// MARK: - String + URL Extensions
+
+extension String {
+    
+    // MARK: - Public Functions
+    
+    /// Return `true` if URL is not an absolute URL.
+    public var isRelative: Bool {
+        String.aboluteRegEx.numberOfMatches(in: self, options: [], range: NSRange(self.startIndex..., in: self)) == 0
+    }
+    
+    // MARK: - Internal Properties
+
+    /// Regular expression to validate absolute URL
+    /// See <https://regex101.com/r/nR2yL6/3>
+    /// See <https://stackoverflow.com/a/31991870>
+    static private var aboluteRegEx: NSRegularExpression {
+        try! NSRegularExpression(pattern: "(?:^[a-z][a-z0-9+.-]*:|\\/\\/)", options: .caseInsensitive)
+    }
+    
+}
+
+// MARK: - URL
+
 extension URL {
     
     // MARK: - Public Functions
