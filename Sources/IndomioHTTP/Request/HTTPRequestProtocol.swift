@@ -100,8 +100,8 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// - Parameters:
     ///   - method: HTTP method for the request, by default is `.get`.
     ///   - route: route to compose with the base url of the `HTTPClient` where the request is running.
-    init(method: HTTPMethod, route: String)
-    
+    init(_ method: HTTPMethod, _ route: String)
+
     // MARK: - Public Functions
     
     /// Create the underlying `URLRequest` instance for an `HTTPRequestProtocol` running into a `HTTPClient` instance.

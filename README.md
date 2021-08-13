@@ -28,24 +28,33 @@ Our goal is make an easy to use and effortless http client for Swift.
 This is how you can make a simple http request:
 
 ```swift
-let client = HTTPClient(baseURL: "myapi.com")
-let login = HTTPRequest<User>(.post, "/login")
-            .json(["username": username, "password": pwd])
-req.resultPublisher(in: client).sink { loggedUser in
-    // decoded User object
+let client = HTTPClient(baseURL: "https://official-joke-api.appspot.com")
+let joke = HTTPRequest<User>(.get, "/random_jokes")
+           .json(["category": category, "count": countJokes])
+req.resultPublisher(in: client).sink { joke in
+    // decoded Joke object
 }
 ```
 
 If you don't want to use Combine you can also switch seamlessy to promise-like chaianable callbacks. This how you can capture both decoded and raw response:
 
 ```swift
-login.run(in: client)
-     .response { loggedUser in
+joke.run(in: client)
+    .response { joke in
         // decoded object
-     }.rawResponse { rawResponse in
+    }.rawResponse { rawResponse in
         // raw response
-     }
+    }
 ```
+
+If you don't need to make custom clients but you want to specify for each request an absolute URL you can execute your requests into the shared `HTTPClient` instance. Request are easier to compose:
+
+```swift
+HTTPRequest("https://official-joke-api.appspot.com/random_joke").run().setResult { joke in
+    // decoded object
+}
+```
+
 ## Simple HTTP Stubber
 
 IndomioHTTP also offer a built-in http stubber useful to mock your network calls for unit testing.  
@@ -65,14 +74,14 @@ This is an example to match Codable entity for a stub:
 
 ```swift
 var stubLogin = HTTPStubRequest()
-            .match(object: User(userID: 34, fullName: "Mark"))
-            .stub(for: .post, delay: 5, json: mockLoginJSON)
+               .match(object: User(userID: 34, fullName: "Mark"))
+               .stub(for: .post, delay: 5, json: mockLoginJSON)
 ```
 
 ## ... And More!
 
-But there's lots more features you can use with IndomioHTTP.  
-Check out the Documentation section below!
+But there's lots more features you can use with IndomioHTTP. 
+Check out the Documentation section below to learn more!
 
 ## Documentation
 

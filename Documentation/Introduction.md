@@ -10,3 +10,10 @@ IndomioHTTP supports reactive programming by integrating Combine's publishers an
 ### Architecture
 
 This is an overview of the library's architecture. We'll take a brief look to each component below.
+
+#### HTTPClient
+
+This is the client where requests are executed. Each client may have its configuration which includes the base URL, cookies, custom headers, caching policy and more.  
+IndomioHTTP exposes two different kind of clients:
+- `HTTPClient`: this is the default client; network call are executed in concurrent fashion.
+- `HTTPQueuedClient`: this client maintain an interval OperationQueue which allows you to have a fine grained control over concurrent operation
