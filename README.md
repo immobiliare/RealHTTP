@@ -175,6 +175,10 @@ If you have any questions on how to use IndomioHTTP, bugs and enhancement please
 
 <a name="#license"/>
 
+## Authors
+
+- [Daniele Margutti](https://github.com/malcommac)
+
 ## License
 
 IndomioHTTP is licensed under the MIT license.  

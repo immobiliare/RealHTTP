@@ -31,7 +31,7 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     public var security: HTTPSecurityProtocol?
     
     /// Event monitor.
-    public var eventMonitor: HTTPClientEventMonitor!
+    public private(set) var eventMonitor: HTTPClientEventMonitor!
     
     /// Timeout interval for requests. Defaults to `60` seconds.
     /// Requests may override this behaviour.
