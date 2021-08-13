@@ -84,29 +84,32 @@ Check out the Documentation section below to learn more!
 
 - [Introduction](./Documentation/Introduction.md)
     - [Architecture Components](./Documentation/Introduction.md#architecture)
-    - [HTTP Client](./Documentation/HTTPClient.md)
-        - [Introduction](./Documentation/HTTPClient.md#introduction)
-        - [Create a new client](./Documentation/HTTPClient.md#newclient)
-        - [Create a queue client](./Documentation/HTTPClient.md#queueclient)
-        - [Configure data validators](./Documentation/HTTPClient.md#validators)
-        - [The default validator](./Documentation/HTTPClient.md#defaultvalidator)
-        - [Client basic configuration](./Documentation/HTTPClient.md#configureclient)
-        - [Security settings (SSL/TSL)](./Documentation/HTTPClient.md#security)
-        - [Configure security (SSL/TSL)](./Documentation/HTTPClient.md#configuresecurity)
+- [HTTP Client](./Documentation/HTTPClient.md)
+    - [Introduction](./Documentation/HTTPClient.md#introduction)
+    - [Create a new client](./Documentation/HTTPClient.md#newclient)
+    - [Create a queue client](./Documentation/HTTPClient.md#queueclient)
+    - [Configure Data Validators](./Documentation/HTTPClient.md#validators)
+        - [The Default Validator](./Documentation/HTTPClient.md#defaultvalidator)
+    - [Client Basic Configuration](./Documentation/HTTPClient.md#configureclient)
+    - [Security Settings (SSL/TSL)](./Documentation/HTTPClient.md#security)
+        - [Configure Security (SSL/TSL)](./Documentation/HTTPClient.md#configuresecurity)
         - [Allows all certificates](./Documentation/HTTPClient.md#allowsallcerts)
-    - Making Requests
+- [HTTP Request](./Documentation/HTTPRequest.md)
+    - Configure a Request
+    - Decodable Request
+    - Chainable Configuration
+    - Set Content
+        - Set Headers
+        - Set Query Parameters
+        - Set JSON Body
+        - Set Form URL Encoded
+        - Set Multipart Form
+    - Modify an URLRequest
+    - Execute Request
     - Response Handling
     - Response Validation
-    - Response Chaining
-- HTTP
-    - HTTP Methods
-    - Parameters & Encoding
-    - HTTP Headers
-    - Authentication
- - Large Data
-     - Downloading to file
-    - Uploading to server
- - Tools
+    - Upload/Download Large Data
+- Tools
      - Obtain Metrics
      - Print Metrics on screen
      - cURL command export
@@ -126,9 +129,9 @@ Check out the Documentation section below to learn more!
 
 IndomioHTTP can be installed in any platform which supports Swift 5.4+ ON:
 
-iOS 13+  
-Xcode 12.5+  
-Swift 5.4+  
+- iOS 13+  
+- Xcode 12.5+  
+- Swift 5.4+  
 
 ## Installation
 

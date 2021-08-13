@@ -1,11 +1,11 @@
 # HTTP Client
 
-**TOC**
+**TABLE OF CONTENTS**
 
 - Introduction
 - Create a new client
 - Create a queue client
-- Configure data validators
+- Response Validators
 - The default validator (`HTTPDefaultValidator`)
 - Client basic configuration
 - Security
@@ -68,7 +68,7 @@ Requests executed in `HTTPClientQueue` instances allows cancelling by calling th
 req.cancel()
 ```
 
-## Configure Data Validators
+## Response Validators
 
 Sometimes you need to provide your own validation rules to received data from server.  
 For example you want to make a custom validation which intercept a business-logic related error and fail the request process along with this information.  

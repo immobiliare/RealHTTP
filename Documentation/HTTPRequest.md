@@ -1,19 +1,19 @@
 # HTTP Request
 
-- Introduction
 - Configure a Request
-    - Decodable Request
-    - Chainable Configuration
-    - Set Request Headers
-    - Set Request Content
+- Decodable Request
+- Chainable Configuration
+- Set Content
+    - Set Headers
     - Set Query Parameters
     - Set JSON Body
     - Set Form URL Encoded
     - Set Multipart Form
 - Modify an URLRequest
 - Execute Request
-- Data Observers
-## Introduction
+- Response Handling
+- Response Validation
+- Upload/Download Large Data
 
 IndomioHTTP provides a variety of convenience methods for making HTTP requests.  
 At the simplest, just provide a String that can be converted into a URL:
@@ -157,7 +157,15 @@ The following methods allows you to configure every aspect of the request (all m
 - `header(HTTPHeaderField, String)` to add/replace an existing header field (type safe, `HTTPHeaderField`).
 - `headers()` to create a builder callback to configure in a single call all the headers of the call.
 
-## Set Request Headers
+## Set Content
+
+IndomioHTTP also provides a variety of methods to configure the content of a request; built in services includes:
+
+- JSON body configuration
+- Form URL Encoded
+- Query Parameters (in URL)
+- Multipart Form Data / File Upload
+### Set Headers
 
 Headers can be set one by line:
 
@@ -186,16 +194,6 @@ req.headers {
     $0["X-MyHeader"] = "SomeValue"
 }
 ```
-
-## Set Request Content
-
-IndomioHTTP provides a variety of methods to configure the content of a request; built in services includes:
-
-- JSON body configuration
-- Form URL Encoded
-- Query Parameters
-- Multipart Form Data / File Upload
-
 ### Set Query Parameters
 
 Setting query parameters which are added to the composed URL (`baseURL` + `route` or just absolute `route`) is pretty easy with the `query()` function:
@@ -314,7 +312,7 @@ The same methods are also available when you don't need of a client and you want
 > NOTE: `*sync()` versions block the caller thread
 
 
-### Data Observers
+## Response Handling
 
 You can monitor 3 different data from a request:
 
@@ -371,3 +369,14 @@ req.$progress.sink { progress in
      print("Progress: \(progress?.percentage ?? 0)%")
 }.store(in: &...)
 ```
+
+## Response Validation
+
+You have two way to perform response validation of a request.  
+The first one is to provide a custom implementation of the `HTTPDecodableResponse` protocol which is used to transform an `HTTPRawResponse` received from server to a valid object.
+
+The second one is centralized at client level and uses the ordered list of `validators` which are conform to `HTTPResponseValidatorProtocol` protocol. To learn more about this method see the "HTTP Client" section of the documentation.
+
+## Download/Upload Large Data
+
+Sometimes 
