@@ -25,35 +25,36 @@ Our goal is make an easy to use and effortless http client for Swift.
 
 ## Simple HTTP Client
 
-This is how you can make a simple http request:
+Making an async http request is easier than ever:
 
 ```swift
-let client = HTTPClient(baseURL: "https://official-joke-api.appspot.com")
-let joke = HTTPRequest<User>(.get, "/random_jokes")
-           .json(["category": category, "count": countJokes])
-req.resultPublisher(in: client).sink { joke in
+HTTPRequest<Joke>("https://official-joke-api.appspot.com/random_joke").run().setResult { joke in
     // decoded Joke object
 }
 ```
 
-If you don't want to use Combine you can also switch seamlessy to promise-like chaianable callbacks. This how you can capture both decoded and raw response:
+In this case you are executing a request inside the shared `HTTPClient`, a shared client which manage your requests.  
+Sometimes you may need to a more fined grained control.  
+Therefore you can create a custom `HTTPClient` to execute all your's webservice network calls sharing a common configuration (headers, cookies, authentication etc.) using the `run(in:)` method.
+
 
 ```swift
-joke.run(in: client)
-    .response { joke in
-        // decoded object
-    }.rawResponse { rawResponse in
-        // raw response
-    }
-```
+let jokeAPIClient = HTTPClient(baseURL: "https://official-joke-api.appspot.com")
+let jokesRequest = HTTPRequest<User>(.get, "/random_jokes")
+           .json(["category": category, "count": countJokes])
 
-If you don't need to make custom clients but you want to specify for each request an absolute URL you can execute your requests into the shared `HTTPClient` instance. Request are easier to compose:
+// Instead of callbacks we can also use Combine RX publishers.
+jokesRequest.resultPublisher(in: jokeAPIClient).sink { joke in
+    // decoded Joke object
+}
 
-```swift
-HTTPRequest("https://official-joke-api.appspot.com/random_joke").run().setResult { joke in
-    // decoded object
+// Get only the raw server response
+jokesRequest.responsePublisher(in: ).sink { raw in
+    // raw response (with metrics, raw data...)
 }
 ```
+
+You can use it with regular callbacks, combine publishers and soon with async/await's Tasks.
 
 ## Simple HTTP Stubber
 
