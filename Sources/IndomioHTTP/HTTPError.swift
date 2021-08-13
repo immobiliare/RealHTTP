@@ -30,6 +30,9 @@ public struct HTTPError: LocalizedError {
     /// Additional user info.
     public var userInfo: [String: Any]?
     
+    /// Custom error message.
+    public let message: String?
+    
     // MARK: - Initialization
         
     public init(_ type: ErrorType,
@@ -42,12 +45,21 @@ public struct HTTPError: LocalizedError {
         self.error = error
         self.userInfo = userInfo
         self.cocoaCode = cocoaCode
+        self.message = nil
+    }
+    
+    public init(_ type: ErrorType, message: String) {
+        self.type = type
+        self.message = message
+        self.statusCode = .none
+        self.cocoaCode = nil
+        self.error = nil
     }
     
     // MARK: - Public Properties
     
     public var errorDescription: String? {
-        return error?.localizedDescription
+        return (message ?? error?.localizedDescription)
     }
     
     /// Return `true` if error is related to a missing connectivity.
@@ -80,6 +92,7 @@ public extension HTTPError {
     /// - `emptyResponse`: empty response received from server
     /// - `maxRetryAttemptsReached`: the maximum number of retries for request has been reached
     /// - `sessionError`: error related to the used session instances (may be a systemic error or it was invalidated)
+    /// - `other`: any internal error, you can use it as your own handler.
     enum ErrorType {
         case invalidURL(URLConvertible)
         case multipartInvalidFile(URL)
@@ -95,6 +108,7 @@ public extension HTTPError {
         case emptyResponse
         case maxRetryAttemptsReached
         case sessionError
+        case other
     }
     
 }

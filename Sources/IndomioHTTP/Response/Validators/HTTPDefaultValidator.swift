@@ -17,21 +17,23 @@ import Foundation
 /// This validator allows you to configure:
 /// - Allows/Deny Empty responses: to allows or generate an error in case of empty response by server.
 /// - Configure Retry Policy: allows you to configure what kind of `Error` should trigger a retry attempt for request.
-open class HTTPDefaultValidator: HTTPResponseValidator {
+open class HTTPDefaultValidator: HTTPResponseValidatorProtocol {
     
     // MARK: - Public Properties
     
     /// If `true` empty responses are tracked as valid responses if status code it's not an error.
     /// In case of empty response validation fails with `emptyResponse` error.
-    public var allowsEmptyResponses = true
+    open var allowsEmptyResponses = true
     
     // MARK: - Validation
     
     /// Validate the response and set the action to perform.
     ///
-    /// - Parameter response: response received.
+    /// - Parameters:
+    ///   - response: response.
+    ///   - request: origin request.
     /// - Returns: HTTPResponseValidatorAction
-    open func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction {
+    open func validate(response: HTTPRawResponse, forRequest request: HTTPRequestProtocol) -> HTTPResponseValidatorResult {
         if let error = response.error {
             if shouldAllowRetryWithError(error) {
                 // Some errors allows retry of the call.

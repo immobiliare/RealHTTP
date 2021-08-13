@@ -30,7 +30,7 @@ public protocol HTTPClientProtocol: AnyObject {
     var timeout: TimeInterval { get set }
     
     /// Validators for response. Values are executed in order.
-    var validators: [HTTPResponseValidator] { get set }
+    var validators: [HTTPResponseValidatorProtocol] { get set }
     
     /// The cache policy for the request. Defaults to `.useProtocolCachePolicy`.
     /// Requests may override this behaviour.
@@ -43,9 +43,11 @@ public protocol HTTPClientProtocol: AnyObject {
     // MARK: - Validation of Response
     
     /// Validate response from a request.
-    ///
-    /// - Parameter response: response.
-    func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction
+
+    /// - Parameters:
+    ///   - response: response received.
+    ///   - request: origin request.
+    func validate(response: HTTPRawResponse, forRequest request: HTTPRequestProtocol) -> HTTPResponseValidatorResult
 
     // MARK: - Requests Builder
 
@@ -100,15 +102,15 @@ public extension HTTPClientProtocol {
         return task
     }
     
-    /// Validate the response with the list of validators.
+    /// Validate the response using the ordered list of validators.
     ///
     /// - Parameters:
-    ///   - clientValidators: validators list.
     ///   - response: response received from server.
+    ///   - request: origin request.
     /// - Returns: HTTPResponseValidatorAction
-    func validate(response: HTTPRawResponse) -> HTTPResponseValidatorAction {
+    func validate(response: HTTPRawResponse, forRequest request: HTTPRequestProtocol) -> HTTPResponseValidatorResult {
         for validator in validators {
-            let result = validator.validate(response: response)
+            let result = validator.validate(response: response, forRequest: request)
             guard case .passed = result else {
                 return result
             }

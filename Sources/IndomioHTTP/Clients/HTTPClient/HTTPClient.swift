@@ -38,7 +38,7 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     public var timeout: TimeInterval = 60
     
     /// Validators for response. Values are executed in order.
-    public var validators: [HTTPResponseValidator] = [
+    public var validators: [HTTPResponseValidatorProtocol] = [
         HTTPDefaultValidator() // standard validator for http responses
     ]
         
@@ -119,6 +119,24 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
         }
         _ = sem.wait(timeout: .now() + 30)
         return rawResponse
+    }
+    
+}
+
+// MARK: - HTTPClient Extensions
+
+extension HTTPClient {
+    
+    /// Add new validator function at the end of the list of validators of the client.
+    ///
+    /// - Parameters:
+    ///   - name: name of the validator (used only for your own needs, library will not use it).
+    ///   - handler: handler function.
+    /// - Returns: Self
+    public func addValidator(name: String? = nil, _ handler: @escaping HTTPCustomValidator.Handler) -> Self {
+        let validator = HTTPCustomValidator(name: name, handler)
+        validators.append(validator)
+        return self
     }
     
 }

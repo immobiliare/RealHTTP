@@ -8,6 +8,10 @@ TOC:
     - Create a new client
     - Create a queue client
     - Configure data validators
+    - The default validator (`HTTPDefaultValidator`)
+    - Client basic configuration
+    - Security settings (SSL/TSL)
+
 ## Introduction
 
 IndomioHTTP provides an elegant type-safe interface to build and execute HTTP request.  
@@ -80,6 +84,72 @@ In this case the `HTTPQueueClient` is the client you want to use:
 let client = HTTPClientQueue(maxSimultaneousRequest: 3, baseURL: "http://.../v1")
 ```
 
-Each time you will run a request 
+Each time you will run a request in a queued client it manages automatically requests based upon their priority respecting the maximum number of concurrent requests.  
+
+> NOTE: To set the priority of a `HTTPRequest`/`HTTPRawRequest` use the `.priority` property. It allows you to manage the priority for request executed in a `HTTPQueueClient` instance and send the hint to compatible HTTP/2 endpoints (for simple `HTTPClient`s only the HTTP/2 is applied, no changes to local's sys priority queues is set).
 
 ### Configure Data Validators
+
+Sometimes you need to provide your own validation rules to received data from server.  
+For example you want to make a custom validation which intercept a business-logic related error and fail the request process along with this information.  
+
+HTTP Client exposes the `validators` property, an ordered array of `HTTPResponseValidatorProtocol` conform objects you can assign to check the raw response coming from server.
+
+This protocol require the implementation of only one method:
+
+```swift
+func validate(response: HTTPRawResponse, forRequest request: HTTPRequestProtocol) 
+             -> HTTPResponseValidatorResult
+```
+
+It will be called for each raw response received for an origin request and return the appropriate action to perform:
+
+- `.failWithError(Error)`: mark the request failed with given error.
+- `.retryIfPossible`: retry the same call if origin request's `retryAttempts` limit is not reached (by default no retry is set).
+- `.retryAfter(HTTPRequestProtocol)`: perform an alternate call, then again this request. This is useful for webservices which return unauthorized and you want to make a silent login before repeting previously failed request.
+- `passed`: no error is throw, pass to the next validator (if any) or successfully resolve the request.
+
+This is silly validator which intercept a specific error field into the response's body:
+
+```swift
+client.addValidator { response, request in
+    guard let data = response.content?.data,
+          let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary,
+          let errorMsg = json.value(forKey: "error") as? String, !errorMsg.isEmpty  else {
+              return .passed // no error found in 'error' field of the response's body
+    }
+            
+    let error = HTTPError(.other, message: errorMsg)
+    return .failWithError(error)
+}
+```
+
+`.validators` **are executed in order**; the first validator which fails interrupt the chain and set the final response of the request.  
+
+### The Default Validator (`HTTPDefaultValidator`)
+
+By default each client has a single validator called `HTTPDefaultValidator`; this validator makes the following standard check:
+
+- Check if the response is an error (http error code identify an error or the network call response is an error)
+- If an error is identified it also identify the error; if it's something related to network connectivity and the user set the `retryAttempts` to a non zero positive value (and the limit is not reached) it attempts to re-execute the call. Recoverable errors are the following error of the `URLError` family: `.timedOut`, `.cannotFindHost`, `.cannotConnectToHost`, `.networkConnectionLost` and `.dnsLookupFailed`.
+- If it's not a recoverable error the call fail with that error.
+- If no error has occurred call is okay and move on to the next validator (if any) or resolve the request.
+
+**Empty Responses**
+
+`HTTPDefaultValidator` also allows to deal with empty responses; by setting the `.allowsEmptyResponses` property you can decide to mark an empty response received from server as okay or as an error. By default no empty response are allowed.
+
+You should need to remove the default validator but you may override it by creating a custom class if you need.
+
+### Client basic configuration
+
+You can configure the following properties for each client instance.
+
+- `headers`: allows you to define (in type-safe manner) the list of HTTP Headers to set for each call you will make with the client instance.
+- `timeout`: you can define a global timeout interval; if request exceed the limit time with no response from server they'll fail with `.timeout` error.
+- `cachePolicy`: you can decide the cache policy to adopt; by default it uses the `.useProtocolCachePolicy`.
+- `security`: you can decide to attach a security settings applied to each requested call. *See the paragraph below for more infos*.
+
+> NOTE: All these properties are used as global settings for each request executed into the instance of the client. However you can extend/override these settings by acting on the respective properties of the `HTTPRequest` instances.
+
+### Security settings (SSL/TSL)

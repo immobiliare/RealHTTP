@@ -195,7 +195,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     private func didComplete(request: HTTPRequestProtocol, response: inout HTTPRawResponse) {
         guard let client = self.client else { return }
         
-        let validationAction = client.validate(response: response)
+        let validationAction = client.validate(response: response, forRequest: request)
         switch validationAction {
         case .failWithError(let error): // Response validation failed with error, set the new error and forward it
             response.error = HTTPError(.invalidResponse, error: error)
