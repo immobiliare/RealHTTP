@@ -72,7 +72,7 @@ private final class HTTPResultSubscription<S: Subscriber, Object: HTTPDecodableR
     // MARK: - Conformance to Subscription
     
     func request(_ demand: Subscribers.Demand) {
-        httpRequest.setResult(queue) { [weak self] result in
+        httpRequest.onResult(queue) { [weak self] result in
             _ = self?.subscriber?.receive(result)
             self?.subscriber?.receive(completion: .finished)
         }

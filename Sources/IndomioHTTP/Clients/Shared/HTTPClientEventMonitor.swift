@@ -219,7 +219,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
                 }
             } else {
                 // Response validation failed, you can retry but we need to execute another call first.
-                client.execute(request: altRequest).setResponse(.main, { altResponse in
+                client.execute(request: altRequest).onResponse(.main, { altResponse in
                     request.reset(retries: true)
                     client.execute(request: request)
                 })

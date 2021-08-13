@@ -28,8 +28,8 @@ Our goal is make an easy to use and effortless http client for Swift.
 Making an async http request is easier than ever:
 
 ```swift
-HTTPRequest<Joke>("https://official-joke-api.appspot.com/random_joke").run().setResult { joke in
-    // decoded Joke object
+HTTPRequest<Joke>("https://official-joke-api.appspot.com/random_joke").run().onResult { joke in
+    // decoded Joke object instance
 }
 ```
 

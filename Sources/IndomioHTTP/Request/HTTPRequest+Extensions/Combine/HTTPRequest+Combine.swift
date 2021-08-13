@@ -23,7 +23,7 @@ public extension HTTPRequest {
     /// - Returns: AnyPublisher<Object, Error>
      func future(in client: HTTPClient, queue: DispatchQueue = .main) -> AnyPublisher<Object, Error> {
         return Future { [weak self] fulfill in
-            self?.run(in: client).setResult(queue, { result in
+            self?.run(in: client).onResult(queue, { result in
                 fulfill(result)
             })
         }.eraseToAnyPublisher()
