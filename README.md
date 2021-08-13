@@ -75,7 +75,7 @@ var stubLogin = HTTPStubRequest()
                .stub(for: .post, delay: 5, json: mockLoginJSON)
 ```
 
-## ... and More!
+## ... and more!
 
 But there's lots more features you can use with IndomioHTTP.  
 Check out the Documentation section below to learn more!
@@ -83,6 +83,15 @@ Check out the Documentation section below to learn more!
 ## Documentation
 
 - [Introduction](./Documentation/Introduction.md)
+    - Architecture Components
+    - HTTP Client
+        - Introduction
+        - Create a new client
+        - Create a queue client
+        - Configure data validators
+        - The default validator (`HTTPDefaultValidator`)
+        - Client basic configuration
+        - Security settings (SSL/TSL)
     - Making Requests
     - Response Handling
     - Response Validation
