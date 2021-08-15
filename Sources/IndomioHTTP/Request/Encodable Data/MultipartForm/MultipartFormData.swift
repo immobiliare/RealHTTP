@@ -194,6 +194,21 @@ public class MultipartFormData: HTTPRequestEncodableData {
         formItems.append(item)
     }
     
+    /// Add the content of file as stream to the multipart form item.
+    ///
+    /// - Parameters:
+    ///   - fileURL: local file URL.
+    ///   - headers: headers to append
+    public func add(fileStream fileURL: URL, headers: HTTPHeaders) {
+        let fileSize = try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? NSNumber
+        let length = (fileSize ?? NSNumber(0)).uint64Value
+        guard let stream = InputStream(fileAtPath: fileURL.path) else {
+            return
+        }
+        
+        add(stream: stream, withLength: length, headers: headers)
+    }
+    
     
     /// Generate the `Content-Disposition` for a single form item.
     ///

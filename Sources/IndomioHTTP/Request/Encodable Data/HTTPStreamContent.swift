@@ -60,8 +60,8 @@ public class HTTPStreamContent: HTTPRequestEncodableData {
             self.length = UInt64(data.count)
         case .fileURL(let fileURL):
             self.inputStream = InputStream(fileAtPath: fileURL.path)
-            let fileSize = try! FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as! NSNumber
-            self.length = fileSize.uint64Value
+            let fileSize = try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? NSNumber
+            self.length = (fileSize ?? NSNumber(0)).uint64Value
         }
         
         return inputStream

@@ -13,7 +13,11 @@
 - Execute Request
 - Response Handling
 - Response Validation
-- Upload/Download Large Data
+- Upload Large Data
+    - Upload Multi-part form with stream of file
+    - Upload File Stream
+- Download Large Data
+- Track Upload/Download Progress
 
 IndomioHTTP provides a variety of convenience methods for making HTTP requests.  
 At the simplest, just provide a String that can be converted into a URL:
@@ -377,10 +381,11 @@ The first one is to provide a custom implementation of the `HTTPDecodableRespons
 
 The second one is centralized at client level and uses the ordered list of `validators` which are conform to `HTTPResponseValidatorProtocol` protocol. To learn more about this method see the "HTTP Client" section of the documentation.
 
-## Download/Upload Large Data
+## Upload Large Data
 
 When sending relatively small amounts of data to a server using JSON or URL encoded parameters data you don't need to setup anything.  
-If you need to send much larger amounts of data from Data in memory, a file URL, or an InputStream, we suggest setting the appropriate `.largeData` options for `transferMode` property (or via `mode()` and `setData()` functions).
+
+If you need to send much larger amounts of data from Data in memory, a file URL, or an InputStream, we suggest setting the appropriate `.largeData` options for `transferMode` property (or via `mode()` function).
 
 ```swift
 let data: Data = ...
@@ -393,7 +398,41 @@ let req = HTTPRequest<FormResponse>()
 req.resultPublisher(in: client).sink { result in
     // ...
 }.
-
 ```
 
+By setting the `transferMode = .largeData` you will be also able to track the progress of the operation via `onProgress` callback or observing chnages in `@Published progress` property (via combine).
 
+Sometimes you may prefer to use stream to send large amount of data without loading them in memory.
+
+### Upload Multi-part form with stream of file
+
+This is an example of multipart form which send the content of a file as stream so we don't need to load all the contents in memory. Contents are read during the stream from local memory to the remote endpoint.
+
+```swift
+let req = HTTPRawRequest<FormResponse>()
+          .method(.post)
+          .multipart({
+              // add file from a stream resource
+              $0.add(fileStream: URL(fileURLWithPath: "<filePath>"), headers: [...])
+          })
+```
+
+> NOTE: You can also add raw `InputStream`, `Data` or key/value strings. See the `add()` function of the `MultipartFormData` object for more info.
+
+### Upload File Stream
+
+Sometimes you want to send large amount of data with a request and you would avoid to put them in memory and send it as body. In this case you can use the `stream()` functions of the `HTTPRequest` to keep your program responsive.
+
+```swift
+let fileURL = URL(fileURLWithPath: "../bigFile.txt")
+HTTPRawRequest(.post)
+              .stream(fileURL: fileURL).run(in: client).onResponse {
+    // Deal with result
+}
+```
+
+Stream also support raw `Data` via `stream(data: )` function.
+
+## Download Large Data
+
+## Track Upload/Download Progress

@@ -46,6 +46,9 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// Thread safe value which identify if a request in pending state or not.
     var isPending: Bool { get }
     
+    /// `true` if operation is marked as cancelled and you are not interested in results.
+    var isCancelled: Bool { get }
+    
     /// Path to the endpoint. URL is composed along the `baseURL` of the `HTTPClient`
     /// instance where the request is running into.
     var route: String { get set }
@@ -164,7 +167,22 @@ public protocol HTTPRequestProtocol: AnyObject {
     ///
     /// - Parameter retries: `true` to also reset retries attempts.
     func reset(retries: Bool)
+    
+    /// Cancel the operation.
+    /// NOTE: On plain `HTTPClient` it will not cancel the network request but may avoid returning data.
+    ///       On a queued client (`HTTPQueueClient`) queued but idle operation may be cancelled without executing request.
+    func cancel()
 
+}
+
+// MARK: - HTTPRequestProtocol Extensions
+
+extension HTTPRequestProtocol {
+    
+    var isCancelled: Bool {
+        state == .cancelled
+    }
+    
 }
 
 // MARK: - HTTPRequestState
@@ -173,10 +191,22 @@ public protocol HTTPRequestProtocol: AnyObject {
 /// - `pending`: request has never executed, no response is available.
 /// - `executing`: request is currently in progress.
 /// - `finished`: request is finished and result is available.
+/// - `cancelled`: operation cancelled by the user.
 public enum HTTPRequestState {
     case pending
     case executing
     case finished
+    case cancelled
+    
+    internal var isFinished: Bool {
+        switch self {
+        case .cancelled, .finished:
+            return true
+        default:
+            return false
+        }
+    }
+    
 }
 
 // MARK: - HTTPTransferMode

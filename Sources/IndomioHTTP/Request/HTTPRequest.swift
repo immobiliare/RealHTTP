@@ -34,6 +34,9 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// It's `nil` until the state of the request is `finished`.
     public private(set) var response: HTTPRawResponse?
     
+    /// It's marked when you call `cancel()` on a operation.
+    public private(set) var isCancelled: Bool = false
+    
     /// Decoded object if any.
     /// It's thread safe.
     public var object: Object? {
@@ -235,6 +238,17 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         }
     }
     
+    /// Cancel a task. Task result in an error of type `cancelled`.
+    public func cancel() {
+        stateQueue.sync {
+            state = .cancelled
+            
+            if state.isFinished  {
+                dispatchEvents()
+            }
+        }
+    }
+    
     // MARK: - Private Functions
     
     /// Sync change the state of the request.
@@ -244,7 +258,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
         stateQueue.sync {
             state = newState
         
-            if newState == .finished {
+            if newState.isFinished {
                 dispatchEvents()
             }
         }
@@ -456,6 +470,7 @@ extension HTTPRequest {
     }
     
     /// Initiate a stream upload for a local file.
+    /// Content will be set to the stream.
     ///
     /// - Parameter fileURL: local file URL.
     /// - Returns: Self
@@ -466,6 +481,7 @@ extension HTTPRequest {
     }
     
     /// Initiate a stream upload for data content.
+    /// Content will be set to the stream.
     ///
     /// - Parameter data: data content.
     /// - Returns: Self

@@ -93,6 +93,7 @@ public extension HTTPError {
     /// - `maxRetryAttemptsReached`: the maximum number of retries for request has been reached
     /// - `sessionError`: error related to the used session instances (may be a systemic error or it was invalidated)
     /// - `other`: any internal error, you can use it as your own handler.
+    /// - `cancelled`: cancelled by user.
     enum ErrorType {
         case invalidURL(URLConvertible)
         case multipartInvalidFile(URL)
@@ -109,6 +110,7 @@ public extension HTTPError {
         case maxRetryAttemptsReached
         case sessionError
         case other
+        case cancelled
     }
     
 }

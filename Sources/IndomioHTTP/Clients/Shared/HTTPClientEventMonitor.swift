@@ -188,6 +188,13 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             return
         }
         
+        guard !request.isCancelled else {
+            // Operation is cancelled.
+            var response = HTTPRawResponse(error: .cancelled, forRequest: request)
+            didComplete(request: request, response: &response)
+            return
+        }
+        
         // Parse the response and create the object which contains all the datas including
         // metrics, requests and curl description.
         let rawResponse = (task.response, data, error)

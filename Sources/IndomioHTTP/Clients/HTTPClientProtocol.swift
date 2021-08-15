@@ -24,7 +24,7 @@ public protocol HTTPClientProtocol: AnyObject {
     
     /// Headers which are part of each request made using the client.
     var headers: HTTPHeaders { get set }
-    
+
     /// Timeout interval for requests. Defaults to `60` seconds.
     /// Requests may override this behaviour.
     var timeout: TimeInterval { get set }
