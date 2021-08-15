@@ -332,6 +332,26 @@ let largeDownload = HTTPRawRequest().resourceAtURL("https://speed.hetzner.de/100
 // At any time during the execution
 largeDownload.cancel()
 ```
+
+For large downloads you can choose to cancel the operation by also producing resumable data you can use to resume the download later:
+
+```swift
+largeDownload.cancel(byProducingResumeData: true, { resumableData in
+    // resumable data are produced asynchronously.
+})
+```
+
+To resume your download in a later moment just pass that data:
+
+```swift
+HTTPRawRequest().resourceAtURL("https://speed.hetzner.de/100MB.bin", resumeData: resumableData).onProgress { progress in
+    // you will receive a progress state instance of `HTTPProgress`
+    //  with `resumedOffset` instance, then a series of data with progression as usual.
+    print("\(progress.percentage)% downloaded")
+}.run()
+```
+
+> NOTE: On some versions of all Apple platforms (iOS 10 - 10.2, macOS 10.12 - 10.12.2, tvOS 10 - 10.1, watchOS 3 - 3.1.1), resumeData is broken on background URLSessionConfigurations. There's an underlying bug in the resumeData generation logic where the data is written incorrectly and will always fail to resume the download. For more information about the bug and possible workarounds, please see this Stack Overflow post.
 ## Response Handling
 
 You can monitor 3 different data from a request:

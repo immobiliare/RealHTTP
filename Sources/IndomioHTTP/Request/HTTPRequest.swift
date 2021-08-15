@@ -473,6 +473,7 @@ extension HTTPRequest {
     /// - Returns: Self
     public func resourceAtURL(_ url: String, resumingWith resumeData: Data? = nil) -> Self {
         self.transferMode = .largeData
+        self.resumeData = resumeData
         self.route = url
         return self
     }
