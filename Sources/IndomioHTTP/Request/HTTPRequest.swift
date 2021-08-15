@@ -93,9 +93,9 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// is set to `URLDownloadTask`. It can be used to resume initiated downloads or to use the
     /// background session downloads. When `expectedDataType` is set to `default` this value is
     /// ignored (the response itself is kept in memory).
-    open var resumeDataURL: URL? {
+    open var resumeData: Data? {
         didSet {
-            transferMode = (resumeDataURL == nil ? .default : .largeData)
+            transferMode = (resumeData == nil ? .default : .largeData)
         }
     }
     

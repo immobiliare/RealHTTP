@@ -334,20 +334,13 @@ extension URL {
     internal func copyFileToDefaultLocation(task: URLSessionDownloadTask, forRequest request: HTTPRequestProtocol) -> URL? {
         let fManager = FileManager.default
         
-        var destURL: URL? = request.resumeDataURL
-        if destURL == nil {
-            let fileName = "download-id-\(task.taskIdentifier)"
-            let documentsDir = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first! as NSString
-            destURL = URL(fileURLWithPath: documentsDir.appendingPathComponent(fileName))
-        }
-        
-        guard let destURL = destURL else {
-            return nil
-        }
+        let fileName = UUID().uuidString
+        let documentsDir = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true).first! as NSString
+        let destinationURL = URL(fileURLWithPath: documentsDir.appendingPathComponent(fileName))
         
         do {
-            try fManager.copyItem(at: self, to: destURL)
-            return destURL
+            try fManager.copyItem(at: self, to: destinationURL)
+            return destinationURL
         } catch {
             return nil
         }

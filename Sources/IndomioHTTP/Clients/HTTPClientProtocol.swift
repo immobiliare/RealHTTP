@@ -98,8 +98,7 @@ public extension HTTPClientProtocol {
             case .default:
                 task = session.dataTask(with: urlRequest)
             case .largeData:
-                if let resumeDataURL = request.resumeDataURL,
-                   let resumeData = Data.fromURL(resumeDataURL) {
+                if let resumeData = request.resumeData {
                     task = session.downloadTask(withResumeData: resumeData)
                 } else {
                     task = session.downloadTask(with: urlRequest)

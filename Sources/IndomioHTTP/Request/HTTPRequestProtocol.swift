@@ -41,7 +41,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// This location is used when `expectedDataType` is set to `large`.
     /// If no value has set a default location inside a subfolder in documents
     /// directory is used instead.
-    var resumeDataURL: URL? { get }
+    var resumeData: Data? { get }
     
     /// Thread safe value which identify if a request in pending state or not.
     var isPending: Bool { get }
