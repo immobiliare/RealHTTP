@@ -37,6 +37,9 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// It's marked when you call `cancel()` on a operation.
     public private(set) var isCancelled: Bool = false
     
+    /// Associated task. It's valid when running on a client.
+    public weak var task: URLSessionTask?
+
     /// Decoded object if any.
     /// It's thread safe.
     public var object: Object? {
@@ -177,6 +180,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// Run request asynchrously in shared client.
     ///
     /// - Returns: Self
+    @discardableResult
     public func run() -> Self {
         run(in: nil)
     }
@@ -193,6 +197,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// - Parameter client: client instance.
     /// - Throws: throw an exception if something went wrong.
     /// - Returns: Self
+    @discardableResult
     public func run(in client: HTTPClientProtocol?) -> Self {
         guard isPending else {
             return self // already started
@@ -240,8 +245,16 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     
     /// Cancel a task. Task result in an error of type `cancelled`.
     public func cancel() {
-        stateQueue.sync {
+        stateQueue.sync { [weak self] in
+            guard let self = self else { return }
+            
+            if !state.isFinished {
+                // Mark as cancelled
+                response = HTTPRawResponse(error: .cancelled, forRequest: self)
+            }
+            
             state = .cancelled
+            self.task?.cancel()
             
             if state.isFinished  {
                 dispatchEvents()
@@ -266,7 +279,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     
     /// Dispatch events call registered events.
     internal func dispatchEvents() {
-        guard state == .finished else {
+        guard state.isFinished else {
             return
         }
         
@@ -422,6 +435,16 @@ extension HTTPRequest {
         return self
     }
     
+    /// Download large data file/resource with progress tracking.
+    ///
+    /// - Parameter fileURL: URL of the resource.
+    /// - Returns: Self
+    public func resourceAtURL(_ url: String) -> Self {
+        self.transferMode = .largeData
+        self.route = url
+        return self
+    }
+    
     /// Set the encoding style for objects in query parameters.
     /// NOTE: You must have set the query parameters object first with `.queryParameters` or `query()` function
     /// otherwise the value will be empty.
@@ -533,7 +556,9 @@ extension HTTPRequest {
         guard isPending else {
             return // ignore any further data when request is completed yet.
         }
-        
+
+        self.task = nil // reset the task
+
         // Attempt to decode the object.
         let decodedObj = Object.decode(response)
         

@@ -83,6 +83,10 @@ public extension HTTPClientProtocol {
     /// - Throws: throw an exception if `URLRequest` failed to be generated.
     /// - Returns: (URLRequest, URLSessionTask)
     func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask {
+        if request.isCancelled {
+            throw HTTPError(.cancelled)
+        }
+        
         let urlRequest = try request.urlRequest(in: self)
         var task: URLSessionTask!
         switch request.transferMode {
@@ -103,6 +107,7 @@ public extension HTTPClientProtocol {
         
         /// Keep in mind it's just a suggestion for HTTP/2 based services.
         task.priority = request.priority.urlTaskPriority
+        request.task = task
         return task
     }
     

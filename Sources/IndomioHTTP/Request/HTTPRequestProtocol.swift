@@ -96,6 +96,10 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// In case of `HTTPQueueClient` it also act as priority level for queue concurrency.
     var priority: HTTPRequestPriority { get set }
     
+    /// When running in a client this value is weakly set.
+    /// NOTE: You should never change it directly, it's managed automatically.
+    var task: URLSessionTask? { get set }
+    
     // MARK: - Initialization
     
     /// Initialize a new request with given parameters.

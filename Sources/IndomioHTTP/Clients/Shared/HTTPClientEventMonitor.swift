@@ -156,7 +156,6 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             return
         }
         
-
         security.receiveChallenge(challenge, forRequest: request, task: task, completionHandler: completionHandler)
     }
     
@@ -189,7 +188,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         }
         
         guard !request.isCancelled else {
-            // Operation is cancelled.
+            // Operation is cancelled but it's complete.
             var response = HTTPRawResponse(error: .cancelled, forRequest: request)
             didComplete(request: request, response: &response)
             return
