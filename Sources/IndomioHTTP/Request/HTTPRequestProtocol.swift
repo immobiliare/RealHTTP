@@ -173,9 +173,12 @@ public protocol HTTPRequestProtocol: AnyObject {
     func reset(retries: Bool)
     
     /// Cancel the operation.
+    ///
     /// NOTE: On plain `HTTPClient` it will not cancel the network request but may avoid returning data.
     ///       On a queued client (`HTTPQueueClient`) queued but idle operation may be cancelled without executing request.
-    func cancel()
+    ///
+    /// - Parameter byProducingResumeData: if supported it will produce resumable data in `HTTPRawResponse`'s `resumableData` property.`
+    func cancel(byProducingResumeData: Bool)
 
 }
 

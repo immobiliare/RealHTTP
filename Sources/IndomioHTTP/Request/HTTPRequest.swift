@@ -244,7 +244,11 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     }
     
     /// Cancel a task. Task result in an error of type `cancelled`.
-    public func cancel() {
+    /// - Parameters:
+    ///   - byProducingResumeData:  pass `true` and if resume is supported `resumableData`
+    ///                             of the response will contain data you can use to resume the call.
+    ///   - callback: you can specify a callback to receive resumable data once available.
+    public func cancel(byProducingResumeData: Bool = false, callback: ((Data?) -> Void)?) {
         stateQueue.sync { [weak self] in
             guard let self = self else { return }
             
@@ -254,12 +258,33 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
             }
             
             state = .cancelled
-            self.task?.cancel()
+            
+            if byProducingResumeData,
+               let downloadTask = self.task as? URLSessionDownloadTask {
+                // When supported cancel will produce resumable data you can use to recover it.
+                downloadTask.cancel { [weak self] resumableData in
+                    self?.response?.resumableData = resumableData
+                    callback?(resumableData)
+                }
+            } else {
+                // A simple cancel of the task
+                self.task?.cancel()
+            }
             
             if state.isFinished  {
                 dispatchEvents()
             }
         }
+    }
+    
+    /// Cancel a task. Task result in an error of type `cancelled`.
+    ///
+    /// - Parameter byProducingResumeData: pass `true` and if resume is supported `resumableData`
+    ///                                    of the response will contain data you can use to resume the call.
+    ///                                    NOTE: the resumable data may be produced later after the request is finished.
+    ///                                    This because it's an async operation.
+    public func cancel(byProducingResumeData: Bool = false) {
+        cancel(byProducingResumeData: byProducingResumeData, callback: nil)
     }
     
     // MARK: - Private Functions
@@ -439,7 +464,14 @@ extension HTTPRequest {
     ///
     /// - Parameter fileURL: URL of the resource.
     /// - Returns: Self
-    public func resourceAtURL(_ url: String) -> Self {
+    
+    /// Download large data file/resource with progress tracking.
+    ///
+    /// - Parameters:
+    ///   - url: URL of the resource to download.
+    ///   - resumeData: pass a valid Data produced by resumable methods in order to resume download.
+    /// - Returns: Self
+    public func resourceAtURL(_ url: String, resumingWith resumeData: Data? = nil) -> Self {
         self.transferMode = .largeData
         self.route = url
         return self

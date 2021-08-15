@@ -33,7 +33,7 @@ extension HTTPRawResponse: HTTPDecodableResponse {
 // MARK: - HTTPRawResponse
 
 /// Encapsulate the result of the execution of an `HTTPRequestProtocol` conform object.
-public struct HTTPRawResponse {
+public final class HTTPRawResponse {
     
     // MARK: - Public Properties
     
@@ -63,6 +63,10 @@ public struct HTTPRawResponse {
     /// Keep the `URLRequest` instance of the original
     public private(set) var urlRequest: (original: URLRequest?, current: URLRequest?)
     
+    /// If task is cancelled by requiring data it will saved here.
+    @Published
+    public internal(set) var resumableData: Data? = nil
+    
     // MARK: - Initialization
     
     /// Initialize a new HTTPResponse object.
@@ -86,7 +90,7 @@ public struct HTTPRawResponse {
         self.content = nil
     }
     
-    internal mutating func attachURLRequests(original: URLRequest?, current: URLRequest?) {
+    internal func attachURLRequests(original: URLRequest?, current: URLRequest?) {
         self.urlRequest = (original, current)
     }
     
