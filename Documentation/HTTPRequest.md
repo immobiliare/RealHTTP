@@ -11,6 +11,7 @@
     - Set Multipart Form
 - Modify an URLRequest
 - Execute Request
+- Cancel Request
 - Response Handling
 - Response Validation
 - Upload Large Data
@@ -315,7 +316,22 @@ The same methods are also available when you don't need of a client and you want
 
 > NOTE: `*sync()` versions block the caller thread
 
+## Cancel Request
 
+You can cancel a request at anytime, while it's in progress or in queue by using the `cancel()` function.
+
+```swift
+let largeDownload = HTTPRawRequest().resourceAtURL("https://speed.hetzner.de/100MB.bin").onResponse { raw in
+    // You'll receive .cancelled error from here
+}.onProgress { progress in
+    print("\(progress.percentage)% downloaded")
+}.run()
+
+...
+
+// At any time during the execution
+largeDownload.cancel()
+```
 ## Response Handling
 
 You can monitor 3 different data from a request:
@@ -434,5 +450,20 @@ HTTPRawRequest(.post)
 Stream also support raw `Data` via `stream(data: )` function.
 
 ## Download Large Data
+
+To download large data from an URL or track the progress of download you can use `resourceAtURL()` function:
+
+```swift
+HTTPRawRequest()
+    .resourceAtURL("https://speed.hetzner.de/100MB.bin")
+    .onResponse { raw in
+        print("Completed")
+    }.onProgress { prog in
+        print(prog.percentage)
+    }
+    .run()
+```
+
+In fact it just a shortcut to set the `transferMode = .largeData` and route to the absolute URL passed.
 
 ## Track Upload/Download Progress

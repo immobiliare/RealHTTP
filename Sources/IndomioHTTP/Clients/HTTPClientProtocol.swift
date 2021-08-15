@@ -84,24 +84,26 @@ public extension HTTPClientProtocol {
     /// - Returns: (URLRequest, URLSessionTask)
     func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask {
         if request.isCancelled {
-            throw HTTPError(.cancelled)
+            throw HTTPError(.cancelled) // we don't need to create a session task for a cancelled event
         }
         
         let urlRequest = try request.urlRequest(in: self)
         var task: URLSessionTask!
-        switch request.transferMode {
-        case .default:
-            task = session.dataTask(with: urlRequest)
-        case .largeData:
-            if urlRequest.httpBodyStream != nil {
-                task = session.uploadTask(withStreamedRequest: urlRequest)
-                return task
-            }
-            if let resumeDataURL = request.resumeDataURL,
-               let resumeData = Data.fromURL(resumeDataURL) {
-                task = session.downloadTask(withResumeData: resumeData)
-            } else {
-                task = session.downloadTask(with: urlRequest)
+        
+        if urlRequest.httpBodyStream != nil {
+            // If specified a stream mode we want to create the appropriate task
+            task = session.uploadTask(withStreamedRequest: urlRequest)
+        } else {
+            switch request.transferMode {
+            case .default:
+                task = session.dataTask(with: urlRequest)
+            case .largeData:
+                if let resumeDataURL = request.resumeDataURL,
+                   let resumeData = Data.fromURL(resumeDataURL) {
+                    task = session.downloadTask(withResumeData: resumeData)
+                } else {
+                    task = session.downloadTask(with: urlRequest)
+                }
             }
         }
         
