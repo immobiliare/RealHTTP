@@ -379,4 +379,21 @@ The second one is centralized at client level and uses the ordered list of `vali
 
 ## Download/Upload Large Data
 
-Sometimes 
+When sending relatively small amounts of data to a server using JSON or URL encoded parameters data you don't need to setup anything.  
+If you need to send much larger amounts of data from Data in memory, a file URL, or an InputStream, we suggest setting the appropriate `.largeData` options for `transferMode` property (or via `mode()` and `setData()` functions).
+
+```swift
+let data: Data = ...
+let client: HTTPClient = ...
+
+let req = HTTPRequest<FormResponse>()
+          .method(.post)
+          .data(data, transferAs: .largeData)
+
+req.resultPublisher(in: client).sink { result in
+    // ...
+}.
+
+```
+
+

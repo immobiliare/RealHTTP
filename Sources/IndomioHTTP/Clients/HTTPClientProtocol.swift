@@ -85,10 +85,10 @@ public extension HTTPClientProtocol {
     func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask {
         let urlRequest = try request.urlRequest(in: self)
         var task: URLSessionTask!
-        switch request.expectedDataType {
+        switch request.transferMode {
         case .default:
             task = session.dataTask(with: urlRequest)
-        case .large:
+        case .largeData:
             if let resumeDataURL = request.resumeDataURL,
                let resumeData = Data.fromURL(resumeDataURL) {
                 task = session.downloadTask(withResumeData: resumeData)

@@ -20,3 +20,14 @@ public protocol HTTPRequestEncodableData {
     func encodeParametersIn(request: inout URLRequest) throws
     
 }
+
+// MARK: - Data + HTTPRequestEncodableData
+
+/// Data type is supported as default body of a request.
+extension Data: HTTPRequestEncodableData {
+    
+    public func encodeParametersIn(request: inout URLRequest) throws {
+        request.httpBody = self
+    }
+    
+}

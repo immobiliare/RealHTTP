@@ -30,7 +30,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     
     /// Type of data expected which is used to define how it should managed from
     /// the `URLSession` subclass to use.
-    var expectedDataType: HTTPExpectedDataType { get }
+    var transferMode: HTTPTransferMode { get }
     
     /// If task is monitorable (`expectedDataType` is `large`) and data is available
     /// here you can found the latest progress stats.
@@ -179,7 +179,7 @@ public enum HTTPRequestState {
     case finished
 }
 
-// MARK: - HTTPExpectedDataType
+// MARK: - HTTPTransferMode
 
 /// Describe what kind of data you are expecting from the server for a response.
 /// This used to identify what kind of `URLSessionTask` subclass we should use.
@@ -188,12 +188,12 @@ public enum HTTPRequestState {
 ///               Data tasks can return data to your app one piece at a time after each piece of data is received,
 ///               or all at once through a completion handler.
 ///               Because data tasks do not store the data to a file, they are not supported in background sessions.
-/// - `large`: Directly writes the response data to a temporary file.
+/// - `largeData`: Directly writes the response data to a temporary file.
 ///            It supports background downloads when the app is not running.
 ///            Download tasks retrieve data in the form of a file, and support background downloads while the app is not running.
-public enum HTTPExpectedDataType {
+public enum HTTPTransferMode {
     case `default`
-    case large
+    case largeData
 }
 
 // MARK: - HTTPRequestPriority

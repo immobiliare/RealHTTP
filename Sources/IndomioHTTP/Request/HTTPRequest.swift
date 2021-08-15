@@ -73,7 +73,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// `default`. Large data as binary downloads may be handled using `large` options which support
     /// resumable downloads and background downloads sessions.
     /// By default `default` is used.
-    open var expectedDataType: HTTPExpectedDataType = .default
+    open var transferMode: HTTPTransferMode = .default
     
     /// If task is monitorable (`expectedDataType` is `large`) and data is available
     /// here you can found the latest progress stats.
@@ -89,7 +89,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// ignored (the response itself is kept in memory).
     open var resumeDataURL: URL? {
         didSet {
-            expectedDataType = (resumeDataURL == nil ? .default : .large)
+            transferMode = (resumeDataURL == nil ? .default : .largeData)
         }
     }
     
@@ -283,6 +283,18 @@ extension HTTPRequest {
         return self
     }
     
+    /// Set the transfer mode of the data.
+    /// You may want to set `.largeData` when you need to transfer much larger amounts
+    /// of data from Data in memory, a file URL, or an InputStream.
+    ///
+    /// - Parameter transferMode: transfer mode; for small amount of data - typically JSON response, you can leave it to `default`.
+    ///                           If you are moving large amount of data use `.largeData`.
+    /// - Returns: Self
+    public func mode(_ transferMode: HTTPTransferMode) -> Self {
+        self.transferMode = transferMode
+        return self
+    }
+    
     /// Set the maximum number of retries to made.
     /// By default is 0 which means any retry will be made in case of failure.
     ///
@@ -417,6 +429,18 @@ extension HTTPRequest {
     /// - Returns: Self
     public func formURLEncoded(_ parameters: [String: AnyObject]) -> Self {
         self.content = URLParametersData(in: .httpBody, parameters: parameters)
+        return self
+    }
+    
+    /// Allows you to transfer binary data as body content of the request.
+    ///
+    /// - Parameters:
+    ///   - data: data to set.
+    ///   - transfer: mode of transfer; use `largeData` if you plan to transfer/receive a significant amount of data.
+    /// - Returns: Self
+    public func data(_ data: Data, transferAs mode: HTTPTransferMode = .largeData) -> Self {
+        self.transferMode = mode
+        self.content = data
         return self
     }
     
