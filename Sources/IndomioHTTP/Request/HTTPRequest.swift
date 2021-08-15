@@ -444,6 +444,37 @@ extension HTTPRequest {
         return self
     }
     
+    /// Allows you to transfer the content of file as body of the request.
+    /// Content is read and placed in memory; if you plan to send large amount of data try stream instead.
+    ///
+    /// - Parameter fileURL: url of the local file.
+    /// - Returns: Self
+    public func file(_ fileURL: URL) -> Self {
+        self.content = Data.fromURL(fileURL)
+        self.transferMode = .largeData
+        return self
+    }
+    
+    /// Initiate a stream upload for a local file.
+    ///
+    /// - Parameter fileURL: local file URL.
+    /// - Returns: Self
+    public func stream(fileURL: URL) -> Self {
+        self.content = HTTPStreamContent(fileURL: fileURL)
+        self.transferMode = .largeData
+        return self
+    }
+    
+    /// Initiate a stream upload for data content.
+    ///
+    /// - Parameter data: data content.
+    /// - Returns: Self
+    public func stream(data: Data) -> Self {
+        self.content = HTTPStreamContent(data: data)
+        self.transferMode = .largeData
+        return self
+    }
+    
     // MARK: - Private Functions
     
     /// Build the request when running in a given client.

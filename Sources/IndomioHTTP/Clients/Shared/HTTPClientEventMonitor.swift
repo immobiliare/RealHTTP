@@ -11,7 +11,7 @@
 
 import Foundation
 
-public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionDownloadDelegate, URLSessionTaskDelegate {
+public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionDownloadDelegate, URLSessionTaskDelegate, URLSessionStreamDelegate {
     
     // MARK: - Private Properties
     
@@ -120,6 +120,21 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             let info = HTTPRequestMetrics(source: metrics, task: task)
             metricsTable[task] = info
         }
+    }
+    
+    // MARK: - URLSessionStreamDelegate
+    
+    public func urlSession(_ session: URLSession, task: URLSessionTask, needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
+        guard let request = request(forTask: task).request else {
+            return
+        }
+
+        if let streamContent = request.content as? HTTPStreamContent,
+           let inputStream = streamContent.inputStream(recreate: true) {
+            inputStream.open() // open the stream
+            completionHandler(inputStream)
+        }
+        
     }
     
     // MARK: - Private Functions

@@ -89,6 +89,10 @@ public extension HTTPClientProtocol {
         case .default:
             task = session.dataTask(with: urlRequest)
         case .largeData:
+            if urlRequest.httpBodyStream != nil {
+                task = session.uploadTask(withStreamedRequest: urlRequest)
+                return task
+            }
             if let resumeDataURL = request.resumeDataURL,
                let resumeData = Data.fromURL(resumeDataURL) {
                 task = session.downloadTask(withResumeData: resumeData)
