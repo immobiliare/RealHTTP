@@ -1,3 +1,7 @@
+<p align="center">
+<img src="./Documentation/indomio_http_logo.png" alt="IndomioFlags" width="900"/>
+</p>
+
 # IndomioHTTP
 
 IndomioHTTP is a lightweight yet powerful client-side HTTP library.  
