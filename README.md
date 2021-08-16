@@ -186,17 +186,25 @@ We are currently using IndomioHTTP in all of our products.
 
 ## Support & Contribute
 
-<p align="center">
-Made with ❤️ by <a href="https://github.com/orgs/immobiliare">ImmobiliareLabs</a> and <a href="https://github.com/immobiliare/IndomioHTTP/graphs/contributors">Contributors</a>
-<br clear="all">
-</p>
+Made with ❤️ by [ImmobiliareLabs](https://github.com/orgs/immobiliare) & [Contributors](https://github.com/immobiliare/IndomioHTTP/graphs/contributors)
 
 We'd love for you to contribute to IndomioHTTP!  
 If you have any questions on how to use IndomioHTTP, bugs and enhancement please feel free to reach out by opening a [GitHub Issue](https://github.com/immobiliare/IndomioHTTP/issues).
 
+### Todo List
+
+If you want to contribuite to the project you can also work on these main topics.
+
+- [ ] Async/Await support for observers
+- [ ] Extended the Combine support
+- [ ] Complete the test suite
+
 <a name="#license"/>
 
 ## Authors
+
+IndomioHTTP was created and maintained by the ImmobiliareLabs team, the tech departement fo Immobiliare.it.  
+This is the list of current contributors (internal/external) of the project:
 
 - [Daniele Margutti](https://github.com/malcommac)
 
