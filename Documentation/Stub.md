@@ -1,19 +1,17 @@
-<a name="#toc"/>
-
 # Network Stubber
 
-- [Introduction](#introduction)
-- [Stub a Request](#stubrequest)
-- [Stub Matchers](#stubmatchers)
-    - [Custom Matcher](#custommatcher)
-    - [URI Matcher](#urimatcher)
-    - [JSON Matcher](#jsonmatcher)
-    - [Body Matcher](#bodymatcher)
-    - [URL Matcher](#urlmatcher)
-- [Add Ignore Rule](#addignorerule)
-- [Unhandled Rules](#unhandledrules)
+[↑ DOCUMENTATION INDEX](./../README.md#documentation)
 
-<a name="#introduction"/>
+- [Introduction](#introduction)
+- [Stub a Request](#stub-a-request)
+- [Stub Matchers](#stub-matchers)
+    - [Custom Matcher](#customer-matcher)
+    - [URI Matcher](#uri-matcher)
+    - [JSON Matcher](#json-matcher)
+    - [Body Matcher](#body-matcher)
+    - [URL Matcher](#url-matcher)
+- [Add Ignore Rule](#add-ignore-rule)
+- [Unhandled Rules](#unhandled-rules)
 
 ## Introduction
 
@@ -31,9 +29,7 @@ Once you have done you can disable it:
 HTTPStubber.shared.disable()
 ```
 
-[↑ INDEX](#toc)
-
-<a name="#stubrequest"/>
+[↑ INDEX](#network-stubber)
 
 ## Stub a Request
 
@@ -85,9 +81,7 @@ var stub = HTTPStubRequest()
             })
 ```
 
-[↑ INDEX](#toc)
-
-<a name="#stubmatchers"/>
+[↑ INDEX](#network-stubber)
 
 ## Stub Matchers
 
@@ -95,10 +89,7 @@ There are different stub matchers you can chain for a single stub request.
 
 > NOTE: `matchers` are evaluated with AND operator, not OR. So all matchers must be verified in order to trigger the relative request.
 
-[↑ INDEX](#toc)
-
-
-<a name="#custommatcher"/>
+[↑ INDEX](#network-stubber)
 
 ### Custom Matcher
 
@@ -130,9 +121,7 @@ var stub = HTTPStubRequest()
 
 The following stub is triggered when headers of the request is `customAgent`.
 
-[↑ INDEX](#toc)
-
-<a name="#urimatcher"/>
+[↑ INDEX](#network-stubber)
 
 ### URI Matcher
 
@@ -152,9 +141,7 @@ Such as the following:
 - /kylef/{repository}
 - /kylef/URITemplate.swift
 
-[↑ INDEX](#toc)
-
-<a name="#jsonmatcher"/>
+[↑ INDEX](#network-stubber)
 
 ### JSON Matcher
 
@@ -168,9 +155,7 @@ var stub = HTTPStubRequest()
 It will match the JSON representation of an `User` struct with `userID=34` and `fullName=Mark` without representing the raw JSON but just passing the `Codable` struct!  
 It uses the `HTTPStubJSONMatcher` matcher.
 
-[↑ INDEX](#toc)
-
-<a name="#bodymatcher"/>
+[↑ INDEX](#network-stubber)
 
 ### Body Matcher
 
@@ -183,9 +168,7 @@ var stub = HTTPStubRequest()
            .stub(...)
 ```
 
-[↑ INDEX](#toc)
-
-<a name="#urlmatcher"/>
+[↑ INDEX](#network-stubber)
 
 ### URL Matcher
 
@@ -198,9 +181,7 @@ var stub = HTTPStubRequest()
 
 It will match URLs by ignoring any query parameter like `http://myws.com/login?username=xxxx` or `http://myws.com/login?username=yyyy&lock=1`.
 
-[↑ INDEX](#toc)
-
-<a name="#addignorerule"/>
+[↑ INDEX](#network-stubber)
 
 ## Add Ignore Rule
 
@@ -213,9 +194,7 @@ HTTPStubber.shared.add(ignoreURL: "http://www.apple.com", options: [.ignorePath,
 
 You can use all the matchers described above even for rules.
 
-[↑ INDEX](#toc)
-
-<a name="#unhandledrules"/>
+[↑ INDEX](#network-stubber)
 
 ## Unhandled Rules
 
@@ -234,3 +213,5 @@ To set the behaviour:
 ```swift
 HTTPStubber.shared.unhandledMode = .optin // enable optin mode
 ```
+
+[↑ INDEX](#network-stubber)

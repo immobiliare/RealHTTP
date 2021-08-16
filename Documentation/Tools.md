@@ -1,11 +1,9 @@
-<a name="#toc"/>
-
 # Tools
 
-- [Gathering/Showing Statistical Metrics](#metrics)
-- [cURL Command Output](#curl)
+[↑ DOCUMENTATION INDEX](./../README.md#documentation)
 
-<a name="#metrics"/>
+- [Gathering/Showing Statistical Metrics](#gatheringshowing-statistical-metrics)
+- [cURL Command Output](#curl-command-output)
 
 ## Gathering/Showing Statistical Metrics
 
@@ -51,9 +49,7 @@ server            |####                                                         
 response          |   #############################################################################|1473.0ms                        
 ```
 
-[↑ INDEX](#toc)
-
-<a name="#curl"/>
+[↑ INDEX](#tools)
 
 ## cURL Command Output
 
@@ -79,4 +75,4 @@ $ curl -v \
 	"http://ipv4.download.thinkbroadband.com/5MB.zip"
 ```
 
-[↑ INDEX](#toc)
+[↑ INDEX](#tools)
