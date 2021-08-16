@@ -88,30 +88,35 @@ Check out the Documentation section below to learn more!
     - [Introduction](./Documentation/HTTPClient.md#introduction)
     - [Create a new client](./Documentation/HTTPClient.md#newclient)
     - [Create a queue client](./Documentation/HTTPClient.md#queueclient)
-    - [Configure Data Validators](./Documentation/HTTPClient.md#validators)
-        - [The Default Validator](./Documentation/HTTPClient.md#defaultvalidator)
-    - [Client Basic Configuration](./Documentation/HTTPClient.md#configureclient)
-    - [Security Settings (SSL/TSL)](./Documentation/HTTPClient.md#security)
-        - [Configure Security (SSL/TSL)](./Documentation/HTTPClient.md#configuresecurity)
+    - [Response Validators](./Documentation/HTTPClient.md#responsevalidators)
+    - [Default Response Validator](./Documentation/HTTPClient.md#defaultvalidator)
+    - [Client Configuration](./Documentation/HTTPClient.md#clientconfiguration)
+    - [Security](./Documentation/HTTPClient.md#security)
+        - [Configure security (SSL/TSL)](./Documentation/HTTPClient.md#configuresecurity)
         - [Allows all certificates](./Documentation/HTTPClient.md#allowsallcerts)
 - [HTTP Request](./Documentation/HTTPRequest.md)
-    - Configure a Request
-    - Decodable Request
-    - Chainable Configuration
-    - Set Content
-        - Set Headers
-        - Set Query Parameters
-        - Set JSON Body
-        - Set Form URL Encoded
-        - Set Multipart Form
-    - Modify an URLRequest
-    - Execute Request
-    - Response Handling
-    - Response Validation
-    - Upload/Download Large Data
-- Tools
-     - Gathering/Showing Statistical Metrics
-     - cURL Command Output
+    - [Configure a Request](./Documentation/HTTPRequest.md#configurerequest)
+    - [Decodable Request](./Documentation/HTTPRequest.md#decodablerequest)
+    - [Chainable Configuration](./Documentation/HTTPRequest.md#chainconfiguration)
+    - [Set Content](./Documentation/HTTPRequest.md#content)
+        - [Set Headers](./Documentation/HTTPRequest.md#headers)
+        - [Set Query Parameters](./Documentation/HTTPRequest.md#queryparams)
+        - [Set JSON Body](./Documentation/HTTPRequest.md#jsonbody)
+        - [Set Form URL Encoded](./Documentation/HTTPRequest.md#formurlencoded)
+        - [Set Multipart Form](./Documentation/HTTPRequest.md#multipartform)
+    - [Modify an URLRequest](./Documentation/HTTPRequest.md#modifyrequest)
+    - [Execute Request](./Documentation/HTTPRequest.md#executerequest)
+    - [Cancel Request](./Documentation/HTTPRequest.md#cancelrequest)
+    - [Response Handling](./Documentation/HTTPRequest.md#responsehandling)
+    - [Response Validation](./Documentation/HTTPRequest.md#responsevalidation)
+    - [Upload Large Data](./Documentation/HTTPRequest.md#uploadlargedata)
+        - [Upload Multi-part form with stream of file](./Documentation/HTTPRequest.md#multipartstream)
+        - [Upload File Stream](./Documentation/HTTPRequest.md#filestream)
+    - [Download Large Data](./Documentation/HTTPRequest.md#downloadlargedata)
+    - [Track Upload/Download Progress](./Documentation/HTTPRequest.md#trackprogress)
+- [Tools](./Documentation/Tools.md)
+    - [Gathering/Showing Statistical Metrics](./Documentation/Tools.md#metrics)
+    - [cURL Command Output](./Documentation/Tools.md#curl)
 - Network Stubber
     - Introduction
     - Stub a Request

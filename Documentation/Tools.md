@@ -1,4 +1,11 @@
+<a name="#toc"/>
+
 # Tools
+
+- [Gathering/Showing Statistical Metrics](#metrics)
+- [cURL Command Output](#curl)
+
+<a name="#metrics"/>
 
 ## Gathering/Showing Statistical Metrics
 
@@ -44,6 +51,10 @@ server            |####                                                         
 response          |   #############################################################################|1473.0ms                        
 ```
 
+[↑ INDEX](#toc)
+
+<a name="#curl"/>
+
 ## cURL Command Output
 
 Debugging platform issues can be frustrating.  
@@ -67,3 +78,5 @@ $ curl -v \
 	-H "Accept-Encoding: br;q=1.0, gzip;q=0.9, deflate;q=0.8" \
 	"http://ipv4.download.thinkbroadband.com/5MB.zip"
 ```
+
+[↑ INDEX](#toc)

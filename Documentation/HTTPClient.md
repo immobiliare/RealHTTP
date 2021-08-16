@@ -1,16 +1,17 @@
+<a name="#toc"/>
 # HTTP Client
 
-**TABLE OF CONTENTS**
+- [Introduction](#introduction)
+- [Create a new client](#newclient)
+- [Create a queue client](#queueclient)
+- [Response Validators](#responsevalidators)
+- [Default Response Validator](#defaultvalidator)
+- [Client Configuration](#clientconfiguration)
+- [Security](#security)
+    - [Configure security (SSL/TSL)](#configuresecurity)
+    - [Allows all certificates](#allowsallcerts)
 
-- Introduction
-- Create a new client
-- Create a queue client
-- Response Validators
-- The default validator (`HTTPDefaultValidator`)
-- Client basic configuration
-- Security
-    - Configure security (SSL/TSL)
-    - Allows all certificates
+<a name="#introduction"/>
 
 # Introduction
 
@@ -21,6 +22,10 @@ IndomioHTTP exposes 2 different clients:
 
 - `HTTPClient`: this is the default client; network call are executed in concurrent fashion.
 - `HTTPQueuedClient`: this client maintain an interval OperationQueue which allows you to have a fine grained control over concurrent operations.
+
+[↑ INDEX](#toc)
+
+<a name="#newclient"/>
 
 ## Create a new client
 
@@ -49,6 +54,10 @@ Built-in iOS configurations are:
 - `ephemeral`: similar to a default session configuration object except that the corresponding session object does not store caches, credential stores, or any session-related data to disk. Instead, session-related data is stored in RAM.
 - `background`: suitable for transferring data files while the app runs in the background. A session configured with this object hands control of the transfers over to the system, which handles the transfers in a separate process. In iOS, this configuration makes it possible for transfers to continue even when the app itself is suspended or terminated.
 
+[↑ INDEX](#toc)
+
+<a name="#queueclient"/>
+
 ## Create a queue client
 
 Sometimes you want to manage the number of concurrent network operations and/or the priority of their execution.  
@@ -67,6 +76,10 @@ Requests executed in `HTTPClientQueue` instances allows cancelling by calling th
 ```swift
 req.cancel()
 ```
+
+[↑ INDEX](#toc)
+
+<a name="#responsevalidators"/>
 
 ## Response Validators
 
@@ -106,7 +119,11 @@ client.addValidator { response, request in
 
 `.validators` **are executed in order**; the first validator which fails interrupt the chain and set the final response of the request.  
 
-## The Default Validator (`HTTPDefaultValidator`)
+[↑ INDEX](#toc)
+
+<a name="#defaultvalidator"/>
+
+## Default Response Validator
 
 By default each client has a single validator called `HTTPDefaultValidator`; this validator makes the following standard check:
 
@@ -121,7 +138,11 @@ By default each client has a single validator called `HTTPDefaultValidator`; thi
 
 You should need to remove the default validator but you may override it by creating a custom class if you need.
 
-## Basic configuration
+[↑ INDEX](#toc)
+
+<a name="#clientconfiguration"/>
+
+## Client Configuration
 
 You can configure the following properties for each client instance.
 
@@ -132,7 +153,22 @@ You can configure the following properties for each client instance.
 
 > NOTE: All these properties are used as global settings for each request executed into the instance of the client. However you can extend/override these settings by acting on the respective properties of the `HTTPRequest` instances.
 
+```swift
+let client = HTTPClient(baseURL: "myawesomeapp.com/webservice/v1")
+client.headers = HTTPHeaders([
+    .userAgent: "MyAwesomeAppV1"
+    "X-API-V": "1.0.1"
+])
+client.security = HTTPCertificatesSecurity(certificates: [certificate])
+```
+
+[↑ INDEX](#toc)
+
+<a name="#security"/>
+
 ## Security
+
+<a name="#configuresecurity"/>
 
 ### Configure security (SSL/TSL)
 
@@ -164,6 +200,8 @@ req.security = HTTPCredentialSecurity {
 }
 ```
 
+<a name="#allowsallcerts"/>
+
 ### Allows all certificates
 
 Sometimes you may want to allows all certificates, especially in development environment.  This is the way to accomplish it.
@@ -173,3 +211,5 @@ req.security = HTTPCredentialSecurity { challenge in
     URLCredential(forTrust: challenge.protectionSpace.serverTrust)
 }
 ```
+
+[↑ INDEX](#toc)

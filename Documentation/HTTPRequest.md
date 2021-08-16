@@ -1,24 +1,26 @@
+<a name="#toc"/>
+
 # HTTP Request
 
-- Configure a Request
-- Decodable Request
-- Chainable Configuration
-- Set Content
-    - Set Headers
-    - Set Query Parameters
-    - Set JSON Body
-    - Set Form URL Encoded
-    - Set Multipart Form
-- Modify an URLRequest
-- Execute Request
-- Cancel Request
-- Response Handling
-- Response Validation
-- Upload Large Data
-    - Upload Multi-part form with stream of file
-    - Upload File Stream
-- Download Large Data
-- Track Upload/Download Progress
+- [Configure a Request](#configurerequest)
+- [Decodable Request](#decodablerequest)
+- [Chainable Configuration](#chainconfiguration)
+- [Set Content](#content)
+    - [Set Headers](#headers)
+    - [Set Query Parameters](#queryparams)
+    - [Set JSON Body](#jsonbody)
+    - [Set Form URL Encoded](#formurlencoded)
+    - [Set Multipart Form](#multipartform)
+- [Modify an URLRequest](#modifyrequest)
+- [Execute Request](#executerequest)
+- [Cancel Request](#cancelrequest)
+- [Response Handling](#responsehandling)
+- [Response Validation](#responsevalidation)
+- [Upload Large Data](#uploadlargedata)
+    - [Upload Multi-part form with stream of file](#multipartstream)
+    - [Upload File Stream](#filestream)
+- [Download Large Data](#downloadlargedata)
+- [Track Upload/Download Progress](#trackprogress)
 
 IndomioHTTP provides a variety of convenience methods for making HTTP requests.  
 At the simplest, just provide a String that can be converted into a URL:
@@ -36,6 +38,10 @@ You can create 2 kind of requests:
 - `HTTPRequest<Object: HTTPDecodableResponse>`: allows you to directly perform the call and execute parsing to return a valid businnes object.
 
 > NOTE: Both the objects have the same properties and methods (in fact the first one is just a typealias for `HTTPRequest<HTTPRawResponse>`).
+
+[↑ INDEX](#toc)
+
+<a name="#configurerequest"/>
 
 ## Configure a Request
 
@@ -68,6 +74,10 @@ let req = HTTPRawRequest(.get, URI: "http://www.apple.com/{type}/{value}",
                          variables: ["type": "mac", "value": 15]) // expand variables
 req.run() // execute with absolute url in shared client
 ```
+
+[↑ INDEX](#toc)
+
+<a name="#decodablerequest"/>
 
 ## Decodable Request (Custom and Codable)
 
@@ -130,6 +140,10 @@ HTTPRequest<User>().method(.post).route("agents/login").json("user": user, "pwd"
 }
 ```
 
+[↑ INDEX](#toc)
+
+<a name="#chainconfiguration"/>
+
 ## Chainable Configuration
 
 `HTTPRequest` can be configured by using chainable configurations; several methods allows you to make a chain to configure parameters of the request:
@@ -162,6 +176,9 @@ The following methods allows you to configure every aspect of the request (all m
 - `header(HTTPHeaderField, String)` to add/replace an existing header field (type safe, `HTTPHeaderField`).
 - `headers()` to create a builder callback to configure in a single call all the headers of the call.
 
+<a name="#content"/>
+
+[↑ INDEX](#toc)
 ## Set Content
 
 IndomioHTTP also provides a variety of methods to configure the content of a request; built in services includes:
@@ -170,6 +187,9 @@ IndomioHTTP also provides a variety of methods to configure the content of a req
 - Form URL Encoded
 - Query Parameters (in URL)
 - Multipart Form Data / File Upload
+
+<a name="#headers"/>
+
 ### Set Headers
 
 Headers can be set one by line:
@@ -199,6 +219,9 @@ req.headers {
     $0["X-MyHeader"] = "SomeValue"
 }
 ```
+
+<a name="#queryparams"/>
+
 ### Set Query Parameters
 
 Setting query parameters which are added to the composed URL (`baseURL` + `route` or just absolute `route`) is pretty easy with the `query()` function:
@@ -231,6 +254,8 @@ let req = HTTPRequest<Search>(.post, "/search")
           .queryEncodingStyle(array: .noBrackets, bool: .asLiterals) // set the encoding style
 ```
 
+<a name="#jsonbody"/>
+
 ### Set JSON Body
 
 Most of the time you need to pass some JSON data inside the body of the requests. IndomioHTTP offer the `json()` method to pass JSON data.
@@ -260,6 +285,8 @@ let req = HTTPRequest<User>()
           .json(user) // automatically convert in a json body
 ```
 
+<a name="#formurlencoded"/>
+
 ### Set Form URL Encoded
 
 If you need to send a Form URL Encoded data (`application/x-www-form-urlencoded`) you can use the `formURLEncoded()` function:
@@ -271,6 +298,8 @@ let req = HTTPRequest<User>()
 ```
 
 Data will be automatically converted to x-ww-form-urlencoded for you.
+
+<a name="#multipartform"/>
 
 ### Set Multipart Form
 
@@ -289,6 +318,10 @@ let req = HTTPRequest<FormResponse>()
           }
 ```
 
+[↑ INDEX](#toc)
+
+<a name="#modifyrequest"/>
+
 ## Modify an URLRequest
 
 When IndomioHTTP create an `URLRequest` for an `HTTPRequest` in a client you may have the need to make some further changes.  
@@ -300,6 +333,10 @@ req.urlRequestModifier = { urlRequest in
     // urlRequest is received as inout object you can modify
 }
 ```
+
+[↑ INDEX](#toc)
+
+<a name="#executerequest"/>
 
 ## Execute Request
 
@@ -315,6 +352,10 @@ The same methods are also available when you don't need of a client and you want
 - `runSync()`
 
 > NOTE: `*sync()` versions block the caller thread
+
+<a name="#cancelrequest"/>
+
+[↑ INDEX](#toc)
 
 ## Cancel Request
 
@@ -352,6 +393,11 @@ HTTPRawRequest().resourceAtURL("https://speed.hetzner.de/100MB.bin", resumeData:
 ```
 
 > NOTE: On some versions of all Apple platforms (iOS 10 - 10.2, macOS 10.12 - 10.12.2, tvOS 10 - 10.1, watchOS 3 - 3.1.1), resumeData is broken on background URLSessionConfigurations. There's an underlying bug in the resumeData generation logic where the data is written incorrectly and will always fail to resume the download. For more information about the bug and possible workarounds, please see this Stack Overflow post.
+
+[↑ INDEX](#toc)
+
+<a name="#responsehandling"/>
+
 ## Response Handling
 
 You can monitor 3 different data from a request:
@@ -410,12 +456,20 @@ req.$progress.sink { progress in
 }.store(in: &...)
 ```
 
+<a name="#responsevalidation"/>
+
+[↑ INDEX](#toc)
+
 ## Response Validation
 
 You have two way to perform response validation of a request.  
 The first one is to provide a custom implementation of the `HTTPDecodableResponse` protocol which is used to transform an `HTTPRawResponse` received from server to a valid object.
 
 The second one is centralized at client level and uses the ordered list of `validators` which are conform to `HTTPResponseValidatorProtocol` protocol. To learn more about this method see the "HTTP Client" section of the documentation.
+
+<a name="#uploadlargedata"/>
+
+[↑ INDEX](#toc)
 
 ## Upload Large Data
 
@@ -440,6 +494,10 @@ By setting the `transferMode = .largeData` you will be also able to track the pr
 
 Sometimes you may prefer to use stream to send large amount of data without loading them in memory.
 
+<a name="#multipartstream"/>
+
+[↑ INDEX](#toc)
+
 ### Upload Multi-part form with stream of file
 
 This is an example of multipart form which send the content of a file as stream so we don't need to load all the contents in memory. Contents are read during the stream from local memory to the remote endpoint.
@@ -455,6 +513,10 @@ let req = HTTPRawRequest<FormResponse>()
 
 > NOTE: You can also add raw `InputStream`, `Data` or key/value strings. See the `add()` function of the `MultipartFormData` object for more info.
 
+[↑ INDEX](#toc)
+
+<a name="#filestream"/>
+
 ### Upload File Stream
 
 Sometimes you want to send large amount of data with a request and you would avoid to put them in memory and send it as body. In this case you can use the `stream()` functions of the `HTTPRequest` to keep your program responsive.
@@ -468,6 +530,10 @@ HTTPRawRequest(.post)
 ```
 
 Stream also support raw `Data` via `stream(data: )` function.
+
+[↑ INDEX](#toc)
+
+<a name="#downloadlargedata"/>
 
 ## Download Large Data
 
@@ -485,6 +551,10 @@ HTTPRawRequest()
 ```
 
 In fact it just a shortcut to set the `transferMode = .largeData` and route to the absolute URL passed.
+
+[↑ INDEX](#toc)
+
+<a name="#trackprogress"/>
 
 ## Track Upload/Download Progress
 
