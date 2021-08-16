@@ -8,7 +8,7 @@ IndomioHTTP is a lightweight yet powerful client-side HTTP library.
 Our goal is make an easy to use and effortless http client for Swift.
 
 <p align="center">
-<img src="./documentation/immobiliarelabs_logo.png" alt="IndomioFlags" width="200"/>
+<img src="./Documentation/immobiliarelabs_logo.png" alt="ImmobiliareLabs" width="200"/>
 </p>
 
 ## Feature Highlights
