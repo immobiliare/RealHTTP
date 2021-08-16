@@ -114,11 +114,15 @@ Check out the Documentation section below to learn more!
      - cURL Command Output
 - Network Stubber
     - Introduction
-    - Add a new stubber request
-        - Configure request
-        - Create Matcher
-        - Built-in Matchers
-    - Add ignore rule
+    - Stub a Request
+    - Stub Matchers
+        - Custom Matcher
+        - URI Matcher
+        - JSON Matcher
+        - Body Matcher
+        - URL Matcher
+    - Add Ignore Rule
+    - Unhandled Rules
 ## Requirements
 
 IndomioHTTP can be installed in any platform which supports Swift 5.4+ ON:

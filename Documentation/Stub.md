@@ -9,6 +9,7 @@
     - Body Matcher
     - URL Matcher
 - Add Ignore Rule
+- Unhandled Rules
 
 ## Introduction
 
@@ -167,4 +168,28 @@ It will match URLs by ignoring any query parameter like `http://myws.com/login?u
 ## Add Ignore Rule
 
 You can add ignoring rule to the `HTTPStubber.shared` in order to ignore and pass through some URLs.  
-An ignore rule is an object of type `HTTPStubIgnoreRule`
+An ignore rule is an object of type `HTTPStubIgnoreRule` which contains a list of `matchers`: when all matchers are verified the stub is valid and the request is ignored.  It works like stub request for response but for ignores.
+
+```swift
+HTTPStubber.shared.add(ignoreURL: "http://www.apple.com", options: [.ignorePath, .ignoreQueryParameters])
+```
+
+You can use all the matchers described above even for rules.
+
+## Unhandled Rules
+
+You can choose how IndomioHTTP must deal with stub not found. You have two options:
+
+ - `optout`: only URLs registered wich matches the matchers are ignored for mocking.
+            - Registered mocked URL: mocked.
+             - Registered ignored URL: ignored by the stubber, default process is applied as if the stubber is disabled.
+             - Any other URL: Raises an error.
+ - `optin`: Only registered mocked URLs are mocked, all others pass through.
+             - Registered mocked URL: mocked.
+             - Any other URL: ignored by the stubber, default process is applied as if the stubber is disabled.
+
+To set the behaviour:
+
+```swift
+HTTPStubber.shared.unhandledMode = .optin // enable optin mode
+```
