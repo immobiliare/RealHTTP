@@ -1,9 +1,7 @@
 # Introduction
 
-**TABLE OF CONTENTS**
-
-- Introduction
-- Architecture Components
+- [Introduction](#introduction)
+- [Architecture Components](#architecture-components)
 
 ## Introduction
 
@@ -14,6 +12,8 @@ At the core of our library you will found URLSession and URLSessionTask; Indomio
 No additional dependencies are part of the package.
 
 IndomioHTTP supports reactive programming by integrating Combine's publishers and subject. Future versions will also support the new Async/Await mechanism.
+
+[↑ INDEX](#introduction)
 
 ## Architecture Components
 
@@ -32,3 +32,5 @@ for **HTTP Stub**:
 - **HTTP Stub Response**: for each HTTP method of a stub request you can define a different response (`HTTPStubResponse`). The response contains the body, headers, cookies, redirect and all the other parameters you can stub.
 
 Along with these structures you've also other support data types which you will see while you'll use the library itself. Each class is fully documented.
+
+[↑ INDEX](#introduction)

@@ -1,5 +1,7 @@
 # HTTP Client
 
+[↑ DOCUMENTATION INDEX](./../README.md#documentation)
+
 - [Introduction](#introduction)
 - [Create a new client](#create-a-new-client)
 - [Create a queue client](#create-a-queue-client)
@@ -7,7 +9,7 @@
 - [Default Response Validator](#default-response-validator)
 - [Client Configuration](#client-configuration)
 - [Security](#security)
-    - [Configure security via SSL/TSL](#configure-security-via-ssl/tsl)
+    - [Configure security via SSL/TSL](#configure-security-ssltsl)
     - [Allows all certificates](#allows-all-certificates)
 
 # Introduction
