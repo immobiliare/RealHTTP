@@ -1,15 +1,19 @@
+<a name="#toc"/>
+
 # Network Stubber
 
-- Introduction
-- Stub a Request
-- Stub Matchers
-    - Custom Matcher
-    - URI Matcher
-    - JSON Matcher
-    - Body Matcher
-    - URL Matcher
-- Add Ignore Rule
-- Unhandled Rules
+- [Introduction](#introduction)
+- [Stub a Request](#stubrequest)
+- [Stub Matchers](#stubmatchers)
+    - [Custom Matcher](#custommatcher)
+    - [URI Matcher](#urimatcher)
+    - [JSON Matcher](#jsonmatcher)
+    - [Body Matcher](#bodymatcher)
+    - [URL Matcher](#urlmatcher)
+- [Add Ignore Rule](#addignorerule)
+- [Unhandled Rules](#unhandledrules)
+
+<a name="#introduction"/>
 
 ## Introduction
 
@@ -26,6 +30,10 @@ Once you have done you can disable it:
 ```swift
 HTTPStubber.shared.disable()
 ```
+
+[↑ INDEX](#toc)
+
+<a name="#stubrequest"/>
 
 ## Stub a Request
 
@@ -77,11 +85,20 @@ var stub = HTTPStubRequest()
             })
 ```
 
+[↑ INDEX](#toc)
+
+<a name="#stubmatchers"/>
+
 ## Stub Matchers
 
 There are different stub matchers you can chain for a single stub request.
 
 > NOTE: `matchers` are evaluated with AND operator, not OR. So all matchers must be verified in order to trigger the relative request.
+
+[↑ INDEX](#toc)
+
+
+<a name="#custommatcher"/>
 
 ### Custom Matcher
 
@@ -113,6 +130,10 @@ var stub = HTTPStubRequest()
 
 The following stub is triggered when headers of the request is `customAgent`.
 
+[↑ INDEX](#toc)
+
+<a name="#urimatcher"/>
+
 ### URI Matcher
 
 IndomioHTTP allows you to define an URI matcher (`HTTPStubURITemplateMatcher`) which is based upon the [URI Template RFC](https://tools.ietf.org/html/rfc6570) - it uses the [URITemplate project by Kyle Fuller](https://github.com/kylef/URITemplate.swift).
@@ -131,6 +152,10 @@ Such as the following:
 - /kylef/{repository}
 - /kylef/URITemplate.swift
 
+[↑ INDEX](#toc)
+
+<a name="#jsonmatcher"/>
+
 ### JSON Matcher
 
 Say you're POSTing a JSON to your server, you could make your stub match a particular value like this:
@@ -143,6 +168,10 @@ var stub = HTTPStubRequest()
 It will match the JSON representation of an `User` struct with `userID=34` and `fullName=Mark` without representing the raw JSON but just passing the `Codable` struct!  
 It uses the `HTTPStubJSONMatcher` matcher.
 
+[↑ INDEX](#toc)
+
+<a name="#bodymatcher"/>
+
 ### Body Matcher
 
 Using the `HTTPStubBodyMatcher` you can match the body of a request which should be equal to a particular value in order to trigger the relative stub request:
@@ -153,6 +182,10 @@ var stub = HTTPStubRequest()
            .match(body: bodyToCheck)
            .stub(...)
 ```
+
+[↑ INDEX](#toc)
+
+<a name="#urlmatcher"/>
 
 ### URL Matcher
 
@@ -165,6 +198,10 @@ var stub = HTTPStubRequest()
 
 It will match URLs by ignoring any query parameter like `http://myws.com/login?username=xxxx` or `http://myws.com/login?username=yyyy&lock=1`.
 
+[↑ INDEX](#toc)
+
+<a name="#addignorerule"/>
+
 ## Add Ignore Rule
 
 You can add ignoring rule to the `HTTPStubber.shared` in order to ignore and pass through some URLs.  
@@ -175,6 +212,10 @@ HTTPStubber.shared.add(ignoreURL: "http://www.apple.com", options: [.ignorePath,
 ```
 
 You can use all the matchers described above even for rules.
+
+[↑ INDEX](#toc)
+
+<a name="#unhandledrules"/>
 
 ## Unhandled Rules
 

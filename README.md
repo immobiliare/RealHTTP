@@ -117,17 +117,17 @@ Check out the Documentation section below to learn more!
 - [Tools](./Documentation/Tools.md)
     - [Gathering/Showing Statistical Metrics](./Documentation/Tools.md#metrics)
     - [cURL Command Output](./Documentation/Tools.md#curl)
-- Network Stubber
-    - Introduction
-    - Stub a Request
-    - Stub Matchers
-        - Custom Matcher
-        - URI Matcher
-        - JSON Matcher
-        - Body Matcher
-        - URL Matcher
-    - Add Ignore Rule
-    - Unhandled Rules
+- [Network Stubber](./Documentation/Stub.md)
+    - [Introduction](./Documentation/Stub.md#introduction)
+    - [Stub a Request](./Documentation/Stub.md#stubrequest)
+    - [Stub Matchers](./Documentation/Stub.md#stubmatchers)
+        - [Custom Matcher](./Documentation/Stub.md#custommatcher)
+        - [URI Matcher](./Documentation/Stub.md#urimatcher)
+        - [JSON Matcher](./Documentation/Stub.md#jsonmatcher)
+        - [Body Matcher](./Documentation/Stub.md#bodymatcher)
+        - [URL Matcher](./Documentation/Stub.md#urlmatcher)
+    - [Add Ignore Rule](./Documentation/Stub.md#addignorerule)
+    - [Unhandled Rules](./Documentation/Stub.md#unhandledrules)
 ## Requirements
 
 IndomioHTTP can be installed in any platform which supports Swift 5.4+ ON:
