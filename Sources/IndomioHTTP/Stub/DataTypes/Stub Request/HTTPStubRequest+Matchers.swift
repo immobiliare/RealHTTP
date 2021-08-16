@@ -22,6 +22,15 @@ extension HTTPStubRequest {
         return self
     }
     
+    /// Add a specified matcher with matching function directly.
+    ///
+    /// - Parameter matcherFunction: matcher function.
+    /// - Returns: Self
+    public func match(_ matcherFunction: @escaping HTTPStubCustomMatcher.Handler) -> Self {
+        let matcher = HTTPStubCustomMatcher(matcherFunction)
+        return match(matcher)
+    }
+    
     /// Configure the stub request to use a regular expression matcher to intercept URLs.
     ///
     /// - Parameters:
@@ -65,7 +74,7 @@ extension HTTPStubRequest {
     /// - Parameter uriTemplate: uri template to match, conform to RFC6570
     /// - Returns: Self
     public func match(URI uriTemplate: String) -> Self {
-        match(HTTPURITemplateMatcher(URI: uriTemplate))
+        match(HTTPStubURITemplateMatcher(URI: uriTemplate))
     }
     
     /// Configure the stub request to match a specific URL optionally ignoring query parameters.
@@ -75,8 +84,8 @@ extension HTTPStubRequest {
     ///   - URL: URL target.
     ///   - options: comparison options for URL matcher.
     /// - Returns: Self
-    public func match(URL: URLConvertible, options: HTTPURLMatcher.Options = .default) -> Self {
-        guard let matcher = HTTPURLMatcher(URL: URL, options: options) else {
+    public func match(URL: URLConvertible, options: HTTPStubURLMatcher.Options = .default) -> Self {
+        guard let matcher = HTTPStubURLMatcher(URL: URL, options: options) else {
             return self
         }
         return match(matcher)

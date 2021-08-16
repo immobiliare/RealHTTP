@@ -487,3 +487,21 @@ HTTPRawRequest()
 In fact it just a shortcut to set the `transferMode = .largeData` and route to the absolute URL passed.
 
 ## Track Upload/Download Progress
+
+On `.largeData` `transferMode` requests you can also add an observer to monitor the progress of download/upload.  
+The following example add a `onProgress` callback which is called when a new update is available.
+
+```swift
+HTTPRawRequest()
+    .resourceAtURL("https://speed.hetzner.de/100MB.bin")
+    }.onProgress { prog in
+        print(prog.percentage)
+    }
+```
+
+returning object is an `HTTProgress` instance with the following properties:
+
+- `info`: return a `Progress` system object with the data of the operation.
+- `percentage`: a float (0..1) with the percentage of completion.
+- `kind`: identify if the operation is an `upload` or `download`.
+- `resumedOffset`: when a resume operation is ready an instance of the `HTTProgress` may also contains a valid non nil value with the value resumed.

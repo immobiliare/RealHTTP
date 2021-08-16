@@ -53,6 +53,16 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
         }
     }
     
+    /// Create a new instance of HTTPHeaders from a dictionary of key,values where
+    /// key is the `HTTPHeaderField` and not a raw string.
+    ///
+    /// - Parameter headersDictionary: headers dictionary.
+    public init(_ headersDictionary: [HTTPHeaderField: String]?) {
+        headersDictionary?.forEach {
+            set(HTTPHeader(name: $0.key, value: $0.value))
+        }
+    }
+    
     /// Initialize by passing a `ExpressibleByArrayLiteral` array.
     ///
     /// - Parameter elements: elements.

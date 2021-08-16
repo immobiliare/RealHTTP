@@ -110,15 +110,9 @@ Check out the Documentation section below to learn more!
     - Response Validation
     - Upload/Download Large Data
 - Tools
-     - Obtain Metrics
-     - Print Metrics on screen
-     - cURL command export
-- Advanced
-    - HTTPQueue Client
-    - Sync Requests
-    - Retring Calls
-    - Deserializing
-- Stub
+     - Gathering/Showing Statistical Metrics
+     - cURL Command Output
+- Network Stubber
     - Introduction
     - Add a new stubber request
         - Configure request

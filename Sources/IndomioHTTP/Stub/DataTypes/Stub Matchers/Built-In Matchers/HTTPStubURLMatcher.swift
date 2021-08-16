@@ -12,7 +12,7 @@
 import Foundation
 
 /// A simple URL matcher.
-public class HTTPURLMatcher: HTTPStubMatcherProtocol {
+public class HTTPStubURLMatcher: HTTPStubMatcherProtocol {
     
     // MARK: - Private Mat
     
@@ -64,7 +64,7 @@ public class HTTPURLMatcher: HTTPStubMatcherProtocol {
 
 // MARK: HTTPURLMatcher.Options
 
-extension HTTPURLMatcher {
+extension HTTPStubURLMatcher {
     
     /// Defines the options for url matching.
     public struct Options: OptionSet {
