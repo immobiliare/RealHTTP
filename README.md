@@ -206,13 +206,6 @@ If you want to contribuite to the project you can also work on these main topics
 
 <a name="#license"/>
 
-## Authors
-
-IndomioHTTP was created and maintained by the ImmobiliareLabs team, the tech departement fo Immobiliare.it.  
-This is the list of current contributors (internal/external) of the project:
-
-- [Daniele Margutti](https://github.com/malcommac)
-
 ## License
 
 IndomioHTTP is licensed under the MIT license.  
