@@ -14,9 +14,9 @@ Pod::Spec.new do |s|
   s.swift_versions = ['5.0', '5.1', '5.3', '5.4', '5.5']
   s.framework = 'Foundation'
 
-  s.source_files = 'IndomioHTTP/Sources/**/*.{h,m,swift}'
+  s.source_files = 'Sources/IndomioHTTP/**/*.{h,m,swift}'
   s.resource_bundles = {
-    'IndomioFlags' => ['IndomioHTTP/**/*.{png,storyboard,lproj,xcassets,xib}']
+    'IndomioHTTP' => ['Sources/IndomioHTTP/**/*.{png,storyboard,lproj,xcassets,xib}']
   }
 
 end
