@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-  s.name         = "IndomioHTTP-old"
+  s.name         = "IndomioHTTP"
   s.version      = "0.9.0"
   s.summary      = "HTTP client for Swift ages: data encoding/auto deserialization, network metrics, stub, combine and more"
   s.homepage     = "https://github.com/malcommac/IndomioHTTP.git"
