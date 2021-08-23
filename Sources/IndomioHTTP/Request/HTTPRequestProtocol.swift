@@ -107,7 +107,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// - Parameters:
     ///   - method: HTTP method for the request, by default is `.get`.
     ///   - route: route to compose with the base url of the `HTTPClient` where the request is running.
-    init(_ method: HTTPMethod, _ route: String)
+    init(_ method: HTTPMethod, route: String)
     
     /// Initialize a new request with given URI template and variables.
     /// The `route` property will be assigned expanding the variables over the template

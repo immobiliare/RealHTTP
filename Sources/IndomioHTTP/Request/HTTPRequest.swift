@@ -155,7 +155,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     ///   - method: method for http.
     ///   - route: route name.
     required
-    public init(_ method: HTTPMethod = .get, _ route: String = "") {
+    public init(_ method: HTTPMethod = .get, route: String = "") {
         self.method = method
         self.route = route
     }
