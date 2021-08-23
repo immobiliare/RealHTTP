@@ -44,7 +44,7 @@ Therefore you can create a custom `HTTPClient` to execute all your's webservice 
 
 ```swift
 let jokeAPIClient = HTTPClient(baseURL: "https://official-joke-api.appspot.com")
-let jokesReq = HTTPRequest<User>(.get, "/random_jokes")
+let jokesReq = HTTPRequest<Joke>(.get, "/random_jokes")
                .json(["category": category, "count": countJokes]) // json parameter encoding!
 
 // Instead of callbacks we can also use Combine RX publishers.
