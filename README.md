@@ -185,7 +185,7 @@ pod 'IndomioHTTP'
 IndomioHTTP was created by the amazing mobile team at ImmobiliareLabs, the Tech dept at Immobiliare.it, the first real estate site in Italy.  
 We are currently using IndomioHTTP in all of our products.
 
-**If you are using IndomioHTTP in your app [drop us a message](mailto://mobile@immobiliare.it), we'll add below**.
+**If you are using IndomioHTTP in your app [drop us a message](mailto:mobile@immobiliare.it), we'll add below**.
 
 <a href="https://apps.apple.com/us/app/immobiiiare-it-indomio/id335948517"><img src="./Documentation/immobiliare-app.png" alt="Indomio" width="270"/></a>
 
