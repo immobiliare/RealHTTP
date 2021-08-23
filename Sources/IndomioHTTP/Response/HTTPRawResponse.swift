@@ -25,7 +25,7 @@ public typealias URLSessionResponse = (urlResponse: URLResponse?, data: HTTPRawD
 // In order to simplify the naming instead of creating `HTTPRequest<HTTPRawResponse>` you
 // can use the typealias `HTTPRawRequest`.
 extension HTTPRawResponse: HTTPDecodableResponse {
-    public static func decode(_ response: HTTPRawResponse) -> Result<HTTPRawResponse, Error> {
+    public static func decode(_ response: HTTPRawResponse) -> Result<HTTPRawResponse, HTTPError> {
         .success(response)
     }
 }

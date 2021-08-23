@@ -21,7 +21,7 @@ public extension HTTPRequest {
     ///   - client: client in which the request will be executed.
     ///   - queue: queue where the result is called, by default is `main`.
     /// - Returns: AnyPublisher<Object, Error>
-     func future(in client: HTTPClient, queue: DispatchQueue = .main) -> AnyPublisher<Object, Error> {
+     func future(in client: HTTPClient, queue: DispatchQueue = .main) -> AnyPublisher<Object, HTTPError> {
         return Future { [weak self] fulfill in
             self?.run(in: client).onResult(queue, { result in
                 fulfill(result)

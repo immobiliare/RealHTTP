@@ -21,7 +21,7 @@ public typealias HTTPRawRequest = HTTPRequest<HTTPRawResponse>
 
 /// Defines the generic request you can execute in a client.
 open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
-    public typealias HTTPRequestResult = Result<Object, Error>
+    public typealias HTTPRequestResult = Result<Object, HTTPError>
     public typealias ResultCallback = ((HTTPRequestResult) -> Void)
     public typealias ProgressCallback = ((HTTPProgress) -> Void)
     
@@ -155,7 +155,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     ///   - method: method for http.
     ///   - route: route name.
     required
-    public init(_ method: HTTPMethod = .get, _ route: String = "") {
+    public init(_ method: HTTPMethod = .get, route: String = "") {
         self.method = method
         self.route = route
     }
