@@ -21,7 +21,7 @@ public typealias HTTPRawRequest = HTTPRequest<HTTPRawResponse>
 
 /// Defines the generic request you can execute in a client.
 open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
-    public typealias HTTPRequestResult = Result<Object, Error>
+    public typealias HTTPRequestResult = Result<Object, HTTPError>
     public typealias ResultCallback = ((HTTPRequestResult) -> Void)
     public typealias ProgressCallback = ((HTTPProgress) -> Void)
     

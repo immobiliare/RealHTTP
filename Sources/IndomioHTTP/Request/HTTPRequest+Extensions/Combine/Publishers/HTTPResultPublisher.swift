@@ -18,7 +18,7 @@ import Combine
 extension Combine.Publishers {
     
     public struct HTTPResultPublisher<Object: HTTPDecodableResponse>: Publisher {
-        public typealias Output = Result<Object, Error>
+        public typealias Output = Result<Object, HTTPError>
         public typealias Failure = Never
         
         // MARK: - Private Properties
@@ -37,7 +37,7 @@ extension Combine.Publishers {
         
         // MARK: - Conformance to Publisher
         
-        public func receive<S>(subscriber: S) where S : Subscriber, Never == S.Failure, Result<Object, Error> == S.Input {
+        public func receive<S>(subscriber: S) where S : Subscriber, Never == S.Failure, Result<Object, HTTPError> == S.Input {
             let subscription = HTTPResultSubscription(subscriber: subscriber,
                                                           client: client,
                                                           httpRequest: request,
@@ -51,7 +51,7 @@ extension Combine.Publishers {
 
 // MARK: - HTTPResultSubscription
 
-private final class HTTPResultSubscription<S: Subscriber, Object: HTTPDecodableResponse>: Subscription where S.Input == Result<Object, Error>, S.Failure == Never {
+private final class HTTPResultSubscription<S: Subscriber, Object: HTTPDecodableResponse>: Subscription where S.Input == Result<Object, HTTPError>, S.Failure == Never {
     
     // MARK: - Private Properties
 

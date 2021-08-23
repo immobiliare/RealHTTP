@@ -11,6 +11,9 @@
 
 import Foundation
 
+// Combination of a decodable response which can be parsed via custom parser or Codable.
+public typealias DecodableResponse = HTTPDecodableResponse & Decodable
+
 // MARK: - HTTPDecodableResponse
 
 /// Allows to customize the decode of an object.
@@ -21,7 +24,7 @@ public protocol HTTPDecodableResponse {
     /// Should return `.objectDecodeFailed` in case of failure.
     ///
     /// - Parameter response: response.
-    static func decode(_ response: HTTPRawResponse) -> Result<Self, Error>
+    static func decode(_ response: HTTPRawResponse) -> Result<Self, HTTPError>
     
 }
 
