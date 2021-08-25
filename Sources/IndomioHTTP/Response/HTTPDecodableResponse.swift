@@ -33,7 +33,7 @@ public protocol HTTPDecodableResponse {
 // Provide default implementation for Decodable models.
 public extension HTTPDecodableResponse where Self: Decodable {
 
-    static func decode(_ response: HTTPRawResponse) -> Result<Self, Error> {
+    static func decode(_ response: HTTPRawResponse) -> Result<Self, HTTPError> {
         guard let data = response.content?.data else {
             return .failure(HTTPError(.emptyResponse)) // empty response
         }
