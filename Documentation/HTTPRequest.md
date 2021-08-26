@@ -401,6 +401,7 @@ public class MyController: UIViewController, HTTPClientDelegate {
     
     func setup() {
         client = HTTPClientQueue(maxSimultaneousRequest: 3, baseURL: "http://.../v1")
+        client.followRedirectsMode = .followCopy // uses the new redirect with the old headers/body/method settings
         client.delegate = self
     }
 
