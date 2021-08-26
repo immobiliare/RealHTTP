@@ -270,7 +270,6 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             client.execute(request: request)
 
         case .passed: // Passed, nothing to do
-            client.delegate?.client(client, didFinish: (request, task), response: response)
             forwardHTTPResponseFor(request: request, task: task, response: response)
         }
     }
