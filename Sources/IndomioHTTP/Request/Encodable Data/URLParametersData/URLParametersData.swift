@@ -64,7 +64,10 @@ public class URLParametersData: HTTPRequestEncodableData {
                 request.headers[.contentType] = "\(HTTPContentType.formUrlEncoded.rawValue); charset=utf-8"
             }
             
-            request.httpBody = encodeParameters(parameters).data(using: .utf8)
+            if let data = encodeParameters(parameters).data(using: .utf8) {
+                request.headers[.contentLength] = String(data.count)
+                request.httpBody = data
+            }
             
         case .queryString:
             if let fullURL = request.url,
