@@ -43,6 +43,12 @@ public protocol HTTPClientProtocol: AnyObject {
     /// Requests may override this behaviour.
     var security: HTTPSecurityProtocol? { get set }
     
+    /// Follow or not redirects. By default the value is `true`.
+    /// You can customize and alter the behaviour per single request by implementing
+    /// the `HTTPClientDelegate`'s `client(:willPerformRedirect:response:newRequest:completion:)`
+    /// function.
+    var followRedirectsMode: HTTPRedirectMode { get set }
+    
     // MARK: - Validation of Response
     
     /// Validate response from a request.

@@ -117,6 +117,7 @@ Check out the Documentation section below to learn more!
     - [Modify an URLRequest](./Documentation/HTTPRequest.md#modify-an-urlrequest)
     - [Execute Request](./Documentation/HTTPRequest.md#execute-request)
     - [Cancel Request](./Documentation/HTTPRequest.md#cancel-request)
+    - [Handle Request Redirects](./Documentation/HTTPRequest.md#handle-request-redirects)
     - [Response Handling](./Documentation/HTTPRequest.md#response-handling)
     - [Response Validation](./Documentation/HTTPRequest.md#response-validation)
     - [Upload Large Data](./Documentation/HTTPRequest.md#upload-large-data)

@@ -81,11 +81,12 @@ req.cancel()
 You can monitor a particular client's requests lifecycle by setting its `delegate` property.  
 The `HTTPClientDelegate` protocol exposes several events:
 
-- `client(_ client:didEnqueue:)`: called when a new request has been enqueued.
-- `client(_ client:didExecute:)`: called when a request is being executed.
-- `client(_ client:didReceiveAuthChallangeFor:authChallenge:)`: called when a new auth challange is in progress for a request.
-- `client(_ client:didCollectedMetricsFor:metrics:)`: called when request statistics has been collected.
-- `client(_ client:didFinish:response:)`: called when a request has been completed.
+- `client(:didEnqueue:)`: called when a new request has been enqueued.
+- `client(:didExecute:)`: called when a request is being executed.
+- `client(:didReceiveAuthChallangeFor:authChallenge:)`: called when a new auth challange is in progress for a request.
+- `client(:didCollectedMetricsFor:metrics:)`: called when request statistics has been collected.
+- `client(:didFinish:response:)`: called when a request has been completed.
+- `client(:willPerformRedirect,response:newRequest:) -> HTTPRedirectAction?`: called when you receive a follow redirect action to decide what to do.
 
 ```swift
 public class MyController: UIViewController, HTTPClientDelegate {

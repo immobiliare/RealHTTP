@@ -87,6 +87,12 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         queue.sync { dataTable[downloadTask] = .file(fileURL) } // set data
     }
     
+    public func urlSession(_ session: URLSession, task: URLSessionTask,
+                           willPerformHTTPRedirection response: HTTPURLResponse,
+                           newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+        didEvaluateRedirection(task: task, response: response, request: request, completion: completionHandler)
+    }
+    
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         didCompleteTask(task, didCompleteWithError: error)
     }
@@ -142,6 +148,41 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     }
     
     // MARK: - Private Functions
+    
+    private func didEvaluateRedirection(task: URLSessionTask, response: HTTPURLResponse, request: URLRequest, completion: @escaping (URLRequest?) -> Void) {
+        // missing components, continue to the default behaviour
+        guard let client = client,
+              let httpRequest = self.request(forTask: task).request else {
+            completion(request)
+            return
+        }
+        
+        // For some reason both body, headers and method is not copied
+        var newRequest = request
+        
+        if client.followRedirectsMode == .followCopy {
+            // maintain http body, headers and method of the original request.
+            newRequest.httpBody = task.originalRequest?.httpBody
+            newRequest.allHTTPHeaderFields = task.originalRequest?.allHTTPHeaderFields
+            newRequest.httpMethod = task.originalRequest?.httpMethod
+        }
+        
+        let rawResponse = HTTPRawResponse(request: httpRequest, response: (response, nil, nil))
+        // If delegate implements its own login we want to ask to him, if not we'll use the behaviour set
+        // in `followRedirectsMode` of the parent client.
+        let action = client.delegate?.client(client, willPerformRedirect: (httpRequest, task),
+                                             response: rawResponse,
+                                             newRequest: &newRequest) ??
+            // default client behaviour, follow with copy or original system follow
+            (client.followRedirectsMode == .followCopy ? .follow(newRequest) : .follow(request))
+        
+        switch action {
+        case .follow(let newRouteRequest):
+            completion(newRouteRequest)
+        case .refuse:
+            completion(nil)
+        }
+    }
     
     private func didReceiveSessionError(_ error: Error?) {
         for task in Array(tasksToRequest.keys) { // invalidate all requests

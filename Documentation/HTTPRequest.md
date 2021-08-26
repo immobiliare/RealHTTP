@@ -14,6 +14,7 @@
 - [Modify an URLRequest](#modify-an-urlrequest)
 - [Execute Request](#execute-request)
 - [Cancel Request](#cancel-request)
+- [Handle Request Redirects](#handle-request-redirects)
 - [Response Handling](#response-handling)
 - [Response Validation](#response-validation)
 - [Upload Large Data](#upload-large-data)
@@ -367,6 +368,50 @@ HTTPRawRequest().resourceAtURL("https://speed.hetzner.de/100MB.bin", resumeData:
 ```
 
 > NOTE: On some versions of all Apple platforms (iOS 10 - 10.2, macOS 10.12 - 10.12.2, tvOS 10 - 10.1, watchOS 3 - 3.1.1), resumeData is broken on background URLSessionConfigurations. There's an underlying bug in the resumeData generation logic where the data is written incorrectly and will always fail to resume the download. For more information about the bug and possible workarounds, please see this Stack Overflow post.
+
+[↑ INDEX](#http-request)
+
+## Handle Request Redirects
+
+By default IndomioHTTP follows the redirects of http request by using the provided new location obtained from associated `URLSession`.  
+However you may decide to configure the behaviour; you can do it in two ways:
+
+### Follow Redirects Mode
+
+By setting the `.followRedirectsMode` property of the `HTTPClient` instance you can choice what kind of follow mechanism to use. There are two options:
+- `follow`: uses the default new `URLRequest` (with the new redirected url) as received from `URLSessionDelegate` which manage the underlying system. In this option the request is created with the settings received from backend.
+- `followCopy`: uses the default new `URLRequest` received from backend but also modify the `httpMethod`, `httpBody` and `allHeadersFields` properties by copying value from old initial request.
+
+The default behaviour is `follow`.
+
+### Custom Behaviour
+
+You can also customize the behaviour by evaluating a new action for each single request received.  
+Just set the `HTTPClient`'s `delegate` property and implement `client(:willPerformRedirect,response:newRequest:) -> HTTPRedirectAction?` function.  
+
+You can return 2 different actions:
+- `refuse`: refuse redirect, continue by using the response received from the original server.
+- `follow(URLRequest)`: you want to follow the request and you can send the proposed new `URLRequest` or provide a new one.
+
+```swift
+
+public class MyController: UIViewController, HTTPClientDelegate {
+
+    ...
+    
+    func setup() {
+        client = HTTPClientQueue(maxSimultaneousRequest: 3, baseURL: "http://.../v1")
+        client.delegate = self
+    }
+
+    func client(_ client: HTTPClientProtocol, willPerformRedirect request: ExecutedRequest, response: HTTPRawResponse, newRequest: inout URLRequest) -> HTTPRedirectAction? {
+        // Implement your own logic and eventually modify the new proposed request.
+        // The creation mechanism of the proposed request must be set in HTTPClient's followRedirectsMode property.
+        .follow(newRequest)
+    }
+    
+}
+```
 
 [↑ INDEX](#http-request)
 
