@@ -7,6 +7,7 @@
 - [Create a queue client](#create-a-queue-client)
 - [Client Delegate](#client-delegate)
 - [Response Validators](#response-validators)
+- [Alt Request Validator](#alt-request-validator)
 - [Default Response Validator](#default-response-validator)
 - [Client Configuration](#client-configuration)
 - [Security](#security)
@@ -148,6 +149,26 @@ client.addValidator { response, request in
 ```
 
 `.validators` **are executed in order**; the first validator which fails interrupt the chain and set the final response of the request.  
+
+## Alt Request Validator
+
+IndomioHTTP also provide a special validator called `HTTPAltRequestValidator`. This validator can be used when you need to execute a specific `HTTPRequest` if another request fails for certain reason.  
+
+A typical example is the silent login operation; if you receive an `unathorized` or `.forbidden` error for a protected resource you may want to try a silent login operation, then re-execute initial failed request.
+
+The `HTTPAltRequestValidator` is triggered by certain HTTP status code; by default `401/403` and require a callback which return a specific `HTTPRequestProtocol` for a certain failed request.  
+Usually you may want to be the first validator (before the default one). This is an example:
+
+```swift
+let client = HTTPClient(...)
+let authValidator = HTTPAltRequestValidator { request, response in
+    // do your logic and return the alternate request to execute before
+    // try again the first one.
+    return HTTPRequest<RefreshToken>(refreshToken: "...")
+}
+// append at the top of the validators chain
+client.validators.insert(authValidator, at: 0)
+```
 
 [↑ INDEX](#toc)
 
