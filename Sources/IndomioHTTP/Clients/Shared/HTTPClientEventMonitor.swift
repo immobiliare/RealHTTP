@@ -84,7 +84,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             return
         }
         
-        queue.sync { dataTable[downloadTask] = .file(fileURL) } // set data
+        queue.sync { dataTable[downloadTask] = HTTPRawData(fileURL: fileURL) } // set data
     }
     
     public func urlSession(_ session: URLSession, task: URLSessionTask,
@@ -117,7 +117,11 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         queue.sync {
-            dataTable[dataTask] = .data(data)
+            if dataTable[dataTask] == nil {
+                dataTable[dataTask] = HTTPRawData()
+            }
+            
+            dataTable[dataTask]?.innerData?.append(data)
         }
     }
     

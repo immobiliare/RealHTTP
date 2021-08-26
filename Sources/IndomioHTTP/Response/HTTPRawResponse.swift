@@ -103,22 +103,46 @@ public final class HTTPRawResponse {
 
 // MARK: - HTTPRawData
 
-/// Define what kind of data you have received.
-/// - `data`: data available in memory (used when `expectedDataType` is set to `default`.
-/// - `file`: used when data is written on disk (used when `expectedDataType` is set to `large`).
-public enum HTTPRawData {
-    case data(Data?)
-    case file(URL)
+/// Represent the raw data received from server, which can be downloaded into a file
+/// when it's a large data set or in memory for small needs.
+public struct HTTPRawData {
     
-    /// Raw data. If it's contained in a file it will
-    /// be loaded and returned.
+    /// For a `largeData` option this value is filled with the source file where
+    /// the data has been downloaded.
+    public let fileURL: URL?
+    
+    /// Return the data downloaded.
+    /// For `largeData` sets it reads the data from file every time and return it
+    /// (no cache is made in order to prevent old data in memory).
+    /// For normal requests you should get the temporary data downloaded from server.
     public var data: Data? {
-        switch self {
-        case .data(let data):
-            return data
-        case .file(let fileURL):
+        if let fileURL = fileURL {
             return Data.fromURL(fileURL)
         }
+        
+        return innerData
+    }
+    
+    /// When data ia not written to a file this value contains the data downloaded
+    /// from server and stored in memory.
+    internal var innerData: Data?
+    
+    // MARK: - Initialization
+    
+    /// Initialize with large data set contained in a file.
+    ///
+    /// - Parameter fileURL: local url of the file with data.
+    internal init(fileURL: URL) {
+        self.fileURL = fileURL
+        self.innerData = nil
+    }
+    
+    /// Initialize with a data set.
+    ///
+    /// - Parameter data: data to set, by default it's a valid empty data
+    internal init(data: Data = Data()) {
+        self.fileURL = nil
+        self.innerData = data
     }
     
 }
