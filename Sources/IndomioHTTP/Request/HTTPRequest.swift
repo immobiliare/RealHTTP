@@ -503,7 +503,7 @@ extension HTTPRequest {
     ///
     /// - Parameter parameters: parameters to set.
     /// - Returns: Self
-    public func formURLEncoded(_ parameters: [String: AnyObject]) -> Self {
+    public func formURLEncoded(_ parameters: HTTPRequestParametersDict?) -> Self {
         self.content = URLParametersData(in: .httpBody, parameters: parameters)
         return self
     }
