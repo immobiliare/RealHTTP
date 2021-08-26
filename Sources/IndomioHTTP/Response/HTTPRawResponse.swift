@@ -57,9 +57,14 @@ public final class HTTPRawResponse {
     /// Error parsed.
     public internal(set) var error: HTTPError?
     
+    /// Return `true` if call ended with error.
+    public var isError: Bool {
+        error != nil
+    }
+    
     /// cURL description of the original request who generate this response.
     public internal(set) var cURLDescription: String?
-    
+
     /// Keep the `URLRequest` instance of the original
     public private(set) var urlRequest: (original: URLRequest?, current: URLRequest?)
     

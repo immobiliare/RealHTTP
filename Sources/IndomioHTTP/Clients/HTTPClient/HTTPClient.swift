@@ -18,6 +18,9 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     /// Shared client for http request.
     public static let shared = HTTPClient()
     
+    /// Delegate of the client.
+    public var delegate: HTTPClientDelegate?
+    
     /// Base URL.
     public var baseURL: String
     
@@ -89,8 +92,12 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     public func execute(request: HTTPRequestProtocol) -> HTTPRequestProtocol {
         do {
             let task = try createTask(for: request) // create the URLRequest and associated URLSessionTask to execute
+            
+            delegate?.client(self, didEnqueue: (request, task))
             eventMonitor.addRequest(request, withTask: task) // add to monitor the response
+
             task.resume() // start it immediately
+            delegate?.client(self, didExecute: (request, task))
         } catch {
             // Something went wrong building request, avoid adding operation and dispatch the message
             let response = HTTPRawResponse(error: .failedBuildingURLRequest, forRequest: request)

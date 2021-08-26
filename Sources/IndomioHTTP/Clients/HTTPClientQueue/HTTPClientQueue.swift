@@ -82,6 +82,7 @@ public class HTTPClientQueue: HTTPClient {
             operation.queuePriority = request.priority.queuePriority
             
             eventMonitor.addRequest(request, withTask: task) // monitor response
+            delegate?.client(self, didEnqueue: (request, task))
             addOperations(operation) // put in queue the operation
         } catch {
             // Something went wrong building request, avoid adding operation and dispatch the message

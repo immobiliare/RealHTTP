@@ -5,6 +5,7 @@
 - [Introduction](#introduction)
 - [Create a new client](#create-a-new-client)
 - [Create a queue client](#create-a-queue-client)
+- [Client Delegate](#client-delegate)
 - [Response Validators](#response-validators)
 - [Default Response Validator](#default-response-validator)
 - [Client Configuration](#client-configuration)
@@ -53,8 +54,6 @@ Built-in iOS configurations are:
 
 [↑ INDEX](#http-client)
 
-<a name="#queueclient"/>
-
 ## Create a queue client
 
 Sometimes you want to manage the number of concurrent network operations and/or the priority of their execution.  
@@ -76,7 +75,36 @@ req.cancel()
 
 [↑ INDEX](#http-client)
 
-<a name="#responsevalidators"/>
+## Client Delegate
+
+You can monitor a particular client's requests lifecycle by setting its `delegate` property.  
+The `HTTPClientDelegate` protocol exposes several events:
+
+- `func client(_ client:didEnqueue:)`: called when a new request has been enqueued.
+- `func client(_ client:didExecute:)`: called when a request is being executed.
+- `func client(_ client:didReceiveAuthChallangeFor:authChallenge:)`: called when a new auth challange is in progress for a request.
+- `func client(_ client:didCollectedMetricsFor:metrics:)`: called when request statistics has been collected.
+- `func client(_ client:didFinish:response:)`: called when a request has been completed.
+
+```swift
+public class MyController: UIViewController, HTTPClientDelegate {
+
+func setup() {
+    client = HTTPClientQueue(maxSimultaneousRequest: 3, baseURL: "http://.../v1")
+    client.delegate = self
+}
+
+func client(_ client: HTTPClientProtocol, didEnqueue request: ExecutedRequest) {
+    print("New request \(request.request) has been enqueued with task: \(request.task)")
+}
+
+func client(_ client: HTTPClientProtocol, didFinish request: ExecutedRequest,
+            response: HTTPRawResponse) {
+    print("Request \(request.request) finished with \(response.isError ? "error" : "no error")")
+}
+```
+
+[↑ INDEX](#http-client)
 
 ## Response Validators
 
@@ -118,8 +146,6 @@ client.addValidator { response, request in
 
 [↑ INDEX](#toc)
 
-<a name="#defaultvalidator"/>
-
 ## Default Response Validator
 
 By default each client has a single validator called `HTTPDefaultValidator`; this validator makes the following standard check:
@@ -136,8 +162,6 @@ By default each client has a single validator called `HTTPDefaultValidator`; thi
 You should need to remove the default validator but you may override it by creating a custom class if you need.
 
 [↑ INDEX](#http-client)
-
-<a name="#clientconfiguration"/>
 
 ## Client Configuration
 
@@ -160,8 +184,6 @@ client.security = HTTPCertificatesSecurity(certificates: [certificate])
 ```
 
 [↑ INDEX](#http-client)
-
-<a name="#security"/>
 
 ## Security
 

@@ -15,7 +15,10 @@ import Foundation
 public protocol HTTPClientProtocol: AnyObject {
     
     // MARK: - Public Properties
-
+    
+    /// Delegate for events of the client.
+    var delegate: HTTPClientDelegate? { get set }
+    
     /// Base URL.
     var baseURL: String { get set }
     

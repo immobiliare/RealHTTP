@@ -119,6 +119,10 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         queue.sync {
             let info = HTTPRequestMetrics(source: metrics, task: task)
             metricsTable[task] = info
+            
+            if let delegate = client?.delegate, let client = client, let request = tasksToRequest[task] {
+                delegate.client(client, didCollectedMetricsFor: (request, task), metrics: info)
+            }
         }
     }
     
@@ -140,9 +144,10 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     // MARK: - Private Functions
     
     private func didReceiveSessionError(_ error: Error?) {
-        for request in Array(tasksToRequest.values) { // invalidate all requests
+        for task in Array(tasksToRequest.keys) { // invalidate all requests
+            let request = tasksToRequest[task]!
             var response = HTTPRawResponse(error: .sessionError, error: error, forRequest: request)
-            didComplete(request: request, response: &response)
+            didComplete(request: request, task: task, response: &response)
         }
     }
     
@@ -154,6 +159,10 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             // if not security is settings for both client and request we can use the default handling
             completionHandler(.performDefaultHandling, nil)
             return
+        }
+        
+        if let client = client {
+            client.delegate?.client(client, didReceiveAuthChallangeFor: (request, task), authChallenge: challenge)
         }
         
         security.receiveChallenge(challenge, forRequest: request, task: task, completionHandler: completionHandler)
@@ -190,7 +199,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         guard !request.isCancelled else {
             // Operation is cancelled but it's complete.
             var response = HTTPRawResponse(error: .cancelled, forRequest: request)
-            didComplete(request: request, response: &response)
+            didComplete(request: request, task: task, response: &response)
             return
         }
         
@@ -202,7 +211,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         response.metrics = metrics
         response.cURLDescription = request.cURLDescription(whenIn: client)
         
-        didComplete(request: request, response: &response)
+        didComplete(request: request, task: task, response: &response)
         
         removeRequest(forTask: task)
     }
@@ -213,7 +222,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     ///   - request: request.
     ///   - urlRequest: urlRequest executed.
     ///   - rawData: raw data.
-    private func didComplete(request: HTTPRequestProtocol, response: inout HTTPRawResponse) {
+    private func didComplete(request: HTTPRequestProtocol, task: URLSessionTask, response: inout HTTPRawResponse) {
         guard let client = self.client else { return }
         
         let validationAction = client.validate(response: response, forRequest: request)
@@ -261,6 +270,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             client.execute(request: request)
 
         case .passed: // Passed, nothing to do
+            client.delegate?.client(client, didFinish: (request, task), response: response)
             request.receiveHTTPResponse(response, client: client)
         }
     }

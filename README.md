@@ -96,6 +96,7 @@ Check out the Documentation section below to learn more!
     - [Introduction](./Documentation/HTTPClient.md#introduction)
     - [Create a new client](./Documentation/HTTPClient.md#create-a-new-client)
     - [Create a queue client](./Documentation/HTTPClient.md#create-a-queue-client)
+    - [Client Delegate](./Documentation/HTTPClient.md#client-delegate)
     - [Response Validators](./Documentation/HTTPClient.md#response-validators)
     - [Default Response Validator](./Documentation/HTTPClient.md#default-response-validator)
     - [Client Configuration](./Documentation/HTTPClient.md#client-configuration)
