@@ -80,27 +80,32 @@ req.cancel()
 You can monitor a particular client's requests lifecycle by setting its `delegate` property.  
 The `HTTPClientDelegate` protocol exposes several events:
 
-- `func client(_ client:didEnqueue:)`: called when a new request has been enqueued.
-- `func client(_ client:didExecute:)`: called when a request is being executed.
-- `func client(_ client:didReceiveAuthChallangeFor:authChallenge:)`: called when a new auth challange is in progress for a request.
-- `func client(_ client:didCollectedMetricsFor:metrics:)`: called when request statistics has been collected.
-- `func client(_ client:didFinish:response:)`: called when a request has been completed.
+- `client(_ client:didEnqueue:)`: called when a new request has been enqueued.
+- `client(_ client:didExecute:)`: called when a request is being executed.
+- `client(_ client:didReceiveAuthChallangeFor:authChallenge:)`: called when a new auth challange is in progress for a request.
+- `client(_ client:didCollectedMetricsFor:metrics:)`: called when request statistics has been collected.
+- `client(_ client:didFinish:response:)`: called when a request has been completed.
 
 ```swift
 public class MyController: UIViewController, HTTPClientDelegate {
 
-func setup() {
-    client = HTTPClientQueue(maxSimultaneousRequest: 3, baseURL: "http://.../v1")
-    client.delegate = self
-}
+    ...
+    
+    func setup() {
+        client = HTTPClientQueue(maxSimultaneousRequest: 3, baseURL: "http://.../v1")
+        client.delegate = self
+    }
 
-func client(_ client: HTTPClientProtocol, didEnqueue request: ExecutedRequest) {
-    print("New request \(request.request) has been enqueued with task: \(request.task)")
-}
+    func client(_ client: HTTPClientProtocol, didEnqueue request: ExecutedRequest) {
+        print("New request \(request.request) has been enqueued with task: \(request.task)")
+    }
 
-func client(_ client: HTTPClientProtocol, didFinish request: ExecutedRequest,
-            response: HTTPRawResponse) {
-    print("Request \(request.request) finished with \(response.isError ? "error" : "no error")")
+    func client(_ client: HTTPClientProtocol, didFinish request: ExecutedRequest,
+                response: HTTPRawResponse) {
+        print("Request \(request.request) finished with \(response.isError ? "error" : "no error")")
+    }
+
+    ...
 }
 ```
 
