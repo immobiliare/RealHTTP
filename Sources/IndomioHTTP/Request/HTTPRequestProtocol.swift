@@ -25,6 +25,9 @@ public protocol HTTPRequestProtocol: AnyObject {
     
     // MARK: - Public Properties
     
+    /// An user info dictionary where you can add your own data.
+    var userInfo: [AnyHashable: Any] { get set }
+    
     /// Current state of the request (not thread-safe)
     var state: HTTPRequestState { get }
     
@@ -275,4 +278,14 @@ public enum HTTPRequestPriority {
         }
     }
     
+}
+
+// MARK: - HTTPRequestUserInfoKeys
+
+/// A set of common keys you can use to fill the `userInfo` keys of your request.
+public enum HTTPRequestUserInfoKeys: Hashable {
+    case fingerprint
+    case subsystem
+    case category
+    case data
 }

@@ -27,6 +27,12 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     
     // MARK: - Public Properties
     
+    /// An user info dictionary where you can add your own data.
+    /// Initially only the `fingerprint` key is set with an unique id of the request.
+    public var userInfo: [AnyHashable : Any] = [
+        HTTPRequestUserInfoKeys.fingerprint: UUID().uuidString
+    ]
+    
     /// Current state of the request.
     public private(set) var state: HTTPRequestState = .pending
 
