@@ -7,8 +7,8 @@
 - [Create a queue client](#create-a-queue-client)
 - [Client Delegate](#client-delegate)
 - [Response Validators](#response-validators)
-- [Alt Request Validator](#alt-request-validator)
-- [Default Response Validator](#default-response-validator)
+    - [Default Response Validator](#default-response-validator)
+    - [Alt Request Validator](#alt-request-validator)
 - [Client Configuration](#client-configuration)
 - [Security](#security)
     - [Configure security via SSL/TSL](#configure-security-ssltsl)
@@ -150,6 +150,25 @@ client.addValidator { response, request in
 
 `.validators` **are executed in order**; the first validator which fails interrupt the chain and set the final response of the request.  
 
+[↑ INDEX](#toc)
+
+## Default Response Validator
+
+By default each client has a single validator called `HTTPDefaultValidator`; this validator makes the following standard check:
+
+- Check if the response is an error (http error code identify an error or the network call response is an error)
+- If an error is identified it also identify the error; if it's something related to network connectivity and the user set the `retryAttempts` to a non zero positive value (and the limit is not reached) it attempts to re-execute the call. Recoverable errors are the following error of the `URLError` family: `.timedOut`, `.cannotFindHost`, `.cannotConnectToHost`, `.networkConnectionLost` and `.dnsLookupFailed`.
+- If it's not a recoverable error the call fail with that error.
+- If no error has occurred call is okay and move on to the next validator (if any) or resolve the request.
+
+**Empty Responses**
+
+`HTTPDefaultValidator` also allows to deal with empty responses; by setting the `.allowsEmptyResponses` property you can decide to mark an empty response received from server as okay or as an error. By default no empty response are allowed.
+
+You should need to remove the default validator but you may override it by creating a custom class if you need.
+
+[↑ INDEX](#http-client)
+
 ## Alt Request Validator
 
 IndomioHTTP also provide a special validator called `HTTPAltRequestValidator`. This validator can be used when you need to execute a specific `HTTPRequest` if another request fails for certain reason.  
@@ -169,23 +188,6 @@ let authValidator = HTTPAltRequestValidator { request, response in
 // append at the top of the validators chain
 client.validators.insert(authValidator, at: 0)
 ```
-
-[↑ INDEX](#toc)
-
-## Default Response Validator
-
-By default each client has a single validator called `HTTPDefaultValidator`; this validator makes the following standard check:
-
-- Check if the response is an error (http error code identify an error or the network call response is an error)
-- If an error is identified it also identify the error; if it's something related to network connectivity and the user set the `retryAttempts` to a non zero positive value (and the limit is not reached) it attempts to re-execute the call. Recoverable errors are the following error of the `URLError` family: `.timedOut`, `.cannotFindHost`, `.cannotConnectToHost`, `.networkConnectionLost` and `.dnsLookupFailed`.
-- If it's not a recoverable error the call fail with that error.
-- If no error has occurred call is okay and move on to the next validator (if any) or resolve the request.
-
-**Empty Responses**
-
-`HTTPDefaultValidator` also allows to deal with empty responses; by setting the `.allowsEmptyResponses` property you can decide to mark an empty response received from server as okay or as an error. By default no empty response are allowed.
-
-You should need to remove the default validator but you may override it by creating a custom class if you need.
 
 [↑ INDEX](#http-client)
 
