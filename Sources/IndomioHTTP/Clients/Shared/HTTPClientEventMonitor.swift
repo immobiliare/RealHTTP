@@ -229,8 +229,8 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         switch validationAction {
         case .failWithError(let error): // Response validation failed with error, set the new error and forward it
             response.error = HTTPError(.invalidResponse, error: error)
-            request.receiveHTTPResponse(response, client: client)
-
+            forwardHTTPResponseFor(request: request, task: task, response: response)
+            
         case .retryAfter(let altRequest):
             request.reset(retries: true)
             
@@ -245,7 +245,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
                     queueClient.addOperations(linkedOperation, thisOperation)
                 } catch {
                     response.error = HTTPError(.invalidResponse, error: error)
-                    request.receiveHTTPResponse(response, client: client)
+                    forwardHTTPResponseFor(request: request, task: task, response: response)
                 }
             } else {
                 // Response validation failed, you can retry but we need to execute another call first.
@@ -261,7 +261,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             guard request.currentRetry < request.maxRetries else {
                 // Maximum number of retry attempts made.
                 response.error = HTTPError(.maxRetryAttemptsReached)
-                request.receiveHTTPResponse(response, client: client)
+                forwardHTTPResponseFor(request: request, task: task, response: response)
                 return
             }
             
@@ -271,8 +271,15 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
 
         case .passed: // Passed, nothing to do
             client.delegate?.client(client, didFinish: (request, task), response: response)
-            request.receiveHTTPResponse(response, client: client)
+            forwardHTTPResponseFor(request: request, task: task, response: response)
         }
+    }
+    
+    private func forwardHTTPResponseFor(request: HTTPRequestProtocol, task: URLSessionTask, response: HTTPRawResponse) {
+        guard let client = client else { return }
+        
+        client.delegate?.client(client, didFinish: (request, task), response: response)
+        request.receiveHTTPResponse(response, client: client)
     }
 
 }
