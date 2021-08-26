@@ -33,13 +33,13 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     /// Security settings.
     public var security: HTTPSecurityProtocol?
     
-    /// Follow or not redirects. By default the value is `followCopy` which uses
+    /// Follow or not redirects. By default the value is `follow` which uses
     /// the new proposed redirection by copying the original HTTPMethod, Body and Headers.
     ///
     /// You can further customize and alter the behaviour per single request by implementing
     /// the `HTTPClientDelegate`'s `client(:willPerformRedirect:response:newRequest:)`
     /// function.
-    public var followRedirectsMode: HTTPRedirectMode = .followCopy
+    public var followRedirectsMode: HTTPRedirectMode = .follow
     
     /// Event monitor.
     public private(set) var eventMonitor: HTTPClientEventMonitor!
