@@ -126,7 +126,7 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
         DispatchQueue.global(qos: .background).async { [weak self] in
             guard let self = self else { return }
 
-            request.onRawResponse { response in
+            request.onRawResponse(queue: .main) { response in
                 rawResponse = response
                 sem.signal()
             }
@@ -146,11 +146,18 @@ extension HTTPClient {
     ///
     /// - Parameters:
     ///   - name: name of the validator (used only for your own needs, library will not use it).
+    ///   - onTop: add validator at the top of the validators list. It will be executed as first validator.
     ///   - handler: handler function.
     /// - Returns: Self
-    public func addValidator(name: String? = nil, _ handler: @escaping HTTPCustomValidator.Handler) -> Self {
+    public func addValidator(name: String? = nil, onTop: Bool = false,
+                             _ handler: @escaping HTTPCustomValidator.Handler) -> Self {
         let validator = HTTPCustomValidator(name: name, handler)
-        validators.append(validator)
+        
+        if onTop {
+            validators.insert(validator, at: 0)
+        } else {
+            validators.append(validator)
+        }
         return self
     }
     

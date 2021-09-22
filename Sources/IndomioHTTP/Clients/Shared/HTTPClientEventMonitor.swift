@@ -271,6 +271,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         guard let client = self.client else { return }
         
         let validationAction = client.validate(response: response, forRequest: request)
+        
         switch validationAction {
         case .failWithError(let error): // Response validation failed with error, set the new error and forward it
             response.error = HTTPError(.invalidResponse, error: error)
@@ -294,11 +295,11 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
                 }
             } else {
                 // Response validation failed, you can retry but we need to execute another call first.
-                let internalToken = altRequest.onRawResponse { _ in
+                let internalToken = altRequest.onRawResponse(queue: .main, { _ in
                     request.reset(retries: true)
                     client.execute(request: request)
-                }
-                altRequest.observers.markTokenAsInternal(internalToken)
+                })
+                altRequest.observers.markTokenAsPriority(internalToken)
                 client.execute(request: altRequest)
             }
             

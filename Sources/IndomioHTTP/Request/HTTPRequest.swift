@@ -134,9 +134,6 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
 
     // MARK: - Private Properties
     
-    /// Decoded object if any.
-    private var responseResult: HTTPRequestResult?
-    
     /// Internal observers storage.
     private var _observers = EventObserver<HTTPRequestResult>()
     
@@ -221,20 +218,28 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     
     /// Add a new observer to get info about the raw response.
     ///
+    /// - Parameter queue: dispatch queue in which the observer is called, by default is `.main`.
     /// - Parameter callback: callback.
     /// - Parameter queue: queue in which the event should be dispatched.
     /// - Returns: Self
     @discardableResult
-    public func onResponse(_ callback: @escaping ResultCallback) -> Self {
-        _ = _observers.add(callback)
+    public func onResponse(queue: DispatchQueue = .main, _ callback: @escaping ResultCallback) -> Self {
+        _ = _observers.add(queue: queue, callback)
         dispatchEvents()
         return self
     }
     
-    
+    /// Capture (and execute if needed) the raw response of the request.
+    /// NOTE:
+    /// Usually you don't need to use this but `onResponse` which return both the raw response
+    /// and the decoded object if any.
+    ///
+    /// - Parameter queue: dispatch queue in which the observer is called, by default is `.main`.
+    /// - Parameter callback: callback.
+    /// - Returns: the token associated with the observer.
     @discardableResult
-    public func onRawResponse(_ callback: @escaping ((HTTPResponseProtocol) -> Void)) -> UInt64 {
-        let token = _observers.add(callback)
+    public func onRawResponse(queue: DispatchQueue = .main, _ callback: @escaping ((HTTPResponseProtocol) -> Void)) -> UInt64 {
+        let token = _observers.add(queue: queue, callback)
         dispatchEvents()
         return token
     }
@@ -246,8 +251,8 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     ///   - callback: callback to call.
     /// - Returns: Self
     @discardableResult
-    public func onProgress(_ callback: @escaping ProgressCallback) -> Self {
-        _ = progressObservers.add(callback)
+    public func onProgress(queue: DispatchQueue = .main, _ callback: @escaping ProgressCallback) -> Self {
+        _ = progressObservers.add(queue: queue, callback)
         return self
     }
     
@@ -269,7 +274,6 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
             }
             
             response = nil
-            responseResult = nil
         }
     }
     
@@ -334,11 +338,11 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     
     /// Dispatch events call registered events.
     internal func dispatchEvents() {
-        guard state.isFinished, let result = responseResult else {
+        guard state.isFinished, let response = response else {
             return
         }
         
-        _observers.callWithValue(result)
+        _observers.callWithValue(response)
     }
     
 }
@@ -631,14 +635,15 @@ extension HTTPRequest {
 
 public protocol EventObserverProtocol {
     
-    func markTokenAsInternal(_ token: UInt64)
+    func markTokenAsPriority(_ token: UInt64)
     
 }
 
 /// Keep a list of all observers registered for a particular callback.
 public class EventObserver<Object>: EventObserverProtocol {
-    public typealias Observer = ((Object) -> Void)
-    public typealias ObserverNode = (id: UInt64, callback: Observer)
+    public typealias ObserverCallback =  ((Object) -> Void)
+    public typealias Observer = (queue: DispatchQueue, callback: ObserverCallback)
+    public typealias ObserverNode = (id: UInt64, observer: Observer)
     
     // MARK: - Private Properties
     
@@ -652,7 +657,7 @@ public class EventObserver<Object>: EventObserverProtocol {
     /// List of active observers.
     public var observers: [Observer] {
         stateQueue.sync {
-            Array(_observers.map({ $0.callback }))
+            _observers.map({ $0.observer })
         }
     }
     
@@ -660,10 +665,10 @@ public class EventObserver<Object>: EventObserverProtocol {
     ///
     /// - Parameter observer: observer to add.
     /// - Returns: UInt64
-    public func add(_ observer: @escaping Observer) -> UInt64 {
+    public func add(queue: DispatchQueue, _ observer: @escaping ObserverCallback) -> UInt64 {
         stateQueue.sync {
             nextToken = nextToken.addingReportingOverflow(1).partialValue
-            _observers.append((nextToken, observer))
+            _observers.append((nextToken, (queue, observer)))
             return nextToken
         }
     }
@@ -686,12 +691,13 @@ public class EventObserver<Object>: EventObserverProtocol {
         }
     }
     
-    public func markTokenAsInternal(_ token: UInt64) {
+    public func markTokenAsPriority(_ token: UInt64) {
         if let index = _observers.firstIndex(where: { $0.id == token }) {
             internalNextToken = internalNextToken - 1
             let tokenToReturn = internalNextToken
             
-            _observers.append((tokenToReturn, _observers[index].callback))
+            let node: ObserverNode = (tokenToReturn, (_observers[index].observer.queue, _observers[index].observer.callback))
+            _observers.append(node)
             _observers.remove(at: index)
             sortTokens()
         }
@@ -704,13 +710,15 @@ public class EventObserver<Object>: EventObserverProtocol {
     /// - Parameter object: value to dispatch.
     internal func callWithValue(_ object: Object) {
         for observer in observers {
-            observer(object)
+            observer.queue.async {
+                observer.callback(object)
+            }
         }
     }
     
     internal func sortTokens() {
         _observers.sort { a, b in
-            return a.id < b.id
+            return a.id > b.id
         }
     }
     

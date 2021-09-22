@@ -152,9 +152,10 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// Execute a call (if needed) and get the raw response.
     ///
     /// - Parameters:
+    ///   - queue: queue in which the callback will be executed.
     ///   - callback: callback.
     @discardableResult
-    func onRawResponse(_ callback: @escaping ((HTTPResponseProtocol) -> Void)) -> UInt64
+    func onRawResponse(queue: DispatchQueue, _ callback: @escaping ((HTTPResponseProtocol) -> Void)) -> UInt64
 
     // MARK: - Private
     
