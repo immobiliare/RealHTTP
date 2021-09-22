@@ -119,16 +119,15 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
     ///
     /// - Parameter request: request.
     /// - Returns: HTTPRawResponse
-    public func executeSync(request: HTTPRequestProtocol) -> HTTPRawResponse {
+    public func executeSync(request: HTTPRequestProtocol) -> HTTPResponseProtocol {
        let sem = DispatchSemaphore(value: 0)
 
-        var rawResponse: HTTPRawResponse!
+        var rawResponse: HTTPResponseProtocol!
         DispatchQueue.global(qos: .background).async { [weak self] in
             guard let self = self else { return }
 
-            request.onResponse {
-            //request.onResponse(.global(qos: .background)) {
-                rawResponse = $0
+            request.onRawResponse { response in
+                rawResponse = response
                 sem.signal()
             }
             self.execute(request: request)

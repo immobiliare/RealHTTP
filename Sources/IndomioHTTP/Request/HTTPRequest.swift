@@ -15,13 +15,14 @@ import Foundation
 
 // When you don't need to get a decoded object but you want to read the raw response
 // you can use this typealias to skip the decode part and get the raw data coming from server.
-public typealias HTTPRawRequest = HTTPRequest<HTTPRawResponse>
+public typealias HTTPRawRequest = HTTPRequest<NoObject>
 
 // MARK: - HTTPRequest (Decode)
 
 /// Defines the generic request you can execute in a client.
 open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
-    public typealias HTTPRequestResult = Result<Object, HTTPError>
+    //public typealias HTTPRequestResult = Result<Object, HTTPError>
+    public typealias HTTPRequestResult = HTTPResponse<Object>
     public typealias ResultCallback = ((HTTPRequestResult) -> Void)
     public typealias ProgressCallback = ((HTTPProgress) -> Void)
     
@@ -38,24 +39,13 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
 
     /// Keep the response received for this request.
     /// It's `nil` until the state of the request is `finished`.
-    public private(set) var response: HTTPRawResponse?
+    public private(set) var response: HTTPRequestResult?
     
     /// It's marked when you call `cancel()` on a operation.
     public private(set) var isCancelled: Bool = false
     
     /// Associated task. It's valid when running on a client.
     public weak var task: URLSessionTask?
-
-    /// Decoded object if any.
-    /// It's thread safe.
-    public var object: Object? {
-        stateQueue.sync {
-            switch responseResult {
-            case .success(let obj): return obj
-            default: return nil
-            }
-        }
-    }
     
     /// Route to the endpoint.
     open var route: String
@@ -137,10 +127,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     // MARK: - Observers
     
     /// Registered callbacks for decoded object events.
-    public private(set) var objectObservers = EventObserver<HTTPRequestResult>()
-    
-    /// Registered callbacks for raw data events.
-    public private(set) var responseObservers = EventObserver<HTTPRawResponse>()
+    public var observers: EventObserverProtocol { _observers }
     
     /// Registered callbacks for download/upload progress events.
     public private(set) var progressObservers = EventObserver<HTTPProgress>()
@@ -149,6 +136,9 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     
     /// Decoded object if any.
     private var responseResult: HTTPRequestResult?
+    
+    /// Internal observers storage.
+    private var _observers = EventObserver<HTTPRequestResult>()
     
     /// Sync queue.
    internal let stateQueue = DispatchQueue(label: "com.indomio-http.request.state")
@@ -194,7 +184,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// Run request synchroously in shared client.
     ///
     /// - Returns: HTTPRawResponse?
-    public func runSync() -> HTTPRawResponse? {
+    public func runSync() -> HTTPResponseProtocol? {
         runSync(in: nil)
     }
     
@@ -218,13 +208,47 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     ///
     /// - Parameter client: client instance.
     /// - Returns: HTTPRawResponse?
-    public func runSync(in client: HTTPClientProtocol?) -> HTTPRawResponse? {
+    public func runSync(in client: HTTPClientProtocol?) -> HTTPResponseProtocol? {
         guard isPending else {
             return response // already started
         }
         
         changeState(.executing)
         return (client ?? HTTPClient.shared).executeSync(request: self)
+    }
+    
+    // MARK: - Callbacks
+    
+    /// Add a new observer to get info about the raw response.
+    ///
+    /// - Parameter callback: callback.
+    /// - Parameter queue: queue in which the event should be dispatched.
+    /// - Returns: Self
+    @discardableResult
+    public func onResponse(_ callback: @escaping ResultCallback) -> Self {
+        _ = _observers.add(callback)
+        dispatchEvents()
+        return self
+    }
+    
+    
+    @discardableResult
+    public func onRawResponse(_ callback: @escaping ((HTTPResponseProtocol) -> Void)) -> UInt64 {
+        let token = _observers.add(callback)
+        dispatchEvents()
+        return token
+    }
+    
+    /// Add a new observer to omonitor the request's progression.
+    ///
+    /// - Parameters:
+    ///   - queue: queue in which the event should be dispatched.
+    ///   - callback: callback to call.
+    /// - Returns: Self
+    @discardableResult
+    public func onProgress(_ callback: @escaping ProgressCallback) -> Self {
+        _ = progressObservers.add(callback)
+        return self
     }
     
     // MARK: - Others
@@ -260,7 +284,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
             
             if !state.isFinished {
                 // Mark as cancelled
-                response = HTTPRawResponse(error: .cancelled, forRequest: self)
+                self.response = HTTPResponse(rawResponse: .init(error: .cancelled, forRequest: self))
             }
             
             state = .cancelled
@@ -269,7 +293,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
                let downloadTask = self.task as? URLSessionDownloadTask {
                 // When supported cancel will produce resumable data you can use to recover it.
                 downloadTask.cancel { [weak self] resumableData in
-                    self?.response?.resumableData = resumableData
+                    self?.response?.rawResponse.resumableData = resumableData
                     callback?(resumableData)
                 }
             } else {
@@ -310,20 +334,11 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
     
     /// Dispatch events call registered events.
     internal func dispatchEvents() {
-        guard state.isFinished else {
+        guard state.isFinished, let result = responseResult else {
             return
         }
         
-        // Raw Response
-        if let rawResponse = self.response {
-            responseObservers.callWithValue(rawResponse)
-        }
-        
-        // Decoded Response
-        if let result = responseResult {
-            objectObservers.callWithValue(result)
-        }
-        
+        _observers.callWithValue(result)
     }
     
 }
@@ -597,23 +612,11 @@ extension HTTPRequest {
         }
 
         self.task = nil // reset the task
-
-        // Attempt to decode the object.
-        let decodedObj = Object.decode(response)
-        
         stateQueue.sync {
             self.state = .finished
-            // Keep in cache our data decoded and raw
-            self.response = response
-            self.responseResult = decodedObj
-
-            if case .failure(let decodeError) = decodedObj {
-                self.response?.error = HTTPError(.objectDecodeFailed, error: decodeError)
-            }
-
+            self.response = HTTPResponse<Object>(rawResponse: response)
             dispatchEvents()
         }
-        
     }
     
     public func receiveHTTPProgress(_ progress: HTTPProgress) {
@@ -626,14 +629,22 @@ extension HTTPRequest {
 
 // MARK: - EventObserver
 
+public protocol EventObserverProtocol {
+    
+    func markTokenAsInternal(_ token: UInt64)
+    
+}
+
 /// Keep a list of all observers registered for a particular callback.
-public class EventObserver<Object> {
+public class EventObserver<Object>: EventObserverProtocol {
     public typealias Observer = ((Object) -> Void)
+    public typealias ObserverNode = (id: UInt64, callback: Observer)
     
     // MARK: - Private Properties
     
     private var nextToken: UInt64 = 0
-    private var observersMap = [UInt64: Observer]()
+    private var internalNextToken: UInt64 = UInt64.max-1
+    private var _observers = [ObserverNode]()
     private var stateQueue = DispatchQueue(label: "com.eventobserver.\(UUID().uuidString)")
     
     // MARK: - Public Properties
@@ -641,7 +652,7 @@ public class EventObserver<Object> {
     /// List of active observers.
     public var observers: [Observer] {
         stateQueue.sync {
-            Array(observersMap.values)
+            Array(_observers.map({ $0.callback }))
         }
     }
     
@@ -652,7 +663,7 @@ public class EventObserver<Object> {
     public func add(_ observer: @escaping Observer) -> UInt64 {
         stateQueue.sync {
             nextToken = nextToken.addingReportingOverflow(1).partialValue
-            observersMap[nextToken] = observer
+            _observers.append((nextToken, observer))
             return nextToken
         }
     }
@@ -662,14 +673,27 @@ public class EventObserver<Object> {
     /// - Parameter token: token.
     public func remove(_ token: UInt64) {
         stateQueue.sync {
-            _ = observersMap.removeValue(forKey: token)
+            if let index = _observers.firstIndex(where: { $0.id == token }) {
+                _observers.remove(at: index)
+            }
         }
     }
     
     /// Remove all observers.
     public func removeAll() {
         stateQueue.sync {
-            observersMap.removeAll()
+            _observers.removeAll()
+        }
+    }
+    
+    public func markTokenAsInternal(_ token: UInt64) {
+        if let index = _observers.firstIndex(where: { $0.id == token }) {
+            internalNextToken = internalNextToken - 1
+            let tokenToReturn = internalNextToken
+            
+            _observers.append((tokenToReturn, _observers[index].callback))
+            _observers.remove(at: index)
+            sortTokens()
         }
     }
     
@@ -681,6 +705,12 @@ public class EventObserver<Object> {
     internal func callWithValue(_ object: Object) {
         for observer in observers {
             observer(object)
+        }
+    }
+    
+    internal func sortTokens() {
+        _observers.sort { a, b in
+            return a.id < b.id
         }
     }
     

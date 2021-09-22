@@ -90,9 +90,6 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// and before it's executed by the client. You can use it in order to modify some settings.
     var urlRequestModifier: HTTPURLRequestModifierCallback? { get set }
     
-    /// Observers registered for raw data responses.
-    var responseObservers: EventObserver<HTTPRawResponse> { get }
-    
     /// Describe the priority of the operation.
     /// It may acts as a suggestion for HTTP/2 based services (priority frames / dependency weighting)
     /// for simple `HTTPClient` instances.
@@ -103,6 +100,11 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// NOTE: You should never change it directly, it's managed automatically.
     var task: URLSessionTask? { get set }
     
+    /// List of observers associated with the request.
+    /// Observers will receive responses of the call and can be chained.
+    /// Use `onResult()` or `onRawResponse()` to add your own observer.
+    var observers: EventObserverProtocol { get }
+
     // MARK: - Initialization
     
     /// Initialize a new request with given parameters.
@@ -143,7 +145,7 @@ public protocol HTTPRequestProtocol: AnyObject {
     ///
     /// - Parameter client: destination client, if `nil` the `shared`'s `HTTPClient` instance is used.
     @discardableResult
-    func runSync(in client: HTTPClientProtocol?) -> HTTPRawResponse?
+    func runSync(in client: HTTPClientProtocol?) -> HTTPResponseProtocol?
     
     // MARK: - Execution
     
@@ -152,8 +154,8 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// - Parameters:
     ///   - callback: callback.
     @discardableResult
-    func onResponse(_ callback: @escaping DataResultCallback) -> Self
-    
+    func onRawResponse(_ callback: @escaping ((HTTPResponseProtocol) -> Void)) -> UInt64
+
     // MARK: - Private
     
     /// Called when a response from client did received.

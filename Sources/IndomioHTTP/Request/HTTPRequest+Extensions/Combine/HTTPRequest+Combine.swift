@@ -23,9 +23,9 @@ public extension HTTPRequest {
     /// - Returns: AnyPublisher<Object, Error>
      func future(in client: HTTPClient, queue: DispatchQueue = .main) -> AnyPublisher<Object, HTTPError> {
         return Future { [weak self] fulfill in
-            self?.run(in: client).onResult { result in
-                fulfill(result)
-            }
+            self?.run(in: client).onResponse({ result in
+                fulfill(result.object)
+            })
         }.eraseToAnyPublisher()
     }
     
@@ -37,16 +37,6 @@ public extension HTTPRequest {
     /// - Returns: HTTPObjectPublisher
     func resultPublisher(in client: HTTPClientProtocol) -> Combine.Publishers.HTTPResultPublisher<Object> {
         Combine.Publishers.HTTPResultPublisher(self, client: client)
-    }
-    
-    /// Create a new publisher which execute and return the raw response of the call.
-    ///
-    /// - Parameters:
-    ///   - client: client in which the request will be executed.
-    ///   - queue: queue where the result is called, by default is `main`.
-    /// - Returns: HTTPRawResponsePublisher
-    func responsePublisher(in client: HTTPClientProtocol) -> Combine.Publishers.HTTPRawResponsePublisher {
-        Combine.Publishers.HTTPRawResponsePublisher(self, client: client)
     }
     
 }

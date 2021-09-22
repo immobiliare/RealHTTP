@@ -48,7 +48,7 @@ public protocol HTTPClientProtocol: AnyObject {
     /// the `HTTPClientDelegate`'s `client(:willPerformRedirect:response:newRequest:completion:)`
     /// function.
     var followRedirectsMode: HTTPRedirectMode { get set }
-    
+        
     // MARK: - Validation of Response
     
     /// Validate response from a request.
@@ -64,7 +64,7 @@ public protocol HTTPClientProtocol: AnyObject {
 
     /// - Parameter request: request to use.
     func createTask(for request: HTTPRequestProtocol) throws -> URLSessionTask
-    
+        
     // MARK: - Executing Requests
     
     /// Execute network request asynchrously.
@@ -78,8 +78,8 @@ public protocol HTTPClientProtocol: AnyObject {
     ///
     /// - Parameter request: request to execute.
     @discardableResult
-    func executeSync(request: HTTPRequestProtocol) -> HTTPRawResponse
-    
+    func executeSync(request: HTTPRequestProtocol) -> HTTPResponseProtocol
+
 }
 
 // MARK: - HTTPClientProtocol Configuration

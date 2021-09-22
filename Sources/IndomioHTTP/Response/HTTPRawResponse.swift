@@ -14,7 +14,7 @@ import Foundation
 // MARK: - Typealias for URLSession Response
 
 /// This is just a typealias for raw reponse coming from underlying URLSession instance.
-public typealias URLSessionResponse = (urlResponse: URLResponse?, data: HTTPRawData?, error: Error?)
+public typealias URLSessionResponse = (urlResponse: URLResponse?, data: DataStream?, error: Error?)
 
 // MARK: - HTTPRequest<HTTPRawResponse> ~> HTTPRawRequest
 
@@ -49,7 +49,7 @@ public final class HTTPRawResponse {
     }
     
     /// Data received.
-    public let content: HTTPRawData?
+    public let content: DataStream?
     
     /// Metrics collected for request.
     public internal(set) var metrics: HTTPRequestMetrics?
@@ -101,11 +101,11 @@ public final class HTTPRawResponse {
     
 }
 
-// MARK: - HTTPRawData
+// MARK: - DataStream
 
 /// Represent the raw data received from server, which can be downloaded into a file
 /// when it's a large data set or in memory for small needs.
-public struct HTTPRawData {
+public struct DataStream {
     
     /// For a `largeData` option this value is filled with the source file where
     /// the data has been downloaded.

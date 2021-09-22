@@ -29,7 +29,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     
     /// Map of the session/requests.
     private var tasksToRequest = [URLSessionTask: HTTPRequestProtocol]()
-    private var dataTable = [URLSessionTask: HTTPRawData]()
+    private var dataTable = [URLSessionTask: DataStream]()
     private var metricsTable = [URLSessionTask: HTTPRequestMetrics]()
 
     // MARK: - Initialization
@@ -54,7 +54,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         }
     }
     
-    internal func request(forTask task: URLSessionTask) -> (request: HTTPRequestProtocol?, dataURL: HTTPRawData?, metrics: HTTPRequestMetrics?) {
+    internal func request(forTask task: URLSessionTask) -> (request: HTTPRequestProtocol?, dataURL: DataStream?, metrics: HTTPRequestMetrics?) {
         queue.sync {
             let data = dataTable[task]
             let request = tasksToRequest[task]
@@ -84,7 +84,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             return
         }
         
-        queue.sync { dataTable[downloadTask] = HTTPRawData(fileURL: fileURL) } // set data
+        queue.sync { dataTable[downloadTask] = DataStream(fileURL: fileURL) } // set data
     }
     
     public func urlSession(_ session: URLSession, task: URLSessionTask,
@@ -118,7 +118,7 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         queue.sync {
             if dataTable[dataTask] == nil {
-                dataTable[dataTask] = HTTPRawData()
+                dataTable[dataTask] = DataStream()
             }
             
             dataTable[dataTask]?.innerData?.append(data)
@@ -294,10 +294,12 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
                 }
             } else {
                 // Response validation failed, you can retry but we need to execute another call first.
-                client.execute(request: altRequest).onResponse { altResponse in
+                let internalToken = altRequest.onRawResponse { _ in
                     request.reset(retries: true)
                     client.execute(request: request)
                 }
+                altRequest.observers.markTokenAsInternal(internalToken)
+                client.execute(request: altRequest)
             }
             
         case .retryIfPossible: // Retry if max retries has not be reached
