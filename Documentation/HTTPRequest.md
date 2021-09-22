@@ -28,7 +28,7 @@ At the simplest, just provide a String that can be converted into a URL:
 
 ```swift
 HTTPRequest("https://httpbin.org/get").run().onResponse { result in
-    print(result.content.data) // print the body
+    print(result.raw.content.data) // print the raw body of the response
 }
 ```
 
@@ -337,7 +337,7 @@ The same methods are also available when you don't need of a client and you want
 You can cancel a request at anytime, while it's in progress or in queue by using the `cancel()` function.
 
 ```swift
-let largeDownload = HTTPRawRequest().resourceAtURL("https://speed.hetzner.de/100MB.bin").onResponse { raw in
+let largeDownload = HTTPRawRequest().resourceAtURL("https://speed.hetzner.de/100MB.bin").onResponse { result in
     // You'll receive .cancelled error from here
 }.onProgress { progress in
     print("\(progress.percentage)% downloaded")
@@ -432,8 +432,10 @@ You can add a new observer via callbacks or using the Combine's publishers (it's
 req.run(in: client)
    .onResult { result in
         // Deal with Result<YourObject,Error>
-    }.onResponse { raw in
-        // deal with HTTPRawResponse
+    }.onResponse { result in
+        // result is HTTPResponse object which contains:
+        // - `raw` to access to the raw response received from server
+        // - `object` if the request support decoding you will find the decoded object.
     }.onProgress { progress in
         // called multiple times with updated HTTProgress
     }
@@ -550,8 +552,8 @@ To download large data from an URL or track the progress of download you can use
 ```swift
 HTTPRawRequest()
     .resourceAtURL("https://speed.hetzner.de/100MB.bin")
-    .onResponse { raw in
-        print("Completed")
+    .onResponse { response in
+        print("Completed with data: \(response.raw.data)")
     }.onProgress { prog in
         print(prog.percentage)
     }

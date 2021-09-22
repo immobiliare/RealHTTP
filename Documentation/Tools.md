@@ -23,7 +23,7 @@ This kind of data can be tricky to read so IndomioHTTP allows you to print a con
 
 ```swift
 HTTPRawRequest().resourceAtURL("http://ipv4.download.thinkbroadband.com/5MB.zip").onResponse { response in
-    response.metrics?.render()
+    response.raw.metrics?.render()
 }
 ```
 

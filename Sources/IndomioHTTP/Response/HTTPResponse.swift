@@ -21,11 +21,17 @@ public struct NoObject: HTTPDecodableResponse {
     private init() {}
 }
 
+// MARK: - HTTPResponseProtocol
+
 public protocol HTTPResponseProtocol {
     
-    var rawResponse: HTTPRawResponse { get }
+    /// The raw response from server.
+    var raw: HTTPRawResponse { get }
     
+    /// Decoded object if any.
+    /// NOTE: Use `object` from HTTPResponse, this is to make the compiler happy.
     var anyObject: Result<Any, HTTPError> { get }
+    
 }
 
 // MARK: - HTTPResponse
@@ -37,22 +43,22 @@ public struct HTTPResponse<Object: HTTPDecodableResponse>: HTTPResponseProtocol 
     /// Decoded object if available.
     public let object: Result<Object, HTTPError>
     
-    
+    /// Decoded object with type erase.
     public var anyObject: Result<Any, HTTPError> {
         object as! Result<Any, HTTPError>
     }
     
-    /// Raw response.
-    public let rawResponse: HTTPRawResponse
+    /// Raw response FROM SERVER.
+    public let raw: HTTPRawResponse
     
     // MARK: - Initialization
     
-    internal init(rawResponse: HTTPRawResponse) {
-        self.rawResponse = rawResponse
-        self.object = Object.decode(rawResponse)
+    internal init(raw: HTTPRawResponse) {
+        self.raw = raw
+        self.object = Object.decode(raw)
         
         if case .failure(let decodeError) = self.object {
-            rawResponse.error = HTTPError(.objectDecodeFailed, error: decodeError)
+            raw.error = HTTPError(.objectDecodeFailed, error: decodeError)
         }
     }
     

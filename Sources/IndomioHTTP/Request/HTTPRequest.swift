@@ -288,7 +288,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
             
             if !state.isFinished {
                 // Mark as cancelled
-                self.response = HTTPResponse(rawResponse: .init(error: .cancelled, forRequest: self))
+                self.response = HTTPResponse(raw: .init(error: .cancelled, forRequest: self))
             }
             
             state = .cancelled
@@ -297,7 +297,7 @@ open class HTTPRequest<Object: HTTPDecodableResponse>: HTTPRequestProtocol {
                let downloadTask = self.task as? URLSessionDownloadTask {
                 // When supported cancel will produce resumable data you can use to recover it.
                 downloadTask.cancel { [weak self] resumableData in
-                    self?.response?.rawResponse.resumableData = resumableData
+                    self?.response?.raw.resumableData = resumableData
                     callback?(resumableData)
                 }
             } else {
@@ -618,7 +618,7 @@ extension HTTPRequest {
         self.task = nil // reset the task
         stateQueue.sync {
             self.state = .finished
-            self.response = HTTPResponse<Object>(rawResponse: response)
+            self.response = HTTPResponse<Object>(raw: response)
             dispatchEvents()
         }
     }
