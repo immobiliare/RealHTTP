@@ -25,14 +25,12 @@ extension Combine.Publishers {
 
         private let request: HTTPRequestProtocol
         private let client: HTTPClientProtocol
-        private let queue: DispatchQueue
 
         // MARK: - Initialization
         
-        public init(_ request: HTTPRequestProtocol, client: HTTPClientProtocol, queue: DispatchQueue) {
+        public init(_ request: HTTPRequestProtocol, client: HTTPClientProtocol) {
             self.request = request
             self.client = client
-            self.queue = queue
         }
         
         // MARK: - Conformance to Publisher
@@ -40,8 +38,7 @@ extension Combine.Publishers {
         public func receive<S>(subscriber: S) where S : Subscriber, Never == S.Failure, HTTPRawResponse == S.Input {
             let subscription = HTTPRawResponseSubscription(subscriber: subscriber,
                                                           client: client,
-                                                          httpRequest: request,
-                                                          queue: queue)
+                                                          httpRequest: request)
             subscriber.receive(subscription: subscription)
         }
         
@@ -57,25 +54,23 @@ private final class HTTPRawResponseSubscription<S: Subscriber>: Subscription whe
     var subscriber: S?
     var client: HTTPClientProtocol
     var httpRequest: HTTPRequestProtocol
-    var queue: DispatchQueue
     var observerToken: UInt64?
     
     // MARK: - Initialization
     
-    init(subscriber: S, client: HTTPClientProtocol, httpRequest: HTTPRequestProtocol, queue: DispatchQueue ) {
+    init(subscriber: S, client: HTTPClientProtocol, httpRequest: HTTPRequestProtocol) {
         self.subscriber = subscriber
         self.client = client
         self.httpRequest = httpRequest
-        self.queue = queue
     }
     
     // MARK: - Conformance to Subscription
     
     func request(_ demand: Subscribers.Demand) {
-        observerToken = httpRequest.responseObservers.add((queue, { [weak self] rawResponse in
+        observerToken = httpRequest.responseObservers.add({ [weak self] rawResponse in
             _ = self?.subscriber?.receive(rawResponse)
             self?.subscriber?.receive(completion: .finished)
-        }))
+        })
         
         client.execute(request: httpRequest)
     }

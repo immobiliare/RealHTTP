@@ -25,14 +25,12 @@ extension Combine.Publishers {
 
         private let request: HTTPRequest<Object>
         private let client: HTTPClientProtocol
-        private let queue: DispatchQueue
 
         // MARK: - Initialization
         
-        public init(_ request: HTTPRequest<Object>, client: HTTPClientProtocol, queue: DispatchQueue) {
+        public init(_ request: HTTPRequest<Object>, client: HTTPClientProtocol) {
             self.request = request
             self.client = client
-            self.queue = queue
         }
         
         // MARK: - Conformance to Publisher
@@ -40,8 +38,7 @@ extension Combine.Publishers {
         public func receive<S>(subscriber: S) where S : Subscriber, Never == S.Failure, Result<Object, HTTPError> == S.Input {
             let subscription = HTTPResultSubscription(subscriber: subscriber,
                                                           client: client,
-                                                          httpRequest: request,
-                                                          queue: queue)
+                                                          httpRequest: request)
             subscriber.receive(subscription: subscription)
         }
         
@@ -58,21 +55,19 @@ private final class HTTPResultSubscription<S: Subscriber, Object: HTTPDecodableR
     var subscriber: S?
     var client: HTTPClientProtocol
     var httpRequest: HTTPRequest<Object>
-    var queue: DispatchQueue
     
     // MARK: - Initialization
     
-    init(subscriber: S, client: HTTPClientProtocol, httpRequest: HTTPRequest<Object>, queue: DispatchQueue ) {
+    init(subscriber: S, client: HTTPClientProtocol, httpRequest: HTTPRequest<Object>) {
         self.subscriber = subscriber
         self.client = client
         self.httpRequest = httpRequest
-        self.queue = queue
     }
     
     // MARK: - Conformance to Subscription
     
     func request(_ demand: Subscribers.Demand) {
-        httpRequest.onResult(queue) { [weak self] result in
+        httpRequest.onResult { [weak self] result in
             _ = self?.subscriber?.receive(result)
             self?.subscriber?.receive(completion: .finished)
         }

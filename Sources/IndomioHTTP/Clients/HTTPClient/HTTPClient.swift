@@ -126,7 +126,8 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
         DispatchQueue.global(qos: .background).async { [weak self] in
             guard let self = self else { return }
 
-            request.onResponse(.global(qos: .background)) {
+            request.onResponse {
+            //request.onResponse(.global(qos: .background)) {
                 rawResponse = $0
                 sem.signal()
             }

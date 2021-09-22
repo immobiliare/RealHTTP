@@ -19,8 +19,8 @@ public extension HTTPRequest {
     /// - Parameter queue: queue in which the event should be dispatched.
     /// - Returns: Self
     @discardableResult
-    func onResult(_ queue: DispatchQueue = .main, _ callback: @escaping ResultCallback) -> Self {
-        _ = objectObservers.add((queue, callback))
+    func onResult(_ callback: @escaping ResultCallback) -> Self {
+        _ = objectObservers.add(callback)
         dispatchEvents()
         return self
     }
@@ -31,8 +31,8 @@ public extension HTTPRequest {
     ///   - queue: queue in which the event should be dispatched.
     /// - Returns: Self
     @discardableResult
-    func onResponse(_ queue: DispatchQueue = .main, _ callback: @escaping DataResultCallback) -> Self {
-        _ = responseObservers.add((queue, callback))
+    func onResponse(_ callback: @escaping DataResultCallback) -> Self {
+        _ = responseObservers.add(callback)
         dispatchEvents()
         return self
     }
@@ -44,8 +44,8 @@ public extension HTTPRequest {
     ///   - callback: callback to call.
     /// - Returns: Self
     @discardableResult
-    func onProgress(_ queue: DispatchQueue = .main, _ callback: @escaping ProgressCallback) -> Self {
-        _ = progressObservers.add((queue, callback))
+    func onProgress(_ callback: @escaping ProgressCallback) -> Self {
+        _ = progressObservers.add(callback)
         return self
     }
     

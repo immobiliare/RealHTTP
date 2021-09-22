@@ -150,10 +150,9 @@ public protocol HTTPRequestProtocol: AnyObject {
     /// Execute a call (if needed) and get the raw response.
     ///
     /// - Parameters:
-    ///   - queue: queue in which the call is executed, `nil` to use the same queue of the caller.
     ///   - callback: callback.
     @discardableResult
-    func onResponse(_ queue: DispatchQueue, _ callback: @escaping DataResultCallback) -> Self
+    func onResponse(_ callback: @escaping DataResultCallback) -> Self
     
     // MARK: - Private
     

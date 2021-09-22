@@ -628,7 +628,7 @@ extension HTTPRequest {
 
 /// Keep a list of all observers registered for a particular callback.
 public class EventObserver<Object> {
-    public typealias Observer = (queue: DispatchQueue, callback: ((Object) -> Void))
+    public typealias Observer = ((Object) -> Void)
     
     // MARK: - Private Properties
     
@@ -649,7 +649,7 @@ public class EventObserver<Object> {
     ///
     /// - Parameter observer: observer to add.
     /// - Returns: UInt64
-    public func add(_ observer: Observer) -> UInt64 {
+    public func add(_ observer: @escaping Observer) -> UInt64 {
         stateQueue.sync {
             nextToken = nextToken.addingReportingOverflow(1).partialValue
             observersMap[nextToken] = observer
@@ -680,9 +680,7 @@ public class EventObserver<Object> {
     /// - Parameter object: value to dispatch.
     internal func callWithValue(_ object: Object) {
         for observer in observers {
-            observer.queue.async {
-                observer.callback(object)
-            }
+            observer(object)
         }
     }
     
