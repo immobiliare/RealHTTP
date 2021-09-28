@@ -174,9 +174,9 @@ public class MultipartFormData: HTTPRequestEncodableData {
         let streamSection = try item.encodedData()
         data.append(streamSection)
         
-        // Final boundary
-        if kind == .end {
-            let boundaryEndSection = Data(boundary.boundaryStringFor(.end).utf8)
+        // Final and intermediary boundary
+        if kind == .end || kind == .encapsulated  {
+            let boundaryEndSection = Data(boundary.boundaryStringFor(kind).utf8)
             data.append(boundaryEndSection)
         }
         
