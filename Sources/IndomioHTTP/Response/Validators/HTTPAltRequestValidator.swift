@@ -16,7 +16,7 @@ import Foundation
 /// and authorized/forbidden errors.
 /// It's triggered by the `triggerHTTPCodes` which by default is set `.unathorized, .forbidden`.
 open class HTTPAltRequestValidator: HTTPResponseValidatorProtocol {
-    public typealias RetryRequestProvider = ((_ request: HTTPRequestProtocol, _ response: HTTPRawResponse) -> HTTPRequestProtocol)
+    public typealias RetryRequestProvider = ((_ request: HTTPRequestProtocol, _ response: HTTPRawResponse) -> HTTPRequestProtocol?)
     
     // MARK: - Public Properties
     
@@ -48,7 +48,10 @@ open class HTTPAltRequestValidator: HTTPResponseValidatorProtocol {
         }
         
         // If error is one of the errors in `triggerHTTPCodes`
-        let altOperation = requestProvider(request, response)
+        guard let altOperation = requestProvider(request, response) else {
+            return .passed // if no retry operation is provided we'll skip and mark the validation as passed
+        }
+        
         return .retryAfter(altOperation)
     }
     
