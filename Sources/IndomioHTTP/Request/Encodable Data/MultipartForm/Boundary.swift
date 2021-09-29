@@ -23,7 +23,26 @@ extension MultipartFormData {
         
         /// CR+LF characters sequence to separate components.
         public static let crlf = "\r\n"
+        public static let crlfData = Boundary.crlf.data(using: .utf8)!
         
+        // MARK: - Internal Properties
+        
+        internal var delimiter: String {
+            "--" + id
+        }
+        
+        internal var distinguishedDelimiter: String {
+            self.delimiter + "--"
+        }
+        
+        internal var delimiterData: Data {
+            self.delimiter.data(using: .utf8)!
+        }
+        
+        internal var distinguishedDelimiterData: Data {
+            self.distinguishedDelimiter.data(using: .utf8)!
+        }
+
         // MARK: - Initialization
         
         /// Initialize a new boundary identifier.
@@ -40,21 +59,6 @@ extension MultipartFormData {
             self = Boundary(value)
         }
         
-        /// Return the boundary string for a part of the multipart form.
-        ///
-        /// - Parameter kind: kind of boundary to get.
-        /// - Returns: String
-        internal func boundaryStringFor(_ kind: Kind) -> String {
-            switch kind {
-            case .start:
-                return "--\(id)\(Boundary.crlf)"
-            case .encapsulated:
-                return "\(Boundary.crlf)--\(id)\(Boundary.crlf)"
-            case .end:
-                return "\(Boundary.crlf)--\(id)--\(Boundary.crlf)"
-            }
-        }
-        
         // MARK: - Private Functions
         
         fileprivate static func generate() -> String {
@@ -63,22 +67,6 @@ extension MultipartFormData {
             return String(format: "indomiohttp.boundary.%08x%08x", firstPart, secondPart)
         }
         
-    }
-    
-}
-
-// MARK: - Kind
-
-extension MultipartFormData.Boundary {
-    
-    /// Type of boundary.
-    /// - `start`: initial sequence of the form
-    /// - `encapsulated`: single item.
-    /// - `end`: cosing sequence of the form
-    enum Kind {
-        case start
-        case encapsulated
-        case end
     }
     
 }

@@ -31,6 +31,12 @@ public class MultipartFormData: HTTPRequestEncodableData {
         boundary.id
     }
     
+    /// A string that is optionally inserted before the first boundary delimiter.
+    /// Can be used as an explanatory note for
+    /// recipients who read the message with pre-MIME software,
+    /// since such notes will be ignored by MIME-compliant software.
+    public var preamble: String? = nil
+        
     // MARK: - Private Properties
     
     /// The boundary used to separate the body parts in the encoded form data.
@@ -141,45 +147,33 @@ public class MultipartFormData: HTTPRequestEncodableData {
     /// - Returns: Data
     private func encodeData() throws -> Data {
         var data = Data()
-
-        try formItems.enumerated().forEach {
-            let kind: Boundary.Kind = ($0.offset == 0 ? .start : ($0.offset == (formItems.count-1) ? .end : .encapsulated))
-            let encodedFormItem = try encodeFormItem($0.element, kind: kind)
-            data.append(encodedFormItem)
+        
+        if let preamble = self.preamble?.data(using: .utf8) {
+            data.append(preamble + Boundary.crlfData)
+            data.append(Boundary.crlfData)
         }
         
-        return data
-    }
-        
-    /// Encode a single item of the multipart form.
-    ///
-    /// - Parameters:
-    ///   - item: item to encode.
-    ///   - kind: position of the multipart form item into the list.
-    ///
-    /// - Throws: throw an exception if something fails.
-    /// - Returns: Data
-    private func encodeFormItem(_ item: MultipartFormItem, kind: Boundary.Kind) throws -> Data {
-        var data = Data()
+        if formItems.isEmpty {
+            data.append(boundary.delimiterData)
+            data.append(Boundary.crlfData)
+            data.append(Boundary.crlfData)
+        } else {
+            for formItem in formItems {
+                data.append(boundary.delimiterData + Boundary.crlfData)
+                if formItem.headers.isEmpty == false {
+                    let headerData = Data(formItem.headers.asMultipartFormItemHeaders().utf8)
+                    data.append(headerData)
+                }
 
-        // Boundary section
-        let boundarySection = Data(boundary.boundaryStringFor(.start).utf8)
-        data.append(boundarySection)
-
-        // Header section with content-disposition data
-        let headersSection = Data(item.headers.asMultipartFormItemHeaders().utf8)
-        data.append(headersSection)
-        
-        // Stream of data
-        let streamSection = try item.encodedData()
-        data.append(streamSection)
-        
-        // Final and intermediary boundary
-        if kind == .end || kind == .encapsulated  {
-            let boundaryEndSection = Data(boundary.boundaryStringFor(kind).utf8)
-            data.append(boundaryEndSection)
+                data.append(Boundary.crlfData)
+                let streamSection = try formItem.encodedData()
+                data.append(streamSection + Boundary.crlfData)
+            }
         }
         
+        
+//        try! data.write(to: URL(fileURLWithPath: "/Users/daniele/Desktop/part.txt"))
+        print(String(data: data, encoding: .utf8)!)
         return data
     }
     
@@ -311,7 +305,7 @@ fileprivate extension HTTPHeaders {
         
         return map {
             "\($0.name): \($0.value)\(clrf)"
-        }.joined() + clrf
+        }.joined()
     }
     
 }
