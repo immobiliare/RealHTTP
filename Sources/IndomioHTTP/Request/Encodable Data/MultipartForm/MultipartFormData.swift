@@ -171,9 +171,6 @@ public class MultipartFormData: HTTPRequestEncodableData {
             }
         }
         
-        
-//        try! data.write(to: URL(fileURLWithPath: "/Users/daniele/Desktop/part.txt"))
-        print(String(data: data, encoding: .utf8)!)
         return data
     }
     
