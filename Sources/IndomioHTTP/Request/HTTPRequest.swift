@@ -579,7 +579,7 @@ extension HTTPRequest {
     /// - Parameter client: client where the request is running into.
     /// - Throws: throw an exception if request building process did fails.
     /// - Returns: URLRequest
-    open func urlRequest(in client: HTTPClientProtocol) throws -> URLRequest {
+    open func createURLRequest(for client: HTTPClientProtocol) throws -> URLRequest {
         // Create the full URL of the request.
         // If route contains an absolute path avoid to compose it with the client's based URL but
         // deals it as absolute string to set.

@@ -127,11 +127,15 @@ public protocol HTTPRequestProtocol: AnyObject {
     // MARK: - Public Functions
     
     /// Create the underlying `URLRequest` instance for an `HTTPRequestProtocol` running into a `HTTPClient` instance.
+    /// 
+    /// NOTE:
+    /// When you call this outside the library you should keep in mind a new URLRequest object is generated.
+    /// Uses HTTPClientDelegate's URLTask.originalRequest in order to get the original url request if you don't need to create a new one.
     ///
     /// - Parameters:
     ///   - request: request.
     ///   - client: client in which the request should run.
-    func urlRequest(in client: HTTPClientProtocol) throws -> URLRequest
+    func createURLRequest(for client: HTTPClientProtocol) throws -> URLRequest
     
     // MARK: - Run Request
     

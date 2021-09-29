@@ -96,7 +96,7 @@ public extension HTTPClientProtocol {
             throw HTTPError(.cancelled) // we don't need to create a session task for a cancelled event
         }
         
-        let urlRequest = try request.urlRequest(in: self)
+        let urlRequest = try request.createURLRequest(for: self)
         var task: URLSessionTask!
         
         if urlRequest.httpBodyStream != nil {

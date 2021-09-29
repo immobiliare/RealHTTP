@@ -20,7 +20,7 @@ extension HTTPRequestProtocol {
     /// - Returns: String
     public func cURLDescription(whenIn client: HTTPClientProtocol?) -> String {
         guard let client = client,
-              let request = try? urlRequest(in: client),
+              let request = try? createURLRequest(for: client),
               let _ = request.url,
               let method = request.httpMethod else {
             return "$ curl command could not be created"
