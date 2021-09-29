@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "IndomioHTTP"
-  s.version      = "0.9.10"
+  s.version      = "0.9.11"
   s.summary      = "HTTP client for Swift ages: data encoding/auto deserialization, network metrics, stub, combine and more"
   s.homepage     = "git@gitlab.rete.farm:ios/IndomioHTTP.git"
   s.license      = { :type => "MIT", :file => "LICENSE" }
