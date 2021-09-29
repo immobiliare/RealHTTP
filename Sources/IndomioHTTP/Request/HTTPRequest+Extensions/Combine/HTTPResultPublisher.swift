@@ -68,7 +68,8 @@ private final class HTTPResultSubscription<S: Subscriber, Object: HTTPDecodableR
     
     func request(_ demand: Subscribers.Demand) {
         httpRequest.onResponse { [weak self] result in
-            _ = self?.subscriber?.receive(result.anyObject as! Result<Object, HTTPError>)
+            let typeSafeResponse: HTTPResponse<Object> = result
+            _ = self?.subscriber?.receive(typeSafeResponse.object)
             self?.subscriber?.receive(completion: .finished)
         }
         _ = httpRequest.run(in: client)
