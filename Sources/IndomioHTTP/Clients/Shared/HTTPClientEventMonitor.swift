@@ -254,7 +254,6 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         var response = HTTPRawResponse(request: request, response: rawResponse)
         response.attachURLRequests(original: task.originalRequest, current: task.currentRequest)
         response.metrics = metrics
-        response.cURLDescription = request.cURLDescription(whenIn: client)
         
         didComplete(request: request, task: task, response: &response)
         
