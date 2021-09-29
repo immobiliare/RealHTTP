@@ -48,6 +48,11 @@ public final class HTTPRawResponse {
         urlResponse as? HTTPURLResponse
     }
     
+    /// HTTP status code of the response, if available.
+    public var statusCode: HTTPStatusCode? {
+        httpResponse?.status
+    }
+    
     /// Data received.
     public let content: DataStream?
     
@@ -61,9 +66,6 @@ public final class HTTPRawResponse {
     public var isError: Bool {
         error != nil
     }
-    
-    /// cURL description of the original request who generate this response.
-    public internal(set) var cURLDescription: String?
 
     /// Keep the `URLRequest` instance of the original
     public private(set) var urlRequest: (original: URLRequest?, current: URLRequest?)
