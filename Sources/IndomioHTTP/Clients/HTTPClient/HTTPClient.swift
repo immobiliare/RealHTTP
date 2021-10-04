@@ -136,6 +136,11 @@ public class HTTPClient: NSObject, HTTPClientProtocol {
         return rawResponse
     }
     
+    deinit {
+        session.finishTasksAndInvalidate()
+        eventMonitor = nil
+    }
+    
 }
 
 // MARK: - HTTPClient Extensions
