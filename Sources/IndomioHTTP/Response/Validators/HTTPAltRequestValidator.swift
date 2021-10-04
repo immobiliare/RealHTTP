@@ -26,6 +26,16 @@ open class HTTPAltRequestValidator: HTTPResponseValidatorProtocol {
     /// Provider of the request.
     open var requestProvider: RetryRequestProvider
     
+    /// Number of alternate calls to execute.
+    /// By default is set to 1. It means the first alternate call which fails on a certain
+    /// request will fails any other request in the same session.
+    open var maxAltRequestsToExecute: Int? = nil
+    
+    // MARK: - Private Properties
+    
+    /// Number of executed alternate request.
+    private var numberOfAltRequestExecuted = 0
+    
     // MARK: - Initialization
     
     /// Initialize to provide a new request when a code is triggered.
@@ -40,6 +50,11 @@ open class HTTPAltRequestValidator: HTTPResponseValidatorProtocol {
         self.requestProvider = requestProvider
     }
     
+    /// Reset the state of alt requests executed.
+    public func reset() {
+        numberOfAltRequestExecuted = 0
+    }
+    
     // MARK: - Protocol Conformance
     
     open func validate(response: HTTPRawResponse, forRequest request: HTTPRequestProtocol) -> HTTPResponseValidatorResult {
@@ -48,6 +63,15 @@ open class HTTPAltRequestValidator: HTTPResponseValidatorProtocol {
         }
         
         // If error is one of the errors in `triggerHTTPCodes`
+        
+        // If we reached the maximum number of alternate calls to execute we want to cancel any other attempt.
+        numberOfAltRequestExecuted += 1
+        if let maxAltRequestsToExecute = maxAltRequestsToExecute,
+              numberOfAltRequestExecuted > maxAltRequestsToExecute {
+            let error = HTTPError(.maxRetryAttemptsReached)
+            return .failWithError(error)
+        }
+        
         guard let altOperation = requestProvider(request, response) else {
             return .passed // if no retry operation is provided we'll skip and mark the validation as passed
         }

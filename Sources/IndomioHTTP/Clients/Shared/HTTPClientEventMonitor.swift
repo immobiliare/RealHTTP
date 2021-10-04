@@ -294,7 +294,13 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
                 }
             } else {
                 // Response validation failed, you can retry but we need to execute another call first.
-                let internalToken = altRequest.onRawResponse(queue: .main, { _ in
+                let internalToken = altRequest.onRawResponse(queue: .main, { [weak self] response in
+                    guard let self = self else { return }
+                    guard response.raw.isError == false else {
+                        // if retry fails we should avoid repeating the same alt call every time
+                        self.forwardHTTPResponseFor(request: request, task: task, response: response.raw)
+                        return
+                    }
                     request.reset(retries: true)
                     client.execute(request: request)
                 })
