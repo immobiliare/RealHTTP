@@ -19,7 +19,7 @@
 This is the client where requests are executed.  
 Each client may have its configuration which includes the base URL, cookies, custom headers, caching policy and more.  
 
-IndomioHTTP exposes 2 different clients:
+RealHTTP exposes 2 different clients:
 
 - `HTTPClient`: this is the default client; network call are executed in concurrent fashion.
 - `HTTPQueuedClient`: this client maintain an interval OperationQueue which allows you to have a fine grained control over concurrent operations.
@@ -39,7 +39,7 @@ Creating a client is pretty straightforward:
 let myWSClient = HTTPClient(baseURL: "http://.../v1")
 ```
 
-Under the hood IndomioHTTP creates an `URLSession` from the `.default` configuration.  
+Under the hood RealHTTP creates an `URLSession` from the `.default` configuration.  
 If you need to create a custom configuration just pass it via `configuration` argument:
 
 ```swift
@@ -172,7 +172,7 @@ You should need to remove the default validator but you may override it by creat
 
 ## Alt Request Validator
 
-IndomioHTTP also provide a special validator called `HTTPAltRequestValidator`. This validator can be used when you need to execute a specific `HTTPRequest` if another request fails for certain reason.  
+RealHTTP also provide a special validator called `HTTPAltRequestValidator`. This validator can be used when you need to execute a specific `HTTPRequest` if another request fails for certain reason.  
 
 A typical example is the silent login operation; if you receive an `unathorized` or `.forbidden` error for a protected resource you may want to try a silent login operation, then re-execute initial failed request.
 
@@ -222,7 +222,7 @@ client.security = HTTPCertificatesSecurity(certificates: [certificate])
 
 To assign a security settings set `.security` property of `HTTPClient` (global) or `HTTPRequest` (single request); passed objects must be conform to the `HTTPSecurityProtocol` protocol which expose a challenge request.
 
-IndomioHTTP exposes the following options:
+RealHTTP exposes the following options:
 - `HTTPCredentialSecurity`: which is based upon the URL Credentials and support Basic Auth and Digest Auth.
 - `HTTPCertificatesSecurity`: which is used to support SSL pinning via certificates and public keys.
 

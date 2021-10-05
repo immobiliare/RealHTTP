@@ -7,24 +7,24 @@
 
 ## Introduction
 
-IndomioHTTP provides an elegant type-safe interface to build and execute HTTP request.  
+RealHTTP provides an elegant type-safe interface to build and execute HTTP request.  
 The goal of this project is to make simple and more swifty the Apple's built-in URL Loading System provided.  
 
-At the core of our library you will found URLSession and URLSessionTask; IndomioHTTP just wrap them in a convenient and elegant box seamlessy adapts to the new Swift design goals.  
+At the core of our library you will found URLSession and URLSessionTask; RealHTTP just wrap them in a convenient and elegant box seamlessy adapts to the new Swift design goals.  
 No additional dependencies are part of the package.
 
-IndomioHTTP supports reactive programming by integrating Combine's publishers and subject. Future versions will also support the new Async/Await mechanism.
+RealHTTP supports reactive programming by integrating Combine's publishers and subject. Future versions will also support the new Async/Await mechanism.
 
 [↑ INDEX](#introduction)
 
 ## Architecture Components
 
-IndomioHTTP defines the following main structures.
+RealHTTP defines the following main structures.
 
 For **HTTP Client**:
 
 - **HTTP Client**: the container where requests are executed (`HTTPClient` and `HTTPQueueClient`).
-- **HTTP Request**: defines a request along with its parameters, data and decode options. IndomioHTTP allows you to automatically define a decoder for data or simply get the raw response (`HTTPRequest<Object>` and `HTTPRawRequest`).
+- **HTTP Request**: defines a request along with its parameters, data and decode options. RealHTTP allows you to automatically define a decoder for data or simply get the raw response (`HTTPRequest<Object>` and `HTTPRawRequest`).
 - **HTTP Response**: defines the raw response coming from server. This object encapsulate the data, result of validations and metrics informations (`HTTPRawResponse`).
 
 for **HTTP Stub**:

@@ -15,7 +15,7 @@
 
 ## Introduction
 
-IndomioHTTP also includes a Stub Engine allowing you to stub any HTTP/HTTPS using `URLConnection` or `URLSession`. That includes any request made from IndomioHTTP or any other library.
+RealHTTP also includes a Stub Engine allowing you to stub any HTTP/HTTPS using `URLConnection` or `URLSession`. That includes any request made from RealHTTP or any other library.
 
 To activate and configure the stubber you need to use the `HTTPStubber.shared` instance:
 
@@ -34,7 +34,7 @@ HTTPStubber.shared.disable()
 ## Stub a Request
 
 To stub a request, first you need to create a `HTTPStubRequest` and `HTTPStubResponse`.  
-You then register this stub with IndomioHTTP and tell it to intercept network requests by calling the `enable()` method.
+You then register this stub with RealHTTP and tell it to intercept network requests by calling the `enable()` method.
 
 An `HTTPStubRequest` describe what kind of triggers should be matched for activating the stub request; a single trigger is called matcher which is an entity conforms to `HTTPStubMatcherProtocol`.  
 Only when all `matchers` of a stub request are validated the stub is used to mock the request; in this case the associated response are used.  
@@ -125,7 +125,7 @@ The following stub is triggered when headers of the request is `customAgent`.
 
 ### URI Matcher
 
-IndomioHTTP allows you to define an URI matcher (`HTTPStubURITemplateMatcher`) which is based upon the [URI Template RFC](https://tools.ietf.org/html/rfc6570) - it uses the [URITemplate project by Kyle Fuller](https://github.com/kylef/URITemplate.swift).
+RealHTTP allows you to define an URI matcher (`HTTPStubURITemplateMatcher`) which is based upon the [URI Template RFC](https://tools.ietf.org/html/rfc6570) - it uses the [URITemplate project by Kyle Fuller](https://github.com/kylef/URITemplate.swift).
 
 ```swift
 var stub = HTTPStubRequest()
@@ -198,7 +198,7 @@ You can use all the matchers described above even for rules.
 
 ## Unhandled Rules
 
-You can choose how IndomioHTTP must deal with stub not found. You have two options:
+You can choose how RealHTTP must deal with stub not found. You have two options:
 
  - `optout`: only URLs registered wich matches the matchers are ignored for mocking.
             - Registered mocked URL: mocked.

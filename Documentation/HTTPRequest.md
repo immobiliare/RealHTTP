@@ -23,7 +23,7 @@
 - [Download Large Data](#download-large-data)
 - [Track Upload/Download Progress](#track-uploaddownload-progress)
 
-IndomioHTTP provides a variety of convenience methods for making HTTP requests.  
+RealHTTP provides a variety of convenience methods for making HTTP requests.  
 At the simplest, just provide a String that can be converted into a URL:
 
 ```swift
@@ -113,7 +113,7 @@ struct User: HTTPDecodableResponse {
 }
 ```
 
-Of course if you don't need to customize your parsing methods, IndomioHTTP also support `Codable` by default.  
+Of course if you don't need to customize your parsing methods, RealHTTP also support `Codable` by default.  
 Any object conform to `Codable` protocol can be assigned to `HTTPRequest` and its decoding is made automatically:
 
 ```swift
@@ -173,7 +173,7 @@ The following methods allows you to configure every aspect of the request (all m
 [↑ INDEX](#http-request)
 ## Set Content
 
-IndomioHTTP also provides a variety of methods to configure the content of a request; built in services includes:
+RealHTTP also provides a variety of methods to configure the content of a request; built in services includes:
 
 - JSON body configuration
 - Form URL Encoded
@@ -227,7 +227,7 @@ It produces the following POST request:
 https://myws.com/service/v2/search?date=2021-08-13%2013%3A55%3A42%20%2B0000&disabled=0&max=5&type=poi
 ```
 
-As you can see IndomioHTTP provides to you automatic object conversion and parameter encoding. The encoding process is made by an instance of `URLParametersData` generated for you.  
+As you can see RealHTTP provides to you automatic object conversion and parameter encoding. The encoding process is made by an instance of `URLParametersData` generated for you.  
 You can configure this object anytime by setting the following options:
 
 - `arrayEncoding: ArrayEncodingStyle`: by default array values are encoded via `key[]=value` brackets. You can also choose `.noBrackets` to avoid this behaviour.
@@ -243,7 +243,7 @@ let req = HTTPRequest<Search>(.post, "/search")
 
 ### Set JSON Body
 
-Most of the time you need to pass some JSON data inside the body of the requests. IndomioHTTP offer the `json()` method to pass JSON data.
+Most of the time you need to pass some JSON data inside the body of the requests. RealHTTP offer the `json()` method to pass JSON data.
 
 `json()` method accepts two kind of data:
 - `Any` which is converted via `JSONSerialization` to a valid json structure.
@@ -284,7 +284,7 @@ Data will be automatically converted to x-ww-form-urlencoded for you.
 
 ### Set Multipart Form
 
-IndomioHTTP also support Multipart Form Data. All the stuff of the multipart format are handled automatically by the library (boundary identifier included!); you just need to put your data in.  
+RealHTTP also support Multipart Form Data. All the stuff of the multipart format are handled automatically by the library (boundary identifier included!); you just need to put your data in.  
 
 Usually you may call `multipart()` function which accept a `MultipartFormData` object or offer a builder functions to configure the content of a new multipart form created for you:
 
@@ -303,7 +303,7 @@ let req = HTTPRequest<FormResponse>()
 
 ## Modify an URLRequest
 
-When IndomioHTTP create an `URLRequest` for an `HTTPRequest` in a client you may have the need to make some further changes.  
+When RealHTTP create an `URLRequest` for an `HTTPRequest` in a client you may have the need to make some further changes.  
 In order to accomplish it you can provide a custom callback to `urlRequestModifier`:
 
 ```swift
@@ -373,7 +373,7 @@ HTTPRawRequest().resourceAtURL("https://speed.hetzner.de/100MB.bin", resumeData:
 
 ## Handle Request Redirects
 
-By default IndomioHTTP follows the redirects of http request by using the provided new location obtained from associated `URLSession`.  
+By default RealHTTP follows the redirects of http request by using the provided new location obtained from associated `URLSession`.  
 However you may decide to configure the behaviour; you can do it in two ways:
 
 ### Follow Redirects Mode

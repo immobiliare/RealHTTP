@@ -1,10 +1,10 @@
 <p align="center">
-<img src="./Documentation/indomio_http_logo.png" alt="IndomioFlags" width="900"/>
+<img src="./Documentation/realhttp_logo.png" alt="RealHTTP" width="900"/>
 </p>
 
-# IndomioHTTP
+# RealHTTP
 
-IndomioHTTP is a lightweight yet powerful client-side HTTP library.  
+RealHTTP is a lightweight yet powerful client-side HTTP library.  
 Our goal is make an easy to use and effortless http client for Swift.
 
 <p align="center">
@@ -62,7 +62,7 @@ You can use it with regular callbacks, combine publishers and soon with async/aw
 
 ## Simple HTTP Stubber
 
-IndomioHTTP also offer a built-in http stubber useful to mock your network calls for unit testing.  
+RealHTTP also offer a built-in http stubber useful to mock your network calls for unit testing.  
 This is a simple URI matching stub:
 
 ```swift
@@ -85,7 +85,7 @@ var stubLogin = HTTPStubRequest()
 
 ## ... and more!
 
-But there's lots more features you can use with IndomioHTTP.  
+But there's lots more features you can use with RealHTTP.  
 Check out the Documentation section below to learn more!
 
 ## Documentation
@@ -142,7 +142,7 @@ Check out the Documentation section below to learn more!
 
 ## Requirements
 
-IndomioHTTP can be installed in any platform which supports Swift 5.4+ ON:
+RealHTTP can be installed in any platform which supports Swift 5.4+ ON:
 
 - iOS 13+  
 - Xcode 12.5+  
@@ -150,7 +150,7 @@ IndomioHTTP can be installed in any platform which supports Swift 5.4+ ON:
 
 ## Installation
 
-To use IndomioHTTP in your project you can use Swift Package Manager (our primary choice) or CocoaPods.
+To use RealHTTP in your project you can use Swift Package Manager (our primary choice) or CocoaPods.
 
 ### Swift Package Manager
 
@@ -158,7 +158,7 @@ Aadd it as a dependency in a Swift Package, add it to your Package.swift:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/immobiliare/IndomioHTTP.git", from: "1.0.0")
+    .package(url: "https://github.com/immobiliare/RealHTTP.git", from: "1.0.0")
 ]
 ```
 
@@ -167,7 +167,7 @@ And add it as a dependency of your target:
 ```swift
 targets: [
     .target(name: "MyTarget", dependencies: [
-        .product(name: "https://github.com/immobiliare/IndomioHTTP.git", package: "IndomioHTTP")
+        .product(name: "https://github.com/immobiliare/RealHTTP.git", package: "RealHTTP")
     ])
 ]
 ```
@@ -176,28 +176,28 @@ In Xcode 11+ you can also navigate to the File menu and choose Swift Packages ->
 
 ### CocoaPods
 
-IndomioHTTP can be installed with CocoaPods by adding pod 'IndomioHTTP' to your Podfile.
+RealHTTP can be installed with CocoaPods by adding pod 'RealHTTP' to your Podfile.
 
 ```ruby
-pod 'IndomioHTTP'
+pod 'RealHTTP'
 ```
 <a name="#powered"/>
 
 ## Powered Apps
 
-IndomioHTTP was created by the amazing mobile team at ImmobiliareLabs, the Tech dept at Immobiliare.it, the first real estate site in Italy.  
-We are currently using IndomioHTTP in all of our products.
+RealHTTP was created by the amazing mobile team at ImmobiliareLabs, the Tech dept at Immobiliare.it, the first real estate site in Italy.  
+We are currently using RealHTTP in all of our products.
 
-**If you are using IndomioHTTP in your app [drop us a message](mailto:mobile@immobiliare.it), we'll add below**.
+**If you are using RealHTTP in your app [drop us a message](mailto:mobile@immobiliare.it), we'll add below**.
 
 <a href="https://apps.apple.com/us/app/immobiiiare-it-indomio/id335948517"><img src="./Documentation/immobiliare-app.png" alt="Indomio" width="270"/></a>
 
 ## Support & Contribute
 
-Made with ❤️ by [ImmobiliareLabs](https://github.com/orgs/immobiliare) & [Contributors](https://github.com/immobiliare/IndomioHTTP/graphs/contributors)
+Made with ❤️ by [ImmobiliareLabs](https://github.com/orgs/immobiliare) & [Contributors](https://github.com/immobiliare/RealHTTP/graphs/contributors)
 
-We'd love for you to contribute to IndomioHTTP!  
-If you have any questions on how to use IndomioHTTP, bugs and enhancement please feel free to reach out by opening a [GitHub Issue](https://github.com/immobiliare/IndomioHTTP/issues).
+We'd love for you to contribute to RealHTTP!  
+If you have any questions on how to use RealHTTP, bugs and enhancement please feel free to reach out by opening a [GitHub Issue](https://github.com/immobiliare/RealHTTP/issues).
 
 ### Todo List
 
@@ -211,5 +211,5 @@ If you want to contribuite to the project you can also work on these main topics
 
 ## License
 
-IndomioHTTP is licensed under the MIT license.  
+RealHTTP is licensed under the MIT license.  
 See the [LICENSE](./LICENSE) file for more information.

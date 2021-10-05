@@ -7,7 +7,7 @@
 
 ## Gathering/Showing Statistical Metrics
 
-IndomioHTTP gathers `URLSessionTaskMetrics` statistics for every `HTTPRequest`. `URLSessionTaskMetrics` encapsulate detailed information about the underlying network connection and request and response timing.  
+RealHTTP gathers `URLSessionTaskMetrics` statistics for every `HTTPRequest`. `URLSessionTaskMetrics` encapsulate detailed information about the underlying network connection and request and response timing.  
 These informations maybe a really useful sources to see bottlenecks in your comunication or gather statistics of network usage.
 
 You can found these information inside the `HTTPRawResponse`'s `metrics` property. It return a `HTTPRequestMetrics` instance with the following info:
@@ -19,7 +19,7 @@ You can found these information inside the `HTTPRawResponse`'s `metrics` propert
 
 Each item of the `metrics` can be expanded in `HTTPMetric.Stage` object which describes the kind of the operation (`domainLookup`, `connect`, `secureConnection`, `request`, `server`, `response`, `total`) along with the respective `interval` (start, end and duration).
 
-This kind of data can be tricky to read so IndomioHTTP allows you to print a console-friendly graphical representation using the `render()` function:
+This kind of data can be tricky to read so RealHTTP allows you to print a console-friendly graphical representation using the `render()` function:
 
 ```swift
 HTTPRawRequest().resourceAtURL("http://ipv4.download.thinkbroadband.com/5MB.zip").onResponse { response in
@@ -30,7 +30,7 @@ HTTPRawRequest().resourceAtURL("http://ipv4.download.thinkbroadband.com/5MB.zip"
 Print the following result type:
 
 ```sh
-IndomioHTTP.HTTPRawResponse
+RealHTTP.HTTPRawResponse
 Task ID: 1 lifetime: 1898.5ms redirects: 1
 GET http://ipv4.download.thinkbroadband.com/5MB.zip -> 302 text/html, through network-load
 protocol: http/1.1 proxy: false reusedconn: false
@@ -54,7 +54,7 @@ response          |   ##########################################################
 ## cURL Command Output
 
 Debugging platform issues can be frustrating.  
-IndomioHTTP allows you to produce the equivalent cURL representation of any `HTTPRequest` instance for easy debugging.
+RealHTTP allows you to produce the equivalent cURL representation of any `HTTPRequest` instance for easy debugging.
 
 ```swift
 let client: HTTPClientProtocol = ...
@@ -70,7 +70,7 @@ This should produce:
 $ curl -v \
 	-X GET \
 	-H "Accept-Language: en;q=1.0, it-US;q=0.9" \
-	-H "User-Agent: HTTPDemo/1.0 (com.danielemargutti.HTTPDemo; build:1; iOS 14.5.0) IndomioHTTP/0.9.0" \
+	-H "User-Agent: HTTPDemo/1.0 (com.danielemargutti.HTTPDemo; build:1; iOS 14.5.0) RealHTTP/0.9.0" \
 	-H "Accept-Encoding: br;q=1.0, gzip;q=0.9, deflate;q=0.8" \
 	"http://ipv4.download.thinkbroadband.com/5MB.zip"
 ```
