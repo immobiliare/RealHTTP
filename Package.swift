@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "IndomioHTTP",
+    name: "RealHTTP",
     platforms: [
         .iOS(.v13),
         .macOS(.v10_15),
@@ -13,18 +13,18 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "IndomioHTTP",
-            targets: ["IndomioHTTP"]),
+            name: "RealHTTP",
+            targets: ["RealHTTP"]),
     ],
     dependencies: [
     ],
     targets: [
         .target(
-            name: "IndomioHTTP",
+            name: "RealHTTP",
             dependencies: []),
         .testTarget(
-            name: "IndomioHTTPTests",
-            dependencies: ["IndomioHTTP"]),
+            name: "RealHTTPTests",
+            dependencies: ["RealHTTP"]),
     ],
     swiftLanguageVersions: [
         .v5
