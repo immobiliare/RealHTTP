@@ -205,7 +205,7 @@ If you want to contribuite to the project you can also work on these main topics
 
 - [ ] Async/Await support for observers
 - [ ] Extended the Combine support
-- [ ] Complete the test suite
+- [ ] Complete the test suite
 
 <a name="#license"/>
 
