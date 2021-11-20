@@ -205,10 +205,11 @@ You can configure the following properties for each client instance.
 
 ```swift
 let client = HTTPClient(baseURL: "myawesomeapp.com/webservice/v1")
-client.headers = HTTPHeaders([
-    .userAgent: "MyAwesomeAppV1"
-    "X-API-V": "1.0.1"
+var headers = HTTPHeaders([
+    .userAgent: "MyAwesomeAppV1",
 ])
+headers.set("X-API-V", "1.0.1")
+client.headers = headers
 client.security = HTTPCertificatesSecurity(certificates: [certificate])
 ```
 
