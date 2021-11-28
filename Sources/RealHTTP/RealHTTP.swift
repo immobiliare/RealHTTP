@@ -12,4 +12,4 @@
 import Foundation
 
 /// Current IndomioHTTP version.
-let LibraryVersion = "0.9.6"
+let LibraryVersion = "0.9.16"

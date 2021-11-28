@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "RealHTTP"
-  s.version      = "0.9.15"
+  s.version      = "0.9.16"
   s.summary      = "HTTP client for Swift ages: data encoding/auto deserialization, network metrics, stub, combine and more"
   s.homepage     = "https://github.com/immobiliare/RealHTTP.git"
   s.license      = { :type => "MIT", :file => "LICENSE" }
