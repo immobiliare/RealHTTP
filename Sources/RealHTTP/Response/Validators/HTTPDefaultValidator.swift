@@ -35,6 +35,13 @@ open class HTTPDefaultValidator: HTTPResponseValidatorProtocol {
         .tooManyRequests: 3 // wait 3 seconds before retry the call.
     ]
     
+    // MARK: - Initialization
+    
+    /// Initialize a new validator.
+    public init() {
+    
+    }
+    
     // MARK: - Validation
     
     /// Validate the response and set the action to perform.
