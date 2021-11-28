@@ -13,7 +13,7 @@ import Foundation
 
 /// This is the default HTTP validator used to validate the request. You can use
 /// it as is or subclass to make your own validator.
-/// 
+///
 /// This validator allows you to configure:
 /// - Allows/Deny Empty responses: to allows or generate an error in case of empty response by server.
 /// - Configure Retry Policy: allows you to configure what kind of `Error` should trigger a retry attempt for request.
@@ -25,6 +25,16 @@ open class HTTPDefaultValidator: HTTPResponseValidatorProtocol {
     /// In case of empty response validation fails with `emptyResponse` error.
     open var allowsEmptyResponses = true
     
+    /// If status code is in this list call could be retry again.
+    /// Dictionary optionally specify an interval (expressed in seconds) to retry
+    /// the same call. Use `0` to immediately retry it.
+    ///
+    /// Default implementation allows retry for:
+    /// - `HTTP 429` (Too Many Request): 3 seconds
+    open var retriableHTTPStatusCodes: [HTTPStatusCode: TimeInterval] = [
+        .tooManyRequests: 3 // wait 3 seconds before retry the call.
+    ]
+    
     // MARK: - Validation
     
     /// Validate the response and set the action to perform.
@@ -34,13 +44,14 @@ open class HTTPDefaultValidator: HTTPResponseValidatorProtocol {
     ///   - request: origin request.
     /// - Returns: HTTPResponseValidatorAction
     open func validate(response: HTTPRawResponse, forRequest request: HTTPRequestProtocol) -> HTTPResponseValidatorResult {
+        
         if let error = response.error {
-            if shouldAllowRetryWithError(error) {
+            if let allowedRetryMode = allowedRetry(forResponse: response, error: error) {
                 // Some errors allows retry of the call.
                 // Retry option is managed by the HTTPRequest itself (if we reached the
                 // maximum amount of retries or no retries are allowed by request this
                 // request will be ignored).
-                return .retryIfPossible
+                return allowedRetryMode
             } else {
                 // Some other fails
                 return .failWithError(error)
@@ -60,11 +71,19 @@ open class HTTPDefaultValidator: HTTPResponseValidatorProtocol {
     /// At the lowest network levels, it makes sense to retry for cases of temporary outage.
     /// Things like timeouts, can't connect to host, network connection lost.
     ///
-    /// - Parameter error: error received.
-    /// - Returns: Bool
-    open func shouldAllowRetryWithError(_ error: Error) -> Bool {
+    /// - Parameters:
+    ///   - response: response received.
+    ///   - error: error received.
+    /// - Returns: `HTTPResponseValidatorResult` or `nil` if retry is not supported
+    open func allowedRetry(forResponse response: HTTPRawResponse, error: Error) -> HTTPResponseValidatorResult? {
+        // If error is part of retriable http status code we want to try again the call.
+        if let httpStatusCode = response.statusCode,
+           let retryInterval = retriableHTTPStatusCodes[httpStatusCode] {
+            return (retryInterval == 0 ? .retryIfPossible : .retryWithInterval(retryInterval))
+        }
+        
         guard let urlError = error as? URLError else {
-            return false
+            return nil
         }
         
         switch urlError.code {
@@ -73,10 +92,10 @@ open class HTTPDefaultValidator: HTTPResponseValidatorProtocol {
                  URLError.cannotConnectToHost,
                  URLError.networkConnectionLost,
                  URLError.dnsLookupFailed:
-                return true
+                return .retryIfPossible
                 
             default:
-                return false
+                return nil
         }
     }
     

@@ -18,6 +18,7 @@ import Foundation
 /// - `failWithError`: call fails with given error.
 /// - `retryIfPossible`: retry the call; this action may be ignored if source HTTPRequest does not allows retry or
 ///                      the maximum amount of retries has been reached yet.
+/// - `retryWithInterval`: retry the call after a given specified time interval (in seconds)
 /// - `retryAfter`: attempt to execute another request, then the current one
 ///                 (ie. session is expired and a silent login must be accomplished
 ///                 before re-trying the current request).
@@ -25,6 +26,7 @@ import Foundation
 public enum HTTPResponseValidatorResult {
     case failWithError(Error)
     case retryIfPossible
+    case retryWithInterval(TimeInterval)
     case retryAfter(HTTPRequestProtocol)
     case passed
 }

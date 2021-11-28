@@ -309,19 +309,15 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
             }
             
         case .retryIfPossible: // Retry if max retries has not be reached
-            request.currentRetry += 1
+            retryRequest(request: request, task: task,
+                         response: &response, client: client,
+                         afterInterval: nil)
             
-            guard request.currentRetry < request.maxRetries else {
-                // Maximum number of retry attempts made.
-                response.error = HTTPError(.maxRetryAttemptsReached)
-                forwardHTTPResponseFor(request: request, task: task, response: response)
-                return
-            }
+        case .retryWithInterval(let retryInterval): // Retry if max retries has not be reached (with interval)
+            retryRequest(request: request, task: task,
+                         response: &response, client: client,
+                         afterInterval: retryInterval)
             
-            // Reset the state and make another attempt
-            request.reset(retries: false)
-            client.execute(request: request)
-
         case .passed: // Passed, nothing to do
             forwardHTTPResponseFor(request: request, task: task, response: response)
         }
@@ -332,6 +328,35 @@ public class HTTPClientEventMonitor: NSObject, URLSessionDelegate, URLSessionDat
         
         client.delegate?.client(client, didFinish: (request, task), response: response)
         request.receiveHTTPResponse(response, client: client)
+    }
+    
+    private func retryRequest(request: HTTPRequestProtocol, task: URLSessionTask, response: inout HTTPRawResponse,
+                              client: HTTPClientProtocol,
+                              afterInterval: TimeInterval?) {
+        
+        func retryClosure() {
+            // Reset the state and make another attempt
+            request.reset(retries: false)
+            client.execute(request: request)
+        }
+        
+        request.currentRetry += 1
+        
+        guard request.currentRetry < request.maxRetries else {
+            // Maximum number of retry attempts made.
+            response.error = HTTPError(.maxRetryAttemptsReached)
+            forwardHTTPResponseFor(request: request, task: task, response: response)
+            return
+        }
+        
+        if let afterInterval = afterInterval {
+            DispatchQueue.global().asyncAfter(deadline: .now() + afterInterval) {
+                retryClosure()
+            }
+        } else {
+            retryClosure()
+        }
+        
     }
 
 }
