@@ -162,6 +162,10 @@ By default each client has a single validator called `HTTPDefaultValidator`; thi
 - If it's not a recoverable error the call fail with that error.
 - If no error has occurred call is okay and move on to the next validator (if any) or resolve the request.
 
+`HTTPDefaultValidator` exposes the following configurable properties:  
+- `allowsEmptyResponses`:  If `true` empty responses are tracked as valid responses if status code it's not an error.  In case of empty response validation fails with `emptyResponse` error.
+- `retriableHTTPStatusCodes`: defines a list of `HTTPStatusCode` which can trigger a retry of the call (when request's `maxRetries` > 1). This is a dictionary so you need to also specify the `TimeInterval` as seconds before retry the request (`0` means immediately, other positive values are expressed in seconds).
+
 **Empty Responses**
 
 `HTTPDefaultValidator` also allows to deal with empty responses; by setting the `.allowsEmptyResponses` property you can decide to mark an empty response received from server as okay or as an error. By default no empty response are allowed.

@@ -1,5 +1,5 @@
     import XCTest
-    @testable import IndomioHTTP
+    @testable import RealHTTP
 
     final class IndomioHTTPTests: XCTestCase {
 
