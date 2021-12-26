@@ -14,7 +14,9 @@ import Foundation
 /// An order-preserving and case-insensitive representation of HTTP headers.
 public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral,
                             Sequence, Collection,
-                            CustomStringConvertible {
+                            CustomStringConvertible,
+                            Equatable, Hashable,
+                            Sendable {
     // MARK: - Private Properties
     
     /// Storage for headers.
@@ -25,7 +27,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// The default set of `HTTPHeaders` used by the library.
     /// It includes encoding, language and user agent.
     public static var `default`: HTTPHeaders {
-        HTTPHeaders([
+        HTTPHeaders(headers: [
             .defaultAcceptEncoding,
             .defaultAcceptLanguage,
             .defaultUserAgent
@@ -37,7 +39,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// NOTE: It's case insentive so duplicate names are collapsed into the last name
     /// and value encountered.
     /// - Parameter headers: headers.
-    public init(_ headers: [HTTPHeader] = []) {
+    public init(headers: [HTTPHeader] = []) {
         headers.forEach {
             set($0)
         }
@@ -48,8 +50,8 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// NOTE: It's case insentive so duplicate names are collapsed into the last name
     /// and value encountered.
     /// - Parameter headersDictionary: headers dictionary.
-    public init(_ headersDictionary: [String: String]?) {
-        headersDictionary?.forEach {
+    public init(rawDictionary: [String: String]?) {
+        rawDictionary?.forEach {
             set(HTTPHeader(name: $0.key, value: $0.value))
         }
     }
@@ -68,7 +70,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     ///
     /// - Parameter elements: elements.
     public init(arrayLiteral elements: HTTPHeader...) {
-        self.init(elements)
+        self.init(headers: elements)
     }
     
     /// Initialize by passing a `ExpressibleByDictionaryLiteral` array.
@@ -234,7 +236,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     }
     
     static func + (left: HTTPHeaders, right: HTTPHeaders) -> HTTPHeaders {
-        HTTPHeaders(left.headers + right.headers)
+        HTTPHeaders(headers: left.headers + right.headers)
     }
 
 }
@@ -245,7 +247,7 @@ extension HTTPURLResponse {
     
     /// Returns `allHeaderFields` as `HTTPHeaders`.
     public var headers: HTTPHeaders {
-        HTTPHeaders(allHeaderFields as? [String: String])
+        HTTPHeaders(rawDictionary: allHeaderFields as? [String: String])
     }
     
 }
@@ -257,7 +259,7 @@ extension URLSessionConfiguration {
     /// `httpAdditionalHeaders` as `HTTPHeaders` object.
     public var headers: HTTPHeaders {
         get {
-            HTTPHeaders(httpAdditionalHeaders as? [String: String])
+            HTTPHeaders(rawDictionary: httpAdditionalHeaders as? [String: String])
         }
         set {
             httpAdditionalHeaders = newValue.asDictionary

@@ -12,7 +12,7 @@
 import Foundation
 
 /// A representation of a single HTTP header's name & value pair.
-public struct HTTPHeader: Hashable, CustomStringConvertible {
+public struct HTTPHeader: Hashable, Equatable, CustomStringConvertible, Sendable {
     
     /// Name of the header.
     public let name: String
