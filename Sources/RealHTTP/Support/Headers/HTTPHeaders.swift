@@ -1,5 +1,5 @@
 //
-//  IndomioHTTP
+//  RealHTTP
 //
 //  Created by the Mobile Team @ ImmobiliareLabs
 //  Email: mobile@immobiliare.it
@@ -12,8 +12,9 @@
 import Foundation
 
 /// An order-preserving and case-insensitive representation of HTTP headers.
-public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral, Sequence, Collection, CustomStringConvertible {
-    
+public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral,
+                            Sequence, Collection,
+                            CustomStringConvertible {
     // MARK: - Private Properties
     
     /// Storage for headers.
@@ -238,22 +239,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
 
 }
 
-// MARK: - HTTPHeaders's UIKit Extensions
-
-extension URLRequest {
-        
-    /// Request's header fields in forms of `HTTPHeaders` object.
-    public var headers: HTTPHeaders {
-        get {
-            HTTPHeaders(allHTTPHeaderFields)
-        }
-        set {
-            allHTTPHeaderFields = newValue.asDictionary
-        }
-    }
-
-}
-
+// MARK: HTTPHeaders (HTTPURLResponse Extension)
 
 extension HTTPURLResponse {
     
@@ -263,6 +249,8 @@ extension HTTPURLResponse {
     }
     
 }
+
+// MARK: HTTPHeaders (URLSessionConfiguration Extension)
 
 extension URLSessionConfiguration {
     
@@ -279,7 +267,7 @@ extension URLSessionConfiguration {
 }
 
 
-// MARK: - Extensions
+// MARK: - Array Extensions
 
 extension Array where Element == HTTPHeader {
         

@@ -1,15 +1,17 @@
 //
-//  IndomioHTTP
+//  File.swift
+//  
 //
-//  Created by the Mobile Team @ ImmobiliareLabs
-//  Email: mobile@immobiliare.it
-//  Web: http://labs.immobiliare.it
-//
-//  Copyright ©2021 Immobiliare.it SpA. All rights reserved.
-//  Licensed under MIT License.
+//  Created by Daniele Margutti on 26/12/21.
 //
 
 import Foundation
 
-/// Current IndomioHTTP version.
-let LibraryVersion = "0.9.16"
+public enum RealHTTP {
+    
+    /// Current IndomioHTTP version.
+    static let sdkVersion = "0.9.16"
+    
+    static let agentIdentifier = "realhttp"
+    
+}
