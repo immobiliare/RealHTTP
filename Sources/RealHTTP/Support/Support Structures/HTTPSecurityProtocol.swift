@@ -21,7 +21,7 @@ public protocol HTTPSecurityProtocol {
     ///   - task: task associated with request.
     ///   - completionHandler: completion handler.
     func receiveChallenge(_ challenge: URLAuthenticationChallenge,
-                          forRequest request: HTTPRequestProtocol, task: URLSessionTask,
+                          forRequest request: HTTPRequest, task: URLSessionTask,
                           completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void)
 
     

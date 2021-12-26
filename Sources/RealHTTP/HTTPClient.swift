@@ -40,14 +40,25 @@ public class HTTPClient {
         set { eventMonitor.cachePolicy = newValue }
     }
     
+    /// Headers which are automatically attached to each request.
+    public var headers = HTTPHeaders()
+    
     /// Timeout interval for requests, expressed in seconds.
     /// Defaults value is `30` seconds but each http request may use it's value.
     public var timeout: TimeInterval = 30
     
-    /// Event monitor used to execute http requests.
-    public let eventMonitor: HTTPClientEventMonitor
+    /// The maximum number of concurrent request the client can execute.
+    /// Default value is `0` which means no limit has been set and it's automatically
+    /// managed by the underlying operating system.
+    public var maximumNumberOfRequests: UInt {
+        get { eventMonitor.maximumNumberOfRequests }
+        set { eventMonitor.maximumNumberOfRequests = newValue }
+    }
     
     // MARK: - Private Properties
+    
+    /// Event monitor used to execute http requests.
+    private let eventMonitor: HTTPClientEventMonitor
     
     // MARK: - Initialization
     
@@ -80,9 +91,8 @@ public class HTTPClient {
     
     // MARK: - Public Functions
     
-    @discardableResult
-    public func execute(request: HTTPRequestProtocol) async -> HTTPRequestProtocol {
-        fatalError()
+    public func fetch(_ request: HTTPRequest) async throws -> HTTPResponse {
+        try await eventMonitor.add(request: request)
     }
     
 }

@@ -13,7 +13,7 @@ import Foundation
 
 public typealias HTTPRequestParametersDict = [String: Any]
 
-public class HTTPRequest<Value: HTTPDecodableResponse>: HTTPRequestProtocol {
+public class HTTPRequest {
     
     // MARK: - Public Properties
     
@@ -82,7 +82,7 @@ public class HTTPRequest<Value: HTTPDecodableResponse>: HTTPRequestProtocol {
     ///   - url: full URL if applicable.
     ///   - configure: configure callback.
     public init(url: URLConvertible? = nil,
-                _ configure: (inout HTTPRequest<Value>) throws -> Void) rethrows {
+                _ configure: (inout HTTPRequest) throws -> Void) rethrows {
         var this = self
         try configure(&this)
         
@@ -99,15 +99,13 @@ public class HTTPRequest<Value: HTTPDecodableResponse>: HTTPRequestProtocol {
     ///   - variables: variables to expand.
     ///   - configure: configure callback.
     public convenience init(URI template: String, variables: [String: Any],
-                _ configure: (inout HTTPRequest<Value>) throws -> Void) rethrows {
+                _ configure: (inout HTTPRequest) throws -> Void) rethrows {
         let path = URITemplate(template: template).expand(variables)
         try self.init(url: nil, configure)
         self.path = path
     }
     
-    // MARK: - Public Functions
-    
-    public func execute(_ client: HTTPClient? = .shared) async -> HTTPResponseProtocol {
+    public func fetch(_ client: HTTPClient = .shared) async throws -> HTTPResponse {
         fatalError()
     }
     

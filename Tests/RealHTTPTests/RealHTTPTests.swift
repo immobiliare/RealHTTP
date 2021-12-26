@@ -1,8 +1,8 @@
 import XCTest
 @testable import RealHTTP
 
-extension Data: HTTPDecodableResponse {
-    
+public struct User: Decodable {
+    var username: String
 }
 
 final class RealHTTPTests: XCTestCase {
@@ -13,15 +13,19 @@ final class RealHTTPTests: XCTestCase {
 
         
         Task {
-            let result = try await HTTPRequest<Data> {
+            let req = try HTTPRequest {
                 $0.timeout = 5
                 $0.body = try .json(["c" : "b"])
                 $0.scheme = .https
                 $0.host = "apple.com"
                 $0.addQueryParameter(name: "p", value: "t")
-            }.execute()
+            }
+                
+                //.fetch().decode(User.self)
             
+            let user = try await RealHTTP.fetch(req).decode(User.self)
             
+            print(user.debugDescription)
         }
         
     }

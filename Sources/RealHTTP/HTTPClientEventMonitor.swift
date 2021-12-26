@@ -11,11 +11,22 @@
 
 import Foundation
 
-public class HTTPClientEventMonitor: NSObject {
+internal class HTTPClientEventMonitor: NSObject {
     
     // MARK: - Public Properties
     
-    public internal(set) weak var client: HTTPClient?
+    internal weak var client: HTTPClient?
+    
+    /// Request internal queue.
+    private var requestsQueue = [HTTPRequest]()
+    
+    private lazy var requestsStream: AsyncStream<HTTPRequest> = {
+        AsyncStream { continuation in
+            
+        }
+    }()
+    
+    internal var maximumNumberOfRequests: UInt = 0
     
     // MARK: - Internal Properties
     
@@ -27,6 +38,10 @@ public class HTTPClientEventMonitor: NSObject {
     
     internal init(session: URLSessionConfiguration) {
         self.session = session
+    }
+    
+    internal func add(request: HTTPRequest) async throws -> HTTPResponse {
+
     }
     
 }

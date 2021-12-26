@@ -85,12 +85,13 @@ extension String {
     ///
     /// - Returns: String
     internal func suggestedMimeType() -> String {
-        if let id = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, self as CFString, nil)?.takeRetainedValue(),
+        /*if let id = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, self as CFString, nil)?.takeRetainedValue(),
             let contentType = UTTypeCopyPreferredTagWithClass(id, kUTTagClassMIMEType)?.takeRetainedValue() {
             return contentType as String
         }
 
-        return HTTPContentType.octetStream.rawValue
+        return HTTPContentType.octetStream.rawValue*/
+        fatalError()
     }
     
 }

@@ -20,3 +20,14 @@ public enum RealHTTP {
     static let agentIdentifier = "realhttp"
     
 }
+
+// MARK: - Global Fetch
+
+extension RealHTTP {
+    
+    /// Fetch the request with the default client.
+    public static func fetch(_ request: HTTPRequest) async throws -> HTTPResponse {
+        try await HTTPClient.shared.fetch(request)
+    }
+    
+}
