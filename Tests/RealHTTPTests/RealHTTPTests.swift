@@ -11,15 +11,18 @@ final class RealHTTPTests: XCTestCase {
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
 
-     
-        let x = try HTTPRequest<Data> {
-            $0.timeout = 5
-            $0.body = try .json(["c" : "b"])
-            $0.scheme = .https
-            $0.host = "apple.com"
-            $0.addQueryParameter(name: "p", value: "t")
+        
+        Task {
+            let result = try await HTTPRequest<Data> {
+                $0.timeout = 5
+                $0.body = try .json(["c" : "b"])
+                $0.scheme = .https
+                $0.host = "apple.com"
+                $0.addQueryParameter(name: "p", value: "t")
+            }.execute()
+            
+            
         }
-        print(x.url)
         
     }
 }

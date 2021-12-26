@@ -78,4 +78,11 @@ public class HTTPClient {
         self.eventMonitor.client = self
     }
     
+    // MARK: - Public Functions
+    
+    @discardableResult
+    public func execute(request: HTTPRequestProtocol) async -> HTTPRequestProtocol {
+        fatalError()
+    }
+    
 }

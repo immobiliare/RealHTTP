@@ -81,7 +81,8 @@ public class HTTPRequest<Value: HTTPDecodableResponse>: HTTPRequestProtocol {
     /// - Parameters:
     ///   - url: full URL if applicable.
     ///   - configure: configure callback.
-    public init(url: URLConvertible? = nil, _ configure: (inout HTTPRequest<Value>) throws -> Void) rethrows {
+    public init(url: URLConvertible? = nil,
+                _ configure: (inout HTTPRequest<Value>) throws -> Void) rethrows {
         var this = self
         try configure(&this)
         
@@ -89,6 +90,25 @@ public class HTTPRequest<Value: HTTPDecodableResponse>: HTTPRequestProtocol {
            let components = try? URLComponents(url: url.asURL(), resolvingAgainstBaseURL: false) {
             self.urlComponents = components
         }
+    }
+    
+    /// Initialize a new request with given URI template for path component.
+    ///
+    /// - Parameters:
+    ///   - template: template.
+    ///   - variables: variables to expand.
+    ///   - configure: configure callback.
+    public convenience init(URI template: String, variables: [String: Any],
+                _ configure: (inout HTTPRequest<Value>) throws -> Void) rethrows {
+        let path = URITemplate(template: template).expand(variables)
+        try self.init(url: nil, configure)
+        self.path = path
+    }
+    
+    // MARK: - Public Functions
+    
+    public func execute(_ client: HTTPClient? = .shared) async -> HTTPResponseProtocol {
+        fatalError()
     }
     
 }

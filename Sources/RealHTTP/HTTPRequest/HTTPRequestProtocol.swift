@@ -9,4 +9,6 @@ import Foundation
 
 public protocol HTTPRequestProtocol: AnyObject {
 
+    func execute(_ client: HTTPClient?) async -> HTTPResponseProtocol
+    
 }
