@@ -1,8 +1,12 @@
 //
-//  File.swift
-//  
+//  RealHTTP
 //
-//  Created by Daniele Margutti on 26/12/21.
+//  Created by the Mobile Team @ ImmobiliareLabs
+//  Email: mobile@immobiliare.it
+//  Web: http://labs.immobiliare.it
+//
+//  Copyright ©2021 Immobiliare.it SpA. All rights reserved.
+//  Licensed under MIT License.
 //
 
 import Foundation
@@ -89,8 +93,9 @@ public extension HTTPError {
     /// - `sessionError`: error related to the used session instances (may be a systemic error or it was invalidated)
     /// - `other`: any internal error, you can use it as your own handler.
     /// - `cancelled`: cancelled by user.
+    /// - `internal`: internal library error occurred.
     enum ErrorType {
-        case invalidURL(URLConvertible)
+        case invalidURL
         case multipartInvalidFile(URL)
         case multipartFailedStringEncoding
         case multipartStreamReadFailed
@@ -107,6 +112,7 @@ public extension HTTPError {
         case sessionError
         case other
         case cancelled
+        case `internal`
     }
     
 }
@@ -114,13 +120,14 @@ public extension HTTPError {
 // MARK: - HTTPError (URLResponse)
 
 extension HTTPError {
-    /*
+    
     /// Parse the response of an HTTP operation and return `nil` if no error has found,
     /// a valid `HTTPError` if call has failed.
     ///
     /// - Parameter httpResponse: response from http layer.
     /// - Returns: HTTPError?
-    public static func fromURLResponse(_ response: URLSessionResponse) -> HTTPError? {
+    internal static func fromResponse(_ response: DataLoaderResponse?) -> HTTPError? {
+        guard let response = response else { return nil }
         // If HTTP is an error or an error has received we can create the error object
         let httpCode = HTTPStatusCode(URLResponse: response.urlResponse) ?? .none
         let isError = (response.error != nil || httpCode.responseType != .success)
@@ -140,6 +147,24 @@ extension HTTPError {
                          error: response.error,
                          userInfo: userInfo,
                          cocoaCode: cocoaErrorCode)
-    }*/
+    }
+    
+}
+
+// MARK: - Swift.Error
+
+extension Swift.Error {
+    
+    /// Return `true` when error is related to the connection.
+    var isMissingConnection: Bool {
+        switch self {
+        case URLError.notConnectedToInternet,
+             URLError.networkConnectionLost,
+             URLError.cannotLoadFromNetwork:
+             return true
+        default:
+            return false
+        }
+    }
     
 }

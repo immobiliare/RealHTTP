@@ -14,8 +14,21 @@ import Foundation
 public typealias HTTPRequestParametersDict = [String: Any]
 
 public class HTTPRequest {
+    public typealias RequestTask = Task<HTTPResponse, Error>
+    
+    internal static let DefaultTimeout = TimeInterval(10)
     
     // MARK: - Public Properties
+    
+    /// Priority level in which the task is executed.
+    /// By default is set to `background`.
+    public var priority: TaskPriority = .background
+    
+    /// Describe the priority of the operation.
+    /// It may acts as a suggestion for HTTP/2 based services (priority frames / dependency weighting)
+    /// for simple `HTTPClient` instances.
+    /// In case of `HTTPQueueClient` it also act as priority level for queue concurrency.
+    public var httpPriority: HTTPRequestPriority = .normal
     
     /// An user info dictionary where you can add your own data.
     /// Initially only the `fingerprint` key is set with an unique id of the request.
@@ -51,6 +64,13 @@ public class HTTPRequest {
         set { body.headers = newValue }
     }
     
+    /// What kind of data we should expect.
+    /// If you are creating a request for a small amount of data (ie RESTful calls) you can use
+    /// `default`. Large data as binary downloads may be handled using `large` options which support
+    /// resumable downloads and background downloads sessions.
+    /// By default `default` is used.
+    open var transferMode: HTTPTransferMode = .default
+    
     /// Cache policy.
     ///
     /// NOTE:
@@ -70,9 +90,20 @@ public class HTTPRequest {
     /// Request's body.
     open var body: HTTPBody = .empty
     
+    // MARK: - Public Properties [Response]
+    
+    /// If task is monitorable (`expectedDataType` is `large`) and data is available
+    /// here you can found the latest progress stats.
+    #if canImport(Combine)
+    @Published
+    public internal(set) var progress: HTTPProgress?
+    #else
+    public internal(set) var progress: HTTPProgress?
+    #endif
+    
     // MARK: - Private Properties
     
-    private var urlComponents = URLComponents()
+    internal var urlComponents = URLComponents()
     
     // MARK: - Initialization
     
@@ -106,7 +137,7 @@ public class HTTPRequest {
     }
     
     public func fetch(_ client: HTTPClient = .shared) async throws -> HTTPResponse {
-        fatalError()
+        try await client.fetch(self)
     }
     
 }
@@ -167,6 +198,20 @@ extension HTTPRequest {
         } else {
             query = [item]
         }
+    }
+    
+}
+
+extension URLComponents {
+    
+    mutating func fullURLInClient(_ client: HTTPClient?) -> URL? {
+        // Path must start with "/" in order to generate a valid url.
+        // We want to "fix" it automatically if we can.
+        if !path.isEmpty, path.first != "/" { path = "/\(path)" }
+        
+        // If we have not specified an absolute URL the URL
+        // must be composed using the base components of the set client.
+        return (host == nil ? url(relativeTo: client?.baseURL) : url)
     }
     
 }

@@ -25,40 +25,42 @@ public class HTTPClient {
     /// NOTE:
     /// If request is executed by passing a complete URL with scheme this
     /// value will be automatically ignored.
-    public let baseURL: String
+    public var baseURL: URL?
     
     /// URLSessionConfigurastion used to perform request in this client.
-    public var session: URLSessionConfiguration {
-        get { eventMonitor.session }
-        set { eventMonitor.session = newValue }
+    public var session: URLSession {
+        loader.session
     }
     
     /// The cache policy for the request. Defaults to `.useProtocolCachePolicy`.
     /// Requests may override this behaviour.
     public var cachePolicy: URLRequest.CachePolicy {
-        get { eventMonitor.cachePolicy }
-        set { eventMonitor.cachePolicy = newValue }
+        get { loader.cachePolicy }
+        set { loader.cachePolicy = newValue }
     }
     
     /// Headers which are automatically attached to each request.
     public var headers = HTTPHeaders()
     
     /// Timeout interval for requests, expressed in seconds.
-    /// Defaults value is `30` seconds but each http request may use it's value.
-    public var timeout: TimeInterval = 30
+    /// Defaults value is `HTTPRequest.DefaultTimeout` but each http request may use it's value.
+    public var timeout: TimeInterval = HTTPRequest.DefaultTimeout
     
-    /// The maximum number of concurrent request the client can execute.
-    /// Default value is `0` which means no limit has been set and it's automatically
-    /// managed by the underlying operating system.
-    public var maximumNumberOfRequests: UInt {
-        get { eventMonitor.maximumNumberOfRequests }
-        set { eventMonitor.maximumNumberOfRequests = newValue }
-    }
+    /// Security settings.
+    public var security: HTTPSecurityProtocol?
+    
+    /// Follow or not redirects. By default the value is `follow` which uses
+    /// the new proposed redirection by copying the original HTTPMethod, Body and Headers.
+    ///
+    /// You can further customize and alter the behaviour per single request by implementing
+    /// the `HTTPClientDelegate`'s `client(:willPerformRedirect:response:newRequest:)`
+    /// function.
+    public var followRedirectsMode: HTTPRedirectMode = .follow
     
     // MARK: - Private Properties
     
     /// Event monitor used to execute http requests.
-    private let eventMonitor: HTTPClientEventMonitor
+    private var loader: HTTPDataLoader
     
     // MARK: - Initialization
     
@@ -66,6 +68,8 @@ public class HTTPClient {
     ///
     /// - Parameters:
     ///   - baseURL: base URL.
+    ///   - maxConcurrentOperations: the number of concurrent network operation we can execute. If not specified is managed
+    ///                              by the operation system and you don't need to set a value unless you have some other constraints.
     ///   - configuration: `URLSession` configuration. The available types are `default`,
     ///                    `ephemeral` and `background`, if you don't provide any or don't have
     ///                     special needs then Default will be used.
@@ -83,16 +87,29 @@ public class HTTPClient {
     ///                     which handles the transfers in a separate process.
     ///                     In iOS, this configuration makes it possible for transfers to continue even when
     ///                     the app itself is suspended or terminated.
-    public init(baseURL: String = "", configuration: URLSessionConfiguration = .default) {
+    public init(baseURL: URL? = nil,
+                maxConcurrentOperations: Int? = nil,
+                configuration: URLSessionConfiguration = .default) {
         self.baseURL = baseURL
-        self.eventMonitor = HTTPClientEventMonitor(session: configuration)
-        self.eventMonitor.client = self
+        
+        //if #available(iOS 15, *) {
+           // self.loader = HTTPClientDelegate(configuration: configuration)
+        //} else {
+            self.loader = HTTPLegacyDataLoader(configuration: configuration,
+                                               maxConcurrentOperations: maxConcurrentOperations ?? OperationQueue.defaultMaxConcurrentOperationCount)
+        //}
+
+        self.loader.client = self
     }
     
     // MARK: - Public Functions
     
+    /// Execute the request and return the promise.
+    ///
+    /// - Parameter request: request to execute in client.
+    /// - Returns: `HTTPRequest.RequestTask?`
     public func fetch(_ request: HTTPRequest) async throws -> HTTPResponse {
-        try await eventMonitor.add(request: request)
+        try await loader.fetch(request)
     }
     
 }

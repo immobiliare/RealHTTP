@@ -35,7 +35,7 @@ extension String: URLConvertible {
     /// - Throws:  Throw an exception if conversion fails.
     public func asURL() throws -> URL {
         guard let url = URL(string: self) else {
-            throw HTTPError(.invalidURL(self))
+            throw HTTPError(.invalidURL)
         }
 
         return url
@@ -65,7 +65,7 @@ extension URLComponents: URLConvertible {
     /// - Throws:  An `AFError.invalidURL` instance.
     public func asURL() throws -> URL {
         guard let url = url else {
-            throw HTTPError(.invalidURL(self))
+            throw HTTPError(.invalidURL)
         }
 
         return url

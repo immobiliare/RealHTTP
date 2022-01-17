@@ -11,22 +11,29 @@ final class RealHTTPTests: XCTestCase {
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
 
-        
+        let expectation = XCTestExpectation(description: "Chops the vegetables")
+
         Task {
             let req = try HTTPRequest {
                 $0.timeout = 5
-                $0.body = try .json(["c" : "b"])
-                $0.scheme = .https
-                $0.host = "apple.com"
-                $0.addQueryParameter(name: "p", value: "t")
+                //$0.body = try .json(["c" : "b"])
+                $0.scheme = .http
+                $0.host = "httpbin.org"
+                $0.path = "/get"
+                $0.method = .get
+                //$0.addQueryParameter(name: "p", value: "t")
             }
                 
                 //.fetch().decode(User.self)
             
-            let user = try await RealHTTP.fetch(req).decode(User.self)
-            
-            print(user.debugDescription)
+            let user = try await req.fetch(HTTPClient.shared)
+         
+            print("ok")
+            expectation.fulfill()
         }
+        
+        wait(for: [expectation], timeout: 1000)
+
         
     }
 }

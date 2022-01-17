@@ -25,9 +25,9 @@ public enum RealHTTP {
 
 extension RealHTTP {
     
-    /// Fetch the request with the default client.
-    public static func fetch(_ request: HTTPRequest) async throws -> HTTPResponse {
-        try await HTTPClient.shared.fetch(request)
-    }
-    
+//    /// Fetch the request with the default client.
+//    public static func fetch(_ request: HTTPRequest) async throws -> HTTPResponse {
+//        try await HTTPClient.shared.fetch(request)
+//    }
+//    
 }

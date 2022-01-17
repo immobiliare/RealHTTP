@@ -11,14 +11,13 @@
 
 import Foundation
 
-extension HTTPRequest {
+internal protocol HTTPDataLoader {
     
-    /// A set of common keys you can use to fill the `userInfo` keys of your request.
-    public enum UserInfoKeys: Hashable {
-        case fingerprint
-        case subsystem
-        case category
-        case data
-    }
-    
+    var client: HTTPClient? { get set }
+    var session: URLSession! { get }
+    var cachePolicy: URLRequest.CachePolicy { get set }
+
+        
+    func fetch(_ request: HTTPRequest) async throws -> HTTPResponse
+
 }

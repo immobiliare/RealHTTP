@@ -11,33 +11,35 @@
 
 import Foundation
 
-
-// MARK: - Typealias for URLSession Response
-
-/// This is just a typealias for raw reponse coming from underlying URLSession instance.
-public typealias URLSessionResponse = (urlResponse: URLResponse?, data: Data?, error: Error?)
-
 // MARK: - HTTPResponse
 
 public struct HTTPResponse {
-    
+
     // MARK: - Public Properties
     
-    /// Reference to the request.
-    public let request: HTTPRequest
+    public internal(set) var metrics: URLSessionTaskMetrics?
     
-    /// Retrived data from server.
+    /// `URLResponse` object received from server.
+    public var urlResponse: URLResponse?
+    
+    /// Data received.
     public var data: Data?
     
-    // MARK: - Initialization
+    /// Error parsed.
+    public var error: HTTPError?
     
-    /// Initialize a new response object with the result of a network call.
-    ///
-    /// - Parameters:
-    ///   - request: request which originate the response.
-    ///   - response: response received from underlying `URLSession` delegate instance.
-    internal init(request: HTTPRequest, response: URLSessionResponse) {
-        self.request = request
+    public weak var request: HTTPRequest?
+    
+    internal init(errorType: HTTPError.ErrorType = .internal, error: Error?) {
+        self.error = HTTPError(errorType, error: error)
+    }
+
+    internal init(response: DataLoaderResponse) {
+        self.data = response.data
+        self.metrics = response.metrics
+        self.request = response.request
+        self.urlResponse = response.urlResponse
+        self.error = HTTPError.fromResponse(response)
     }
     
 }
