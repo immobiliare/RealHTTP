@@ -11,6 +11,9 @@
 
 import Foundation
 
+// Combination of a decodable response which can be parsed via custom parser or Codable.
+public typealias DecodableResponse = HTTPDecodableResponse & Decodable
+
 // MARK: - HTTPDecodableResponse
 
 /// If you can't implement `Decodable` you can customize your own decoding mechanism.

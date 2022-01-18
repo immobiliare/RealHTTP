@@ -57,6 +57,11 @@ public class HTTPClient {
     /// function.
     public var followRedirectsMode: HTTPRedirectMode = .follow
     
+    /// Validators for response. Values are executed in order.
+    public var validators: [HTTPResponseValidator] = [
+        HTTPDefaultValidator() // standard validator for http responses
+    ]
+    
     // MARK: - Private Properties
     
     /// Event monitor used to execute http requests.
@@ -67,7 +72,7 @@ public class HTTPClient {
     /// Initialize a new HTTP Client instance with a given configuration.
     ///
     /// - Parameters:
-    ///   - baseURL: base URL.
+    ///   - baseURL: base URL. You can also pass a valid URL as `String`.
     ///   - maxConcurrentOperations: the number of concurrent network operation we can execute. If not specified is managed
     ///                              by the operation system and you don't need to set a value unless you have some other constraints.
     ///   - configuration: `URLSession` configuration. The available types are `default`,
@@ -90,26 +95,38 @@ public class HTTPClient {
     public init(baseURL: URL? = nil,
                 maxConcurrentOperations: Int? = nil,
                 configuration: URLSessionConfiguration = .default) {
-        self.baseURL = baseURL
         
-        //if #available(iOS 15, *) {
-           // self.loader = HTTPClientDelegate(configuration: configuration)
-        //} else {
-            self.loader = HTTPLegacyDataLoader(configuration: configuration,
-                                               maxConcurrentOperations: maxConcurrentOperations ?? OperationQueue.defaultMaxConcurrentOperationCount)
-        //}
-
+        self.baseURL = baseURL
+        self.loader = HTTPDataLoader(configuration: configuration,
+                                     maxConcurrentOperations: maxConcurrentOperations ?? OperationQueue.defaultMaxConcurrentOperationCount)
         self.loader.client = self
     }
     
-    // MARK: - Public Functions
+    // MARK: - Internal Functions
     
     /// Execute the request and return the promise.
     ///
     /// - Parameter request: request to execute in client.
     /// - Returns: `HTTPRequest.RequestTask?`
-    public func fetch(_ request: HTTPRequest) async throws -> HTTPResponse {
+    internal func fetch(_ request: HTTPRequest) async throws -> HTTPResponse {
         try await loader.fetch(request)
+    }
+    
+    /// Validate the response using the ordered list of validators.
+    ///
+    /// - Parameters:
+    ///   - response: response received from server.
+    ///   - request: origin request.
+    /// - Returns: HTTPResponseValidatorAction
+    internal func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
+        for validator in validators {
+            let result = validator.validate(response: response, forRequest: request)
+            guard case .success = result else {
+                return result
+            }
+        }
+        
+        return .success
     }
     
 }

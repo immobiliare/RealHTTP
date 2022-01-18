@@ -126,7 +126,7 @@ extension HTTPError {
     ///
     /// - Parameter httpResponse: response from http layer.
     /// - Returns: HTTPError?
-    internal static func fromResponse(_ response: DataLoaderResponse?) -> HTTPError? {
+    internal static func fromResponse(_ response: HTTPDataLoaderResponse?) -> HTTPError? {
         guard let response = response else { return nil }
         // If HTTP is an error or an error has received we can create the error object
         let httpCode = HTTPStatusCode(URLResponse: response.urlResponse) ?? .none

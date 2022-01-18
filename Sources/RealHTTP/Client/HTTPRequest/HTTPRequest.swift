@@ -11,12 +11,20 @@
 
 import Foundation
 
-public typealias HTTPRequestParametersDict = [String: Any]
-
 public class HTTPRequest {
     public typealias RequestTask = Task<HTTPResponse, Error>
     
+    // MARK: - Supported Structures
+    
     internal static let DefaultTimeout = TimeInterval(10)
+    
+    /// A set of common keys you can use to fill the `userInfo` keys of your request.
+    public enum UserInfoKeys: Hashable {
+        case fingerprint
+        case subsystem
+        case category
+        case data
+    }
     
     // MARK: - Public Properties
     
@@ -103,8 +111,16 @@ public class HTTPRequest {
     
     // MARK: - Private Properties
     
-    internal var urlComponents = URLComponents()
+    /// Current network attempt.
+    internal var currentAttempt = 0
     
+    /// Alternate requests cannot support retry strategy,
+    /// this avoid any infinite loop.
+    internal var isAltRequest = false
+    
+    /// URLComponents of the network request.
+    internal var urlComponents = URLComponents()
+        
     // MARK: - Initialization
     
     /// Initialize a new request.
@@ -136,8 +152,29 @@ public class HTTPRequest {
         self.path = path
     }
     
+    // MARK: - Fetch Operations
+    
+    /// Fetch data asynchronously and return the raw response.
+    ///
+    /// - Parameter client: client where execute the request.
+    /// - Returns: `HTTPResponse`
     public func fetch(_ client: HTTPClient = .shared) async throws -> HTTPResponse {
         try await client.fetch(self)
+    }
+    
+    /// Fetch data asynchronously and return decoded object with given passed type.
+    /// Object must be conform to `HTTPDecodableResponse` if you want to implement custom decode.
+    ///
+    /// - Returns: T?
+    public func fetch<T: HTTPDecodableResponse>(_ client: HTTPClient = .shared, decode: T.Type) async throws -> T? {
+        try await client.fetch(self).decode(decode)
+    }
+    
+    /// Fetch data asynchronously and return the decoded object by using `Decodable` conform type.
+    ///
+    /// - Returns: T?
+    public func fetch<T: Decodable>(_ client: HTTPClient = .shared, decode: T.Type, decoder: JSONDecoder = .init()) async throws -> T? {
+        try await client.fetch(self).decode(decode)
     }
     
 }

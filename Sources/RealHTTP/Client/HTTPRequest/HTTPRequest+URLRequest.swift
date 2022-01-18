@@ -11,9 +11,13 @@
 
 import Foundation
 
-internal extension HTTPRequest {
+extension HTTPRequest {
     
-    func urlSessionTask(inClient client: HTTPClient) throws -> URLSessionTask {
+    /// Create the task to execute in an `URLSession` instance.
+    ///
+    /// - Parameter client: client where the query should be executed.
+    /// - Returns: `URLSessionTask`
+    internal func urlSessionTask(inClient client: HTTPClient) throws -> URLSessionTask {
         // Generate the `URLRequest` instance.
         let urlRequest = try urlRequest(inClient: client)
         
@@ -42,6 +46,10 @@ internal extension HTTPRequest {
     
     // MARK: - Private Functions
     
+    /// Create the `URLRequest` instance for a client instance.
+    ///
+    /// - Parameter client: client instance.
+    /// - Returns: `URLRequest`
     private func urlRequest(inClient client: HTTPClient) throws -> URLRequest {
         guard let fullURL = urlComponents.fullURLInClient(client) else {
             throw HTTPError(.invalidURL)

@@ -11,12 +11,13 @@
 
 import Foundation
 
-internal class HTTPLegacyDataLoader: NSObject, HTTPDataLoader, URLSessionDelegate, URLSessionDataDelegate, URLSessionDownloadDelegate, URLSessionTaskDelegate, URLSessionStreamDelegate {
-    
-    
-    // MARK: - Public Properties
-        
-    var queue = OperationQueue()
+/// This class is used to perform async/await operation by using the standard
+/// URLSessionDelegate which can be used from iOS 13+.
+/// This because new `URLSession` methods are introduced and available only starting from iOS 15+.
+internal class HTTPDataLoader: NSObject,
+                               URLSessionDelegate, URLSessionDataDelegate,
+                               URLSessionDownloadDelegate,
+                               URLSessionTaskDelegate, URLSessionStreamDelegate {
 
     // MARK: - Internal Properties
     
@@ -32,10 +33,19 @@ internal class HTTPLegacyDataLoader: NSObject, HTTPDataLoader, URLSessionDelegat
     
     // MARK: - Private Properties
     
-    private var handlers = [URLSessionTask: DataLoaderResponse]()
+    /// Operation queue.
+    private var queue = OperationQueue()
+    
+    /// List of active running operations.
+    private var dataLoadersMap = [URLSessionTask: HTTPDataLoaderResponse]()
         
     // MARK: - Initialization
     
+    /// Initialize a new client configuration.
+    ///
+    /// - Parameters:
+    ///   - configuration: configuration setting.
+    ///   - maxConcurrentOperations: number of concurrent operations.
     required init(configuration: URLSessionConfiguration,
                   maxConcurrentOperations: Int) {
         super.init()
@@ -45,30 +55,110 @@ internal class HTTPLegacyDataLoader: NSObject, HTTPDataLoader, URLSessionDelegat
     
     // MARK: - Internal Function
     
+    /// Perform fetch of the request in background and return the response asynchrously.
+    ///
+    /// - Parameter request: request to execute.
+    /// - Returns: `HTTPResponse`
     public func fetch(_ request: HTTPRequest) async throws -> HTTPResponse {
-        guard let client = client else { throw HTTPError(.internal) }
+        guard let client = client else {
+            throw HTTPError(.internal)
+        }
         
         let sessionTask = try request.urlSessionTask(inClient: client)
-
-        final class Box { var task: URLSessionTask? }
-        
         let box = Box()
         return try await withTaskCancellationHandler(handler: {
+            // Support for task cancellation
             box.task?.cancel()
         }, operation: {
-            try await withUnsafeThrowingContinuation({ continuation in
-                box.task = self.loadData(with: request, task: sessionTask, completion: { response in
+            // Conversion of the callback system to the async/await version.
+            let response = try await withUnsafeThrowingContinuation({ continuation in
+                box.task = self.fetch(request, task: sessionTask, completion: { response in
+                    // continue the async/await operation
                     continuation.resume(returning: response)
                 })
             })
+            
+            /// Once we receive the response we would to use validators to validate received response.
+            /// It evaluates each validator in order and stops to the first one who send a non `.success`
+            /// response. Validator return the action to perform in case of failure.
+            let validationAction = self.client!.validate(response: response, forRequest: request)
+            switch validationAction {
+            case .fail(let error):
+                // Fail network operation with given error object.
+                return HTTPResponse(error: error)
+                
+            case .retry(let strategy):
+                // Perform a retry attempt using specified strategy.
+                guard request.isAltRequest == false else {
+                    // retry strategy cannot be executed if call is an alternate request
+                    // created as retry strategy, otherwise we'll get an infinite loop.
+                    // In this case we want just return the response itself.
+                    return response
+                }
+                
+                // Perform the retry strategy to apply and return the result
+                let retryResponse = try await performRetryStrategy(strategy, forRequest: request)
+                return retryResponse
+                
+            case .success:
+                // Everything goes fine, we want to return the response of the call.
+                return response
+            }
         })
     }
     
-    private func loadData(with request: HTTPRequest, task: URLSessionTask,
-                          completion: @escaping DataLoaderResponse.Completion) -> URLSessionTask {
+    /// Execute the retry strategy if one of the client's validator wants it.
+    ///
+    /// - Parameters:
+    ///   - strategy: strategy to execute for retry.
+    ///   - request: request who failed to be validated.
+    /// - Returns: `HTTPResponse`
+    private func performRetryStrategy(_ strategy: HTTPRetryStrategy, forRequest request: HTTPRequest) async throws -> HTTPResponse {
+        switch strategy {
+        case .after(let altRequest, let delay, let catcher):
+            // If `request` did fail we want to execute an alternate request and retry again the original one.
+            // An example of this case is the auth expiration; we want to perform an authentication refresh
+            // and retry again the original call.
+            altRequest.isAltRequest = true
+            let altRequestResponse = try await self.fetch(altRequest)
+            // we can specify an async callback function to execute once we receive the response of the alt request.
+            // (in the example above we would use it to setup and store the authentication data received before retry the call).
+            try await catcher?(altRequest, altRequestResponse)
+            // wait before retry the original call, if set.
+            try await Task.sleep(seconds: delay)
+            
+            return altRequestResponse
+            
+        default:
+            // Retry mechanism is made with a specified interval.
+            var lastResponse: HTTPResponse!
+            
+            // If we can make a further attempt...
+            while request.currentAttempt <= request.maxRetries {
+                // wait a certain amount of time depending by the strategy set...
+                try await Task.sleep(seconds: strategy.retryInterval(forRequest: request))
+                // try again the same request...
+                lastResponse = try await self.fetch(request)
+                // ...and increment the attempts counter
+                request.currentAttempt += 1
+            }
+            
+            return lastResponse
+        }
+    }
+    
+    /// Fetch function which uses a callback.
+    ///
+    /// - Parameters:
+    ///   - request: request to execute.
+    ///   - task: task to execute.
+    ///   - completion: completion block to call at the end of the operation.
+    /// - Returns: `URLSessionTask`
+    private func fetch(_ request: HTTPRequest, task: URLSessionTask,
+                       completion: @escaping HTTPDataLoaderResponse.Completion) -> URLSessionTask {
         session.delegateQueue.addOperation {
-            let response = DataLoaderResponse(request: request, completion: completion)
-            self.handlers[task] = response
+            let response = HTTPDataLoaderResponse(request: request, completion: completion)
+            self.dataLoadersMap[task] = response
         }
         task.resume()
         return task
@@ -89,7 +179,7 @@ internal class HTTPLegacyDataLoader: NSObject, HTTPDataLoader, URLSessionDelegat
     
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask,
                            didReceive data: Data) {
-        handlers[dataTask]?.appendData(data)
+        dataLoadersMap[dataTask]?.appendData(data)
     }
     
     public func urlSession(_ session: URLSession, task: URLSessionTask,
@@ -105,7 +195,7 @@ internal class HTTPLegacyDataLoader: NSObject, HTTPDataLoader, URLSessionDelegat
     
     func urlSession(_ session: URLSession, task: URLSessionTask,
                     didFinishCollecting metrics: URLSessionTaskMetrics) {
-        handlers[task]?.metrics = metrics
+        dataLoadersMap[task]?.metrics = metrics
     }
     
     // MARK: - Upload Progress
@@ -117,14 +207,14 @@ internal class HTTPLegacyDataLoader: NSObject, HTTPDataLoader, URLSessionDelegat
         let progress = HTTPProgress(operation: .upload,
                                     progress: task.progress,
                                     currentLength: totalBytesSent, expectedLength: totalBytesExpectedToSend)
-        handlers[task]?.request.progress = progress
+        dataLoadersMap[task]?.request.progress = progress
     }
     
     // MARK: - Download Progress
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
                     didFinishDownloadingTo location: URL) {
-        guard let handler = handlers[downloadTask],
+        guard let handler = dataLoadersMap[downloadTask],
               let fileURL = location.copyFileToDefaultLocation(task: downloadTask,
                                                                forRequest: handler.request) else {
             // copy file from a temporary location to a valid location
@@ -142,7 +232,7 @@ internal class HTTPLegacyDataLoader: NSObject, HTTPDataLoader, URLSessionDelegat
         let progress = HTTPProgress(operation: .download,
                                     progress: downloadTask.progress,
                                     currentLength: totalBytesWritten, expectedLength: totalBytesExpectedToWrite)
-        handlers[downloadTask]?.request.progress = progress
+        dataLoadersMap[downloadTask]?.request.progress = progress
     }
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
@@ -150,14 +240,14 @@ internal class HTTPLegacyDataLoader: NSObject, HTTPDataLoader, URLSessionDelegat
         
         let progress = HTTPProgress(progress: downloadTask.progress,
                                     currentLength: fileOffset, expectedLength: expectedTotalBytes)
-        handlers[downloadTask]?.request.progress = progress
+        dataLoadersMap[downloadTask]?.request.progress = progress
     }
     
     // MARK: - Stream
     
     public func urlSession(_ session: URLSession, task: URLSessionTask,
                            needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
-        guard let request = handlers[task]?.request else {
+        guard let request = dataLoadersMap[task]?.request else {
             return
         }
 
@@ -170,11 +260,17 @@ internal class HTTPLegacyDataLoader: NSObject, HTTPDataLoader, URLSessionDelegat
     
 }
 
-private extension HTTPLegacyDataLoader {
+// MARK: - HTTPLegacyDataLoader (Helper Functions)
+
+private extension HTTPDataLoader {
     
+    /// This method is called when session is not valid anymore and all requests cannot be
+    /// performed by the system.
+    ///
+    /// - Parameter error: error generated.
     func didCompleteAllHandlersWithSessionError(_ error: Error?) {
-        let allHandlers = handlers.values
-        handlers.removeAll()
+        let allHandlers = dataLoadersMap.values
+        dataLoadersMap.removeAll()
         
         for handler in allHandlers {
             var response = HTTPResponse(errorType: .sessionError, error: error)
@@ -183,18 +279,31 @@ private extension HTTPLegacyDataLoader {
         }
     }
     
+    /// Method called to perform finalization of a request and return of the operation.
+    ///
+    /// - Parameters:
+    ///   - task: target task finished.
+    ///   - error: error received, if any.
     func completeTask(_ task: URLSessionTask, error: Error?) {
-        guard let handler = handlers[task] else {
+        guard let handler = dataLoadersMap[task] else {
             return
         }
         
-        handlers[task] = nil
+        dataLoadersMap[task] = nil
         
         let response = HTTPResponse(response: handler)
         handler.completion(response)
     }
     
-    func evaluateRedirect(task: URLSessionTask, response: HTTPURLResponse, request: URLRequest, completion: @escaping (URLRequest?) -> Void) {
+    /// Evaluate redirect of the requests.
+    ///
+    /// - Parameters:
+    ///   - task: task to execute.
+    ///   - response: response received.
+    ///   - request: original request executed.
+    ///   - completion: completion block.
+    func evaluateRedirect(task: URLSessionTask, response: HTTPURLResponse, request: URLRequest,
+                          completion: @escaping (URLRequest?) -> Void) {
         // missing components, continue to the default behaviour
         guard let client = client else {
             completion(request)
@@ -223,9 +332,15 @@ private extension HTTPLegacyDataLoader {
         }
     }
     
+    /// Evaluate authentication challange with the security option set.
+    ///
+    /// - Parameters:
+    ///   - task: task to execute.
+    ///   - challenge: challange.
+    ///   - completionHandler: completion callback.
     func evaluateAuthChallange(_ task: URLSessionTask, challenge: URLAuthenticationChallenge,
                                       completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        guard let request = handlers[task]?.request,
+        guard let request = dataLoadersMap[task]?.request,
               let security = request.security ?? client?.security else {
             // if not security is settings for both client and request we can use the default handling
             completionHandler(.performDefaultHandling, nil)
@@ -234,6 +349,28 @@ private extension HTTPLegacyDataLoader {
         
         // use request's security or client security
         security.receiveChallenge(challenge, forRequest: request, task: task, completionHandler: completionHandler)
+    }
+    
+}
+
+extension HTTPDataLoader {
+    
+    /// Support class for incapsulation of the task.
+    private final class Box {
+        var task: URLSessionTask?
+    }
+
+}
+
+extension Task where Success == Never, Failure == Never {
+    
+    static func sleep(seconds: Double) async throws {
+        guard seconds > 0 else {
+            return
+        }
+        
+        let duration = UInt64(seconds * 1_000_000_000)
+        try await Task.sleep(nanoseconds: duration)
     }
     
 }

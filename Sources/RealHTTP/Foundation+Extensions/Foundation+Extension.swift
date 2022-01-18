@@ -11,7 +11,6 @@
 
 import Foundation
 
-
 internal extension Bundle {
     
     private static let UnknownIdentifier = "Unknown"
@@ -182,6 +181,62 @@ extension Array where Element == String {
     
     internal func joinedWithAmpersands() -> String {
         joined(separator: "&")
+    }
+    
+}
+
+// MARK: - URL
+
+extension URL {
+            
+    /// Create URL from a valid string.
+    /// It allows to pass `String` instances where `URL` is required.
+    ///
+    /// NOTE:
+    /// The URL string must be valid otherwise a fatal error will be triggered.
+    ///
+    /// - Parameter value: URL string.
+    public init(stringLiteral value: StaticString) {
+        guard let url = URL(string: "\(value)") else {
+            fatalError("Failed to create URL from literal: \(value)")
+        }
+        
+        self = url
+    }
+    
+    // MARK: - Public Functions
+
+    /// Returns the base URL string build with the scheme, host and path.
+    /// For example:
+    /// "https://www.apple.com/v1/test?param=test"
+    /// would be "https://www.apple.com/v1/test"
+    public var baseString: String? {
+        guard let scheme = scheme, let host = host else { return nil }
+        return scheme + "://" + host + path
+    }
+
+    // MARK: - Internal Functions
+    
+    /// Copy the temporary file for location in a non deletable path.
+    ///
+    /// - Parameters:
+    ///   - task: task.
+    ///   - request: request.
+    /// - Returns: URL?
+    internal func copyFileToDefaultLocation(task: URLSessionDownloadTask,
+                                            forRequest request: HTTPRequest) -> URL? {
+        let fManager = FileManager.default
+        
+        let fileName = UUID().uuidString
+        let documentsDir = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true).first! as NSString
+        let destinationURL = URL(fileURLWithPath: documentsDir.appendingPathComponent(fileName))
+        
+        do {
+            try fManager.copyItem(at: self, to: destinationURL)
+            return destinationURL
+        } catch {
+            return nil
+        }
     }
     
 }

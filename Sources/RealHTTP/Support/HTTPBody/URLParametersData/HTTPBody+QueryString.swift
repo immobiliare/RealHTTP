@@ -11,6 +11,8 @@
 
 import Foundation
 
+public typealias HTTPRequestParametersDict = [String: Any]
+
 extension HTTPBody {
     
     /// Create a new body which contains the query string with passed parameters.
