@@ -78,5 +78,41 @@ public struct HTTPResponse {
         self.urlResponse = response.urlResponse
         self.error = HTTPError.fromResponse(response)
     }
+    
+    // MARK: - Decoding
+    
+    /// Decode a raw response using `Decodable` object type.
+    ///
+    /// - Returns: `T` or `nil` if no response has been received.
+    public func decode<T: Decodable>(_ decodable: T.Type, decoder: JSONDecoder = .init()) throws -> T? {
+        guard let data = data else { return nil }
         
+        let decodedObj = try decoder.decode(T.self, from: data)
+        return decodedObj
+    }
+    
+    /// Decode a raw response and transform it to passed `HTTPDecodableResponse` type.
+    ///
+    /// - Returns: T or `nil` if response is empty.
+    public func decode<T: HTTPDecodableResponse>(_ decodable: T.Type) throws -> T? {
+        try decodable.decode(self)
+    }
+        
+}
+
+// MARK: - Automatic Decoding of Objects
+
+// Combination of a decodable response which can be parsed via custom parser or Codable.
+public typealias DecodableResponse = HTTPDecodableResponse & Decodable
+
+// MARK: - HTTPDecodableResponse
+
+/// If you can't implement `Decodable` you can customize your own decoding mechanism.
+public protocol HTTPDecodableResponse {
+    
+    /// A custom decoder function.
+    ///
+    /// - Returns: a valid instance of `Self` or `nil`.
+    static func decode(_ response: HTTPResponse) throws -> Self?
+    
 }

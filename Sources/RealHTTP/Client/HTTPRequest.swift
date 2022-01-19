@@ -52,10 +52,10 @@ public class HTTPRequest {
     ///
     /// NOTE:
     /// When not specified the HTTPClient's value where the request is executed is used.
-    open var timeout: TimeInterval?
+    public var timeout: TimeInterval?
     
     /// HTTP Method for request.
-    open var method: HTTPMethod = .get
+    public var method: HTTPMethod = .get
     
     /// Full URL.
     ///
@@ -65,13 +65,13 @@ public class HTTPRequest {
     public var url: URL? {
         urlComponents.url
     }
-
+    
     /// Headers to send along the request.
     ///
     /// NOTE:
     /// Values here are combined with HTTPClient's values where the request is executed
     /// with precedence for request's keys.
-    open var headers: HTTPHeaders {
+    public var headers: HTTPHeaders {
         get { body.headers }
         set { body.headers = newValue }
     }
@@ -81,50 +81,52 @@ public class HTTPRequest {
     /// `default`. Large data as binary downloads may be handled using `large` options which support
     /// resumable downloads and background downloads sessions.
     /// By default `default` is used.
-    open var transferMode: HTTPTransferMode = .default
+    public var transferMode: HTTPTransferMode = .default
     
     /// Cache policy.
     ///
     /// NOTE:
     /// When not specified the HTTPClient's value where the request is executed is used.
-    open var cachePolicy: URLRequest.CachePolicy?
+    public var cachePolicy: URLRequest.CachePolicy?
     
     /// The HTTP Protocol version to use for request.
-    open var httpVersion: HTTPVersion = .default
+    public var httpVersion: HTTPVersion = .default
     
     /// Number of retries for this request.
     /// By default is set to `0` which means no retries are executed.
-    open var maxRetries: Int = 0
+    public var maxRetries: Int = 0
     
     /// Security settings.
-    open var security: HTTPSecurityProtocol?
+    public var security: HTTPSecurity?
     
     /// Request's body.
-    open var body: HTTPBody = .empty
+    public var body: HTTPBody = .empty
     
     // MARK: - Public Properties [Response]
     
     /// If task is monitorable (`expectedDataType` is `large`) and data is available
     /// here you can found the latest progress stats.
-    #if canImport(Combine)
+#if canImport(Combine)
     @Published
     public internal(set) var progress: HTTPProgress?
-    #else
+#else
     public internal(set) var progress: HTTPProgress?
-    #endif
+#endif
     
     // MARK: - Private Properties
     
-    /// Current network attempt.
+    /// Current network attempt. Use `maxRetries` to set the number of attempts
+    /// per each request.
     internal var currentAttempt = 0
     
     /// Alternate requests cannot support retry strategy,
-    /// this avoid any infinite loop.
+    /// this property is automatically set by the client's loader
+    /// to avoid recursive check.
     internal var isAltRequest = false
     
     /// URLComponents of the network request.
     internal var urlComponents = URLComponents()
-        
+    
     // MARK: - Initialization
     
     /// Initialize a new request.
@@ -150,7 +152,7 @@ public class HTTPRequest {
     ///   - variables: variables to expand.
     ///   - configure: configure callback.
     public convenience init(URI template: String, variables: [String: Any],
-                _ configure: (inout HTTPRequest) throws -> Void) rethrows {
+                            _ configure: (inout HTTPRequest) throws -> Void) rethrows {
         let path = URITemplate(template: template).expand(variables)
         try self.init(url: nil, configure)
         self.path = path
@@ -170,15 +172,36 @@ public class HTTPRequest {
     /// Object must be conform to `HTTPDecodableResponse` if you want to implement custom decode.
     ///
     /// - Returns: T?
-    public func fetch<T: HTTPDecodableResponse>(_ client: HTTPClient = .shared, decode: T.Type) async throws -> T? {
+    public func fetch<T: HTTPDecodableResponse>(_ client: HTTPClient = .shared,
+                                                decode: T.Type) async throws -> T? {
         try await client.fetch(self).decode(decode)
     }
     
     /// Fetch data asynchronously and return the decoded object by using `Decodable` conform type.
     ///
     /// - Returns: T?
-    public func fetch<T: Decodable>(_ client: HTTPClient = .shared, decode: T.Type, decoder: JSONDecoder = .init()) async throws -> T? {
+    public func fetch<T: Decodable>(_ client: HTTPClient = .shared,
+                                    decode: T.Type, decoder: JSONDecoder = .init()) async throws -> T? {
         try await client.fetch(self).decode(decode)
+    }
+    
+    // MARK: - Public Functions
+    
+    /// Set cookies for a given request.
+    ///
+    /// NOTES:
+    /// 1. When you set this cookie values are automatically to a `Cookie` header
+    ///    and attached to the `headers` properties, eventually replacing existing `Cookie` node.
+    ///    If you want to set a shared cookies consider using the `HTTPCookieStorage` attached
+    ///    to each destination `HTTPClient` instance.
+    ///
+    /// 2. Each new get call to cookies produce new instances of `HTTPCookie` even with the same values
+    ///    (this because value is parsed on the fly from `headers` properties).
+    public func setCookies(_ cookies: [HTTPCookie]) {
+        let headerFields = HTTPCookie.requestHeaderFields(with: cookies).map { item in
+            HTTPHeader(name: item.key, value: item.value)
+        }
+        headers.set(headerFields)
     }
     
 }
@@ -240,6 +263,71 @@ extension HTTPRequest {
             query = [item]
         }
     }
+    
+}
+
+// MARK: - URLRequest and URLSessionTask Builders
+
+extension HTTPRequest {
+    
+    // MARK: - Internal Functions
+    
+    /// Create the task to execute in an `URLSession` instance.
+    ///
+    /// - Parameter client: client where the query should be executed.
+    /// - Returns: `URLSessionTask`
+    internal func urlSessionTask(inClient client: HTTPClient) throws -> URLSessionTask {
+        // Generate the `URLRequest` instance.
+        let urlRequest = try urlRequest(inClient: client)
+        
+        // Create the `URLSessionTask` instance.
+        var task: URLSessionTask!
+        if urlRequest.hasStream {
+            // If specified a stream mode we want to create the appropriate task
+            task = client.session.uploadTask(withStreamedRequest: urlRequest)
+        } else {
+            switch transferMode {
+            case .default:
+                task = client.session.dataTask(with: urlRequest)
+            case .largeData:
+                //if let resumeData = resumeData {
+                //  task = client.session.downloadTask(withResumeData: resumeData)
+                //} else {
+                task = client.session.downloadTask(with: urlRequest)
+                //}
+            }
+        }
+        
+        /// Keep in mind it's just a suggestion for HTTP/2 based services.
+        task.priority = httpPriority.urlTaskPriority
+        return task
+    }
+    
+    // MARK: - Private Functions
+    
+    /// Create the `URLRequest` instance for a client instance.
+    ///
+    /// - Parameter client: client instance.
+    /// - Returns: `URLRequest`
+    private func urlRequest(inClient client: HTTPClient) throws -> URLRequest {
+        guard let fullURL = urlComponents.fullURLInClient(client) else {
+            throw HTTPError(.invalidURL)
+        }
+        
+        let requestCachePolicy = cachePolicy ?? client.cachePolicy
+        let requestTimeout = timeout ?? client.timeout
+        let requestHeaders = (client.headers + headers)
+        
+        // Prepare the request
+        var urlRequest = try URLRequest(url: fullURL,
+                                        method: method,
+                                        cachePolicy: requestCachePolicy,
+                                        timeout: requestTimeout,
+                                        headers: requestHeaders)
+        try urlRequest.setHTTPBody(body) // setup the body
+        return urlRequest
+    }
+    
     
 }
 

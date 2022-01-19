@@ -22,7 +22,7 @@ public class HTTPClient {
     // MARK: - Public Properties
     
     /// Shared HTTPClient instance.
-    public static let shared = HTTPClient()
+    public static let shared = HTTPClient(baseURL: nil)
     
     /// Base URL used to compose each request.
     ///
@@ -51,7 +51,12 @@ public class HTTPClient {
     public var timeout: TimeInterval = HTTPRequest.DefaultTimeout
     
     /// Security settings.
-    public var security: HTTPSecurityProtocol?
+    public var security: HTTPSecurity?
+    
+    /// Cookies storage.
+    public var cookies: HTTPCookieStorage? {
+        loader.session.configuration.httpCookieStorage
+    }
     
     /// Follow or not redirects. By default the value is `follow` which uses
     /// the new proposed redirection by copying the original HTTPMethod, Body and Headers.
@@ -96,7 +101,7 @@ public class HTTPClient {
     ///                     which handles the transfers in a separate process.
     ///                     In iOS, this configuration makes it possible for transfers to continue even when
     ///                     the app itself is suspended or terminated.
-    public init(baseURL: URL? = nil,
+    public init(baseURL: URL?,
                 maxConcurrentOperations: Int? = nil,
                 configuration: URLSessionConfiguration = .default) {
         

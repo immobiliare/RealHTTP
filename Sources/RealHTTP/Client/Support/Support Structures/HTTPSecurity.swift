@@ -15,7 +15,7 @@
 
 import Foundation
 
-public protocol HTTPSecurityProtocol {
+public protocol HTTPSecurity {
         
     /// Receive challange for authentication.
     ///
