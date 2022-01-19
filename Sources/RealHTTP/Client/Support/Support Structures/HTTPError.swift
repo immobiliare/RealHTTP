@@ -15,6 +15,8 @@
 
 import Foundation
 
+/// `HTTPError` represent an object which wrap all the infos related to an
+/// error occurred inside the library itself.
 public struct HTTPError: LocalizedError {
     
     /// HTTP Status Code if available.

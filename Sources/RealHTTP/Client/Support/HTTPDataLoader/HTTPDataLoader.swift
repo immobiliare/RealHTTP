@@ -138,13 +138,13 @@ internal class HTTPDataLoader: NSObject,
             var lastResponse: HTTPResponse!
             
             // If we can make a further attempt...
-            while request.currentAttempt <= request.maxRetries {
+            while request.currentRetry <= request.maxRetries {
                 // wait a certain amount of time depending by the strategy set...
                 try await Task.sleep(seconds: strategy.retryInterval(forRequest: request))
                 // try again the same request...
                 lastResponse = try await self.fetch(request)
                 // ...and increment the attempts counter
-                request.currentAttempt += 1
+                request.currentRetry += 1
             }
             
             return lastResponse

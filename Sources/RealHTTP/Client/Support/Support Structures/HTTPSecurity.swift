@@ -15,6 +15,7 @@
 
 import Foundation
 
+/// This protocol allows you to customize the logic to handle custon authentication styles.
 public protocol HTTPSecurity {
         
     /// Receive challange for authentication.
@@ -28,5 +29,4 @@ public protocol HTTPSecurity {
                           forRequest request: HTTPRequest, task: URLSessionTask,
                           completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void)
 
-    
 }

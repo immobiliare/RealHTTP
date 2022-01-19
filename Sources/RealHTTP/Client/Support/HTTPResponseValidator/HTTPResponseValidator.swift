@@ -69,7 +69,7 @@ public enum HTTPRetryStrategy {
     /// - Parameter request: request to execute.
     /// - Returns: `TimeInterval`
     internal func retryInterval(forRequest request: HTTPRequest) -> TimeInterval {
-        let numberOfPreviousAttempts = request.currentAttempt
+        let numberOfPreviousAttempts = request.currentRetry
         let maximumNumberOfAttempts = request.maxRetries
         
         switch self {

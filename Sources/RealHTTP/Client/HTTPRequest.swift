@@ -33,14 +33,9 @@ public class HTTPRequest {
     // MARK: - Public Properties
     
     /// Priority level in which the task is executed.
+    /// 
     /// By default is set to `background`.
     public var priority: TaskPriority = .background
-    
-    /// Describe the priority of the operation.
-    /// It may acts as a suggestion for HTTP/2 based services (priority frames / dependency weighting)
-    /// for simple `HTTPClient` instances.
-    /// In case of `HTTPQueueClient` it also act as priority level for queue concurrency.
-    public var httpPriority: HTTPRequestPriority = .normal
     
     /// An user info dictionary where you can add your own data.
     /// Initially only the `fingerprint` key is set with an unique id of the request.
@@ -54,7 +49,7 @@ public class HTTPRequest {
     /// When not specified the HTTPClient's value where the request is executed is used.
     public var timeout: TimeInterval?
     
-    /// HTTP Method for request.
+    /// HTTP Method for request, by default `get`.
     public var method: HTTPMethod = .get
     
     /// Full URL.
@@ -77,9 +72,10 @@ public class HTTPRequest {
     }
     
     /// What kind of data we should expect.
-    /// If you are creating a request for a small amount of data (ie RESTful calls) you can use
-    /// `default`. Large data as binary downloads may be handled using `large` options which support
+    /// If you are creating a request for a small amount of data (ie RESTful calls) you can use `default`.
+    /// Large data as binary downloads may be handled using `large` options which support
     /// resumable downloads and background downloads sessions.
+    ///
     /// By default `default` is used.
     public var transferMode: HTTPTransferMode = .default
     
@@ -91,6 +87,11 @@ public class HTTPRequest {
     
     /// The HTTP Protocol version to use for request.
     public var httpVersion: HTTPVersion = .default
+    
+    /// Describe the priority of the operation.
+    /// It may acts as a suggestion for HTTP/2 based services (priority frames / dependency weighting)
+    /// for simple `HTTPClient` instances.
+    public var httpPriority: HTTPRequestPriority = .normal
     
     /// Number of retries for this request.
     /// By default is set to `0` which means no retries are executed.
@@ -117,7 +118,7 @@ public class HTTPRequest {
     
     /// Current network attempt. Use `maxRetries` to set the number of attempts
     /// per each request.
-    internal var currentAttempt = 0
+    internal var currentRetry = 0
     
     /// Alternate requests cannot support retry strategy,
     /// this property is automatically set by the client's loader
@@ -208,37 +209,37 @@ public class HTTPRequest {
 
 // MARK: - HTTPRequest + URL Builder Extension
 
-extension HTTPRequest {
+public extension HTTPRequest {
     
     /// Set the URI Schema of the url.
     /// Use it if you need to set an absolute URL and you don't need to inerith this value from
     /// destination `HTTPClient` instance.
-    public var scheme: URIScheme {
-        get { urlComponents.scheme.map(URIScheme.init(rawValue:)) ?? .https }
+    var scheme: HTTPScheme {
+        get { urlComponents.scheme.map(HTTPScheme.init(rawValue:)) ?? .https }
         set { urlComponents.scheme = newValue.rawValue }
     }
     
     /// Set an absolute host of the url.
     /// When not nil it will override the destination `HTTPClient`'s `host` parameter.
-    public var host: String? {
+    var host: String? {
         get { urlComponents.host }
         set { urlComponents.host = newValue }
     }
     
     /// Set the path component of the URL.
-    public var path: String {
+    var path: String {
         get { urlComponents.path }
         set { urlComponents.path = newValue }
     }
     
     /// Setup a list of query string parameters.
-    public var query: [URLQueryItem]? {
+    var query: [URLQueryItem]? {
         get { urlComponents.queryItems }
         set { urlComponents.queryItems = newValue }
     }
     
     /// Set the port of the request. If not set the default HTTP port is used.
-    public var port: Int? {
+    var port: Int? {
         get { urlComponents.port }
         set { urlComponents.port = newValue }
     }
@@ -248,7 +249,7 @@ extension HTTPRequest {
     /// - Parameters:
     ///   - name: name of the parameter to add.
     ///   - value: value of the parameter to add.
-    public func addQueryParameter(name: String, value: String) {
+    func addQueryParameter(name: String, value: String) {
         let item = URLQueryItem(name: name, value: value)
         add(queryItem: item)
     }
@@ -256,7 +257,7 @@ extension HTTPRequest {
     /// Add a new query parameter via `URLQueryItem` instance.
     ///
     /// - Parameter item: instance of the query item to add.
-    public func add(queryItem item: URLQueryItem) {
+    func add(queryItem item: URLQueryItem) {
         if query != nil {
             query?.append(item)
         } else {

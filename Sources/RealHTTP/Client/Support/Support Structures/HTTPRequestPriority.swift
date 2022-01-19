@@ -25,9 +25,7 @@ import Foundation
 /// See:
 /// <https://developer.apple.com/forums/thread/48371>
 /// <http://www.ietf.org/rfc/rfc7540.txt>)
-///
-/// For `HTTPQueueClient` it also set the priority of the underlying queue and
-/// works as priority level for both client and server side.
+/// 
 public enum HTTPRequestPriority {
     case veryLow
     case low
@@ -36,16 +34,6 @@ public enum HTTPRequestPriority {
     case veryHigh
     
     // MARK: - Internal Properties
-    
-    internal var queuePriority: Operation.QueuePriority {
-        switch self {
-        case .veryLow:  return .veryLow
-        case .low:      return .low
-        case .normal:   return .normal
-        case .high:     return .high
-        case .veryHigh: return .veryHigh
-        }
-    }
     
     internal var urlTaskPriority: Float {
         switch self {

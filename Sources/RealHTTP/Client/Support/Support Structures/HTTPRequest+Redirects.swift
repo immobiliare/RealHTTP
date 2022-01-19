@@ -26,12 +26,14 @@ public enum HTTPRedirectAction {
     case follow(URLRequest)
 }
 
+// MARK: - HTTPRedirectFollow
+
 /// Follow redirects mechanism mode.
 /// - `follow`: follow the redirect with the default new urlrequest.
 ///             new request has a different url but not maintain the original method/body/headers.
 /// - `followCopy`: follow the redirect with the new urlrequest proposed
 ///                 which has the same method/body/headers of the original one.
-public enum HTTPRedirectMode {
+public enum HTTPRedirectFollow {
     case follow
     case followCopy
 }

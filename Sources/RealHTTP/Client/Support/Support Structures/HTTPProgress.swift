@@ -15,6 +15,8 @@
 
 import Foundation
 
+/// `HTTPProgress` is used to send periodic updates about an upload or a download
+/// session. It contains all the relevant information about the current state of the operation.
 public struct HTTPProgress {
     
     // MARK: - Support Structures

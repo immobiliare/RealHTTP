@@ -15,7 +15,16 @@
 
 import Foundation
 
-public struct URIScheme: Equatable, Hashable, Codable, RawRepresentable {
+/// Defines the protocol scheme for an URL.
+public struct HTTPScheme: Equatable, Hashable, Codable, RawRepresentable {
+    static let http: Self = "http"
+    static let https: Self = "https"
+    static let ftp: Self = "ftp"
+    static let sftp: Self = "sftp"
+    static let tel: Self = "tel"
+    static let mailto: Self = "mailto"
+    static let file: Self = "file"
+    static let data: Self = "data"
     
     public let rawValue: String
 
@@ -25,19 +34,10 @@ public struct URIScheme: Equatable, Hashable, Codable, RawRepresentable {
     
 }
 
-extension URIScheme: ExpressibleByStringLiteral {
+extension HTTPScheme: ExpressibleByStringLiteral {
+    
     public init(stringLiteral value: String) {
         self.init(rawValue: value)
     }
-}
-
-public extension URIScheme {
-    static let http: Self = "http"
-    static let https: Self = "https"
-    static let ftp: Self = "ftp"
-    static let sftp: Self = "sftp"
-    static let tel: Self = "tel"
-    static let mailto: Self = "mailto"
-    static let file: Self = "file"
-    static let data: Self = "data"
+    
 }
