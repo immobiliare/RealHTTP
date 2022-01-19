@@ -19,10 +19,9 @@ public struct HTTPResponse {
 
     // MARK: - Public Properties
     
-    /// Gathered metrics collected for each request made (a single
-    ///` HTTPRequestMetrics` represent the data collected for a request
-    /// executed (redirect, direct call...)
-    public let metrics: [HTTPRequestMetrics]?
+    /// Each metrics  contains the taskInterval and redirectCount, as well as metrics for each
+    /// request-and-response transaction made during the execution of the task.
+    public let metrics: HTTPMetrics?
     
     /// `URLResponse` object received from server.
     public let urlResponse: URLResponse?
@@ -70,9 +69,7 @@ public struct HTTPResponse {
     /// - Parameter response: response received.
     internal init(response: HTTPDataLoaderResponse) {
         self.data = response.data
-        self.metrics = response.metrics?.transactionMetrics.compactMap({
-            HTTPRequestMetrics(metrics: $0)
-        })
+        self.metrics = HTTPMetrics(metrics: response.metrics)
         self.request = response.request
         self.urlResponse = response.urlResponse
         self.error = HTTPError.fromResponse(response)

@@ -11,56 +11,108 @@
 
 import Foundation
 
+// MARK: - HTTPMetrics
 
-/// `HTTPMetrics` is a wrapper class under `URLSessionTaskMetrics`. It just allow
-/// to easily read the connection metrics.
-public struct HTTPRequestMetrics {
+public struct HTTPMetrics {
     
-    // MARK: - Public Properties
+    /// Each metrics  contains the taskInterval and redirectCount, as well as metrics for each
+    /// request-and-response transaction made during the execution of the task.
+    public let requests: [RequestMetrics]
     
-    /// Stages of a connection.
-    public let stages: [Stage]
+    /// Elapsed time interval since the start of the first request down the last response.
+    public var elapsedInterval: TimeInterval? {
+        guard let start = requests.first?[.request]?.interval.start,
+              let end = requests.first?[.response]?.interval.end else {
+                  return nil
+              }
+
+        return end.timeIntervalSince(start)
+    }
     
-    /// Underlying transaction metrics.
-    public let metrics: URLSessionTaskTransactionMetrics
+    /// Task metrics.
+    public let taskMetrics: URLSessionTaskMetrics?
     
-    /// The transaction request.
-    public var request: URLRequest {
-        metrics.request
+    /// Number of redirects made.
+    public var countRedirects: Int {
+        return taskMetrics?.redirectCount ?? 0
     }
     
     // MARK: - Initialization
     
-    /// Initialize a new instance of metrics from the collected metrics of `URLSession`
-    ///
-    /// - Parameter metrics: metrics instance
-    internal init?(metrics: URLSessionTaskTransactionMetrics?) {
-        guard let metrics = metrics else {
+    /// Initialize the object with the metrics gathered for a task.
+    internal init?(metrics: URLSessionTaskMetrics?) {
+        self.taskMetrics = metrics
+        
+        let list = metrics?.transactionMetrics.compactMap({
+            RequestMetrics(metrics: $0)
+        }) ?? []
+        
+        guard !list.isEmpty else {
             return nil
         }
         
-        self.metrics = metrics
-        self.stages = [
-            Stage.stage(.domainLookup, metrics.domainLookupStartDate, metrics.domainLookupEndDate),
-            Stage.stage(.connect, metrics.connectStartDate, metrics.connectEndDate),
-            Stage.stage(.secureConnect, metrics.secureConnectionStartDate, metrics.secureConnectionEndDate),
-            Stage.stage(.request, metrics.requestStartDate, metrics.requestEndDate),
-            Stage.stage(.response, metrics.responseStartDate, metrics.responseEndDate),
-            Stage.stage(.total, metrics.domainLookupStartDate, metrics.responseEndDate)
-        ].compactMap { $0 }
-        
-    }
-    
-    /// Get specific stage from metrics.
-    public subscript(stage: Stage.Kind) -> Stage? {
-        stages.first(where: {
-            $0.kind == stage
-        })
+        self.requests = list
     }
     
 }
 
-public extension HTTPRequestMetrics {
+// MARK: - RequestMetrics
+
+public extension HTTPMetrics {
+    
+    /// `RequestMetrics` represent a single request/response for an executed
+    /// task and contains all gathered stats about it.
+    struct RequestMetrics {
+        
+        // MARK: - Public Properties
+        
+        /// Stages of a connection.
+        public let stages: [Stage]
+        
+        /// Underlying transaction metrics.
+        public let metrics: URLSessionTaskTransactionMetrics
+        
+        /// The transaction request.
+        public var request: URLRequest {
+            metrics.request
+        }
+        
+        // MARK: - Initialization
+        
+        /// Initialize a new instance of metrics from the collected metrics of `URLSession`
+        ///
+        /// - Parameter metrics: metrics instance
+        internal init?(metrics: URLSessionTaskTransactionMetrics?) {
+            guard let metrics = metrics else {
+                return nil
+            }
+            
+            self.metrics = metrics
+            self.stages = [
+                Stage.stage(.domainLookup, metrics.domainLookupStartDate, metrics.domainLookupEndDate),
+                Stage.stage(.connect, metrics.connectStartDate, metrics.connectEndDate),
+                Stage.stage(.secureConnect, metrics.secureConnectionStartDate, metrics.secureConnectionEndDate),
+                Stage.stage(.request, metrics.requestStartDate, metrics.requestEndDate),
+                Stage.stage(.response, metrics.responseStartDate, metrics.responseEndDate),
+                Stage.stage(.fetchStart, metrics.domainLookupStartDate, metrics.responseEndDate)
+            ].compactMap { $0 }
+            
+        }
+        
+        // MARK: - Public Functions
+        
+        /// Get specific stage from metrics.
+        public subscript(stage: Stage.Kind) -> Stage? {
+            stages.first(where: {
+                $0.kind == stage
+            })
+        }
+        
+    }
+    
+}
+
+public extension HTTPMetrics.RequestMetrics {
     
     /// Each request is composed by a list of individual operations.
     /// This object represent a single operation gathered
@@ -89,8 +141,8 @@ public extension HTTPRequestMetrics {
         public var totalInterval: TimeInterval? {
             guard let start = interval.start,
                   let end = interval.end else {
-                return nil
-            }
+                      return nil
+                  }
             
             return end.timeIntervalSince(start)
         }
@@ -105,11 +157,13 @@ public extension HTTPRequestMetrics {
             return Stage(kind: kind, interval: (start, end))
         }
         
-        public static func < (lhs: HTTPRequestMetrics.Stage, rhs: HTTPRequestMetrics.Stage) -> Bool {
+        public static func < (lhs: HTTPMetrics.RequestMetrics.Stage,
+                              rhs: HTTPMetrics.RequestMetrics.Stage) -> Bool {
             lhs.kind < rhs.kind
         }
         
-        public static func == (lhs: HTTPRequestMetrics.Stage, rhs: HTTPRequestMetrics.Stage) -> Bool {
+        public static func == (lhs: HTTPMetrics.RequestMetrics.Stage,
+                               rhs: HTTPMetrics.RequestMetrics.Stage) -> Bool {
             lhs.kind == rhs.kind
         }
         
@@ -117,19 +171,25 @@ public extension HTTPRequestMetrics {
     
 }
 
-public extension HTTPRequestMetrics.Stage {
+public extension HTTPMetrics.RequestMetrics.Stage {
     
     /// Identify the stage of a request.
-    /// -
+    /// - `fetchStart`: connection to the network is about to be opened.
+    /// - `domainLookup`: domain lookup stage.
+    /// - `connect`: fetch the document using an HTTP request.
+    /// - `secureConnect`: secure connection handshake starts.
+    /// - `request`: request start.
+    /// - `response`: response received.
     enum Kind: Int, Comparable {
-        case total
+        case fetchStart
         case domainLookup
         case connect
         case secureConnect
         case request
         case response
         
-        public static func < (lhs: HTTPRequestMetrics.Stage.Kind, rhs: HTTPRequestMetrics.Stage.Kind) -> Bool {
+        public static func < (lhs: HTTPMetrics.RequestMetrics.Stage.Kind,
+                              rhs: HTTPMetrics.RequestMetrics.Stage.Kind) -> Bool {
             lhs.rawValue < rhs.rawValue
         }
     }
