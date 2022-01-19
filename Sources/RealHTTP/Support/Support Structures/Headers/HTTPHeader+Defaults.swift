@@ -1,11 +1,15 @@
 //
 //  RealHTTP
+//  Lightweight Async/Await Network Layer/Stubber for Swift
 //
-//  Created by the Mobile Team @ ImmobiliareLabs
+//  Created & Maintained by Mobile Platforms Team @ ImmobiliareLabs.it
 //  Email: mobile@immobiliare.it
 //  Web: http://labs.immobiliare.it
 //
-//  Copyright ©2021 Immobiliare.it SpA. All rights reserved.
+//  Authors:
+//   - Daniele Margutti <hello@danielemargutti.com>
+//
+//  Copyright ©2021 Immobiliare.it SpA.
 //  Licensed under MIT License.
 //
 
