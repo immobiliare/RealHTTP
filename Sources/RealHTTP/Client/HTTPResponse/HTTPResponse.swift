@@ -19,10 +19,13 @@ public struct HTTPResponse {
 
     // MARK: - Public Properties
     
-    public internal(set) var metrics: URLSessionTaskMetrics?
+    /// Gathered metrics collected for each request made (a single
+    ///` HTTPRequestMetrics` represent the data collected for a request
+    /// executed (redirect, direct call...)
+    public let metrics: [HTTPRequestMetrics]?
     
     /// `URLResponse` object received from server.
-    public var urlResponse: URLResponse?
+    public let urlResponse: URLResponse?
     
     /// Casted `HTTPURLResponse` object received from server.
     public var httpResponse: HTTPURLResponse? {
@@ -58,6 +61,8 @@ public struct HTTPResponse {
     internal init(errorType: HTTPError.ErrorType = .internal, error: Error?) {
         self.error = HTTPError(errorType, error: error)
         self.data = nil
+        self.metrics = nil
+        self.urlResponse = nil
     }
     
     /// Initialize with response from data loader.
@@ -65,7 +70,9 @@ public struct HTTPResponse {
     /// - Parameter response: response received.
     internal init(response: HTTPDataLoaderResponse) {
         self.data = response.data
-        self.metrics = response.metrics
+        self.metrics = response.metrics?.transactionMetrics.compactMap({
+            HTTPRequestMetrics(metrics: $0)
+        })
         self.request = response.request
         self.urlResponse = response.urlResponse
         self.error = HTTPError.fromResponse(response)
