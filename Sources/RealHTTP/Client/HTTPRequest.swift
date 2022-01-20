@@ -200,7 +200,7 @@ public class HTTPRequest {
     ///    (this because value is parsed on the fly from `headers` properties).
     public func setCookies(_ cookies: [HTTPCookie]) {
         let headerFields = HTTPCookie.requestHeaderFields(with: cookies).map { item in
-            HTTPHeader(name: item.key, value: item.value)
+            HTTPHeaders.Element(name: item.key, value: item.value)
         }
         headers.set(headerFields)
     }

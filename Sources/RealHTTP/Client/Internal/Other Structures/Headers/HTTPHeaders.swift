@@ -19,12 +19,11 @@ import Foundation
 public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral,
                             Sequence, Collection,
                             CustomStringConvertible,
-                            Equatable, Hashable,
-                            Sendable {
+                            Equatable, Hashable {
     // MARK: - Private Properties
     
     /// Storage for headers.
-    private var headers = [HTTPHeader]()
+    private var headers = [HTTPHeaders.Element]()
     
     // MARK: - Initialization
     
@@ -43,7 +42,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// NOTE: It's case insentive so duplicate names are collapsed into the last name
     /// and value encountered.
     /// - Parameter headers: headers.
-    public init(headers: [HTTPHeader] = []) {
+    public init(headers: [HTTPHeaders.Element] = []) {
         headers.forEach {
             set($0)
         }
@@ -56,7 +55,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// - Parameter headersDictionary: headers dictionary.
     public init(rawDictionary: [String: String]?) {
         rawDictionary?.forEach {
-            set(HTTPHeader(name: $0.key, value: $0.value))
+            set(HTTPHeaders.Element(name: $0.key, value: $0.value))
         }
     }
     
@@ -64,16 +63,16 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// key is the `HTTPHeaderField` and not a raw string.
     ///
     /// - Parameter headersDictionary: headers dictionary.
-    public init(_ headersDictionary: [HTTPHeaderField: String]?) {
+    public init(_ headersDictionary: [HTTPHeaders.Element.Name: String]?) {
         headersDictionary?.forEach {
-            set(HTTPHeader(name: $0.key, value: $0.value))
+            set(HTTPHeaders.Element(name: $0.key, value: $0.value))
         }
     }
     
     /// Initialize by passing a `ExpressibleByArrayLiteral` array.
     ///
     /// - Parameter elements: elements.
-    public init(arrayLiteral elements: HTTPHeader...) {
+    public init(arrayLiteral elements: HTTPHeaders.Element...) {
         self.init(headers: elements)
     }
     
@@ -88,7 +87,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     
     // MARK: - Sequence, Collection Conformance
     
-    public func makeIterator() -> IndexingIterator<[HTTPHeader]> {
+    public func makeIterator() -> IndexingIterator<[HTTPHeaders.Element]> {
         headers.makeIterator()
     }
     
@@ -100,7 +99,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
         headers.endIndex
     }
 
-    public subscript(position: Int) -> HTTPHeader {
+    public subscript(position: Int) -> HTTPHeaders.Element {
         headers[position]
     }
 
@@ -117,7 +116,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     ///   - name: name of the header.
     ///   - value: value of the header.
     public mutating func set(_ name: String, _ value: String) {
-        set(HTTPHeader(name: name, value: value))
+        set(HTTPHeaders.Element(name: name, value: value))
     }
     
     /// Add of a new header to the list.
@@ -125,16 +124,16 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// - Parameters:
     ///   - field: field.
     ///   - value: value.
-    public mutating func set(_ field: HTTPHeaderField, _ value: String) {
-        set(HTTPHeader(name: field.rawValue, value: value))
+    public mutating func set(_ field: HTTPHeaders.Element.Name, _ value: String) {
+        set(HTTPHeaders.Element(name: field.rawValue, value: value))
     }
     
     /// Update the headers value by adding a new header.
     /// NOTE: It's case insensitive.
     ///
     /// - Parameter header: header to add.
-    public mutating func set(_ header: HTTPHeader) {
-        guard let index = headers.index(of: header.name) else {
+    public mutating func set(_ header: HTTPHeaders.Element) {
+        guard let index = headers.index(of: header.name.rawValue) else {
             headers.append(header)
             return
         }
@@ -146,7 +145,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// NOTE: It's case insentive.
     ///
     /// - Parameter headers: headers to add.
-    public mutating func set(_ headers: [HTTPHeader]) {
+    public mutating func set(_ headers: [HTTPHeaders.Element]) {
         headers.forEach {
             set($0)
         }
@@ -155,9 +154,9 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// Add headers from a dictionary.
     ///
     /// - Parameter headers: headers
-    public mutating func set(_ headers: [HTTPHeaderField: String]) {
+    public mutating func set(_ headers: [HTTPHeaders.Element.Name: String]) {
         headers.enumerated().forEach {
-            set(HTTPHeader(name: $0.element.key.rawValue, value: $0.element.value))
+            set(HTTPHeaders.Element(name: $0.element.key.rawValue, value: $0.element.value))
         }
     }
     
@@ -192,7 +191,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// NOTE: It's case insentive.
     public mutating func sort() {
         headers.sort {
-            $0.name.lowercased() < $1.name.lowercased()
+            $0.name.rawValue.lowercased() < $1.name.rawValue.lowercased()
         }
     }
 
@@ -200,7 +199,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     /// Note: duplicate values may be overriden and the order is not preserved.
     public var asDictionary: [String: String] {
         let namesAndValues = headers.map {
-            ($0.name, $0.value)
+            ($0.name.rawValue, $0.value)
         }
 
         return Dictionary(namesAndValues, uniquingKeysWith: { _, last in last })
@@ -223,7 +222,7 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
         }
     }
     
-    public subscript(_ key: HTTPHeaderField) -> String? {
+    public subscript(_ key: HTTPHeaders.Element.Name) -> String? {
         get {
             self[key.rawValue]
         }
@@ -275,7 +274,7 @@ extension URLSessionConfiguration {
 
 // MARK: - Array Extensions
 
-extension Array where Element == HTTPHeader {
+extension Array where Element == HTTPHeaders.Element {
         
     /// Search for index of an HTTPHeader's field inside the list.
     /// Search is made as case insensitive.
@@ -284,7 +283,7 @@ extension Array where Element == HTTPHeader {
     /// - Returns: Int?
     internal func index(of name: String) -> Int? {
         let lowercasedName = name.lowercased()
-        return firstIndex { $0.name.lowercased() == lowercasedName }
+        return firstIndex { $0.name.rawValue.lowercased() == lowercasedName }
     }
     
 }
