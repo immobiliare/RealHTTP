@@ -15,7 +15,9 @@
 
 import Foundation
 
-/// Defines the body of a request, including the content's body and headers.
+// MARK: - HTTPBody
+
+/// Defines the body of a request, including the content's body and additional headers.
 public struct HTTPBody {
     
     // MARK: - Public Static Properties
@@ -58,8 +60,39 @@ public struct HTTPBody {
     ///   - content: content string.
     ///   - contentType: content type to assign, by default is set to `.text.plain`
     /// - Returns: HTTPBody
-    public static func string(_ content: String, contentType: MIMEType = .text.plain) -> HTTPBody {
+    public static func string(_ content: String, contentType: MIMEType = .textPlain) -> HTTPBody {
         .data(content.data(using: .utf8) ?? Data(), contentType: contentType)
+    }
+    
+}
+
+// MARK: - HTTPBody for JSON
+
+extension HTTPBody {
+    
+    /// Initialize a new body with an `Encodable` conform object which can be encoded using
+    /// the system's `JSONEncoder` instance passed.
+    ///
+    /// - Returns: HTTPBody
+    public static func json<T: Encodable>(_ object: T, encoder: JSONEncoder = JSONEncoder()) throws -> HTTPBody {
+        let content = try encoder.encode(object)
+        var body = HTTPBody.data(content, contentType: MIMEType.jsonUtf8)
+        body.headers[.contentType] = MIMEType.jsonUtf8.rawValue
+        return body
+    }
+    
+    /// Initialize a new body with an object which can be converted to JSON by using
+    /// the system's `JSONSerialization`'s class.
+    ///
+    /// - Parameters:
+    ///   - object: object to serialize.
+    ///   - options: options for serialization.
+    /// - Returns: HTTPBody
+    public static func json(_ object: Any, options: JSONSerialization.WritingOptions = []) throws -> HTTPBody {
+        let content = try JSONSerialization.data(withJSONObject: object, options: options)
+        var body = HTTPBody.data(content, contentType: MIMEType.jsonUtf8)
+        body.headers[.contentType] = MIMEType.jsonUtf8.rawValue
+        return body
     }
     
 }

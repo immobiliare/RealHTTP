@@ -589,9 +589,11 @@ class FormStyleQueryContinuation : BaseOperator, Operator {
         
         return expandedValue
     }
+    
 }
 
 private extension CharacterSet {
+    
     struct URITemplate {
         static let digits = CharacterSet(charactersIn: "0"..."9")
         static let genDelims = CharacterSet(charactersIn: ":/?#[]@")
@@ -616,4 +618,5 @@ private extension CharacterSet {
     static let uriTemplateReservedAllowed = {
         return URITemplate.unreserved.union(URITemplate.reserved)
     }()
+    
 }

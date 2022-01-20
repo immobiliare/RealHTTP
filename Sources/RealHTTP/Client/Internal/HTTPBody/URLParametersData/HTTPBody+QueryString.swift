@@ -28,7 +28,7 @@ extension HTTPBody {
         var body = HTTPBody(content: content, headers: .init())
         
         if let data = try? content.encodedData() {
-            body.headers[.contentType] = "\(MIMEType.application.wwwForm.rawValue); charset=utf-8"
+            body.headers[.contentType] = MIMEType.wwwFormUtf8.rawValue
             body.headers[.contentLength] = String(data.count)
         }
         

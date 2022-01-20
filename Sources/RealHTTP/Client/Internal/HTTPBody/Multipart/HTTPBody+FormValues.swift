@@ -37,7 +37,7 @@ extension HTTPBody {
                   }
             return "\(name)=\(value)"
         }.joined(separator: "&")
-        return .string(content, contentType: .application.wwwForm.appending(.characterSet, value: .utf8))
+        return .string(content, contentType: .wwwFormUtf8)
     }
     
 }

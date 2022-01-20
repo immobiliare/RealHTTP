@@ -14,6 +14,7 @@
 //
 
 import Foundation
+import MobileCoreServices
 
 internal extension Bundle {
     
@@ -92,13 +93,12 @@ extension String {
     ///
     /// - Returns: String
     internal func suggestedMimeType() -> String {
-        /*if let id = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, self as CFString, nil)?.takeRetainedValue(),
+        if let id = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, self as CFString, nil)?.takeRetainedValue(),
             let contentType = UTTypeCopyPreferredTagWithClass(id, kUTTagClassMIMEType)?.takeRetainedValue() {
             return contentType as String
         }
 
-        return HTTPContentType.octetStream.rawValue*/
-        fatalError()
+        return HTTPContentType.octetStream.rawValue
     }
     
 }
@@ -192,6 +192,13 @@ extension Array where Element == String {
 // MARK: - URL
 
 extension URL {
+    
+    /// Return suggested mime type for file at given URL.
+    ///
+    /// - Returns: String
+    public func mimeType() -> String {
+        self.pathExtension.suggestedMimeType()
+    }
             
     /// Create URL from a valid string.
     /// It allows to pass `String` instances where `URL` is required.
