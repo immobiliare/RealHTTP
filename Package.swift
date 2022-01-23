@@ -26,6 +26,9 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "RealHTTPTests",
-            dependencies: ["RealHTTP"]),
+            dependencies: ["RealHTTP"],
+            resources: [
+                .copy("Resources/test_rawdata.png"),
+            ]),
     ]
 )

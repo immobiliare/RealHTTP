@@ -48,6 +48,15 @@ extension URLRequest {
         httpBodyStream != nil
     }
     
+    /// Get the `URLComponents` of the url to execute.
+    public var urlComponents: URLComponents? {
+        guard let urlString = self.url?.absoluteString else {
+            return nil
+        }
+        
+        return URLComponents(string: urlString)
+    }
+    
     /// Returns the `httpMethod` as `HTTPMethod`
     public var method: HTTPMethod? {
         get { httpMethod.flatMap(HTTPMethod.init) }

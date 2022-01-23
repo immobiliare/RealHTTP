@@ -43,6 +43,8 @@ class HTTPHeaders_Tests: XCTestCase {
     }
     
     override class func tearDown() {
+        HTTPStubber.shared.removeAllStubs()
+        HTTPStubber.shared.disable()
         super.tearDown()
     }
     

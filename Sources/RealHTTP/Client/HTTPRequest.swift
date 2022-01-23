@@ -52,11 +52,12 @@ public class HTTPRequest {
     /// HTTP Method for request, by default `get`.
     public var method: HTTPMethod = .get
     
-    /// Full URL.
+    /// Set the full absolute URL for the request by ignoring the the url components
+    /// and the `baseURL` of the destination client.
     ///
     /// NOTE:
-    /// If you specify a relative path and you need the destination HTTPClient instance
-    /// to get the full URL, this value maybe wrong.
+    /// When you specify a full URL via this set don't use the `port`, `scheme`, `host` after.
+    /// If you are specifying an IP address (ex. `127.0.0.1:8080`) remember to add the scheme prefix.
     public var url: URL? {
         get {
             urlComponents.url
@@ -245,7 +246,11 @@ public extension HTTPRequest {
                 // An absolute URL will replace any settings from destination client.
                 urlComponents = parsed
             } else {
-                urlComponents.path = newValue
+                if newValue.first == "/" {
+                    urlComponents.path = newValue
+                } else {
+                    urlComponents.path = "/\(newValue)"
+                }
             }
         }
     }
@@ -280,6 +285,15 @@ public extension HTTPRequest {
             query?.append(item)
         } else {
             query = [item]
+        }
+    }
+    
+    /// Add an array of query params.
+    ///
+    /// - Parameter queryItems: query items to add.
+    func add(queryItems: [URLQueryItem]) {
+        queryItems.forEach {
+            add(queryItem: $0)
         }
     }
     
@@ -351,10 +365,19 @@ extension HTTPRequest {
 extension URLComponents {
     
     mutating func fullURLInClient(_ client: HTTPClient?) -> URL? {
+        guard host == nil else {
+            return self.url
+        }
+        
+        guard let baseURL = client?.baseURL else { return nil }
         // If we have not specified an absolute URL the URL
         // must be composed using the base components of the set client.
-        let finalURL = (host == nil ? url(relativeTo: client?.baseURL) : url)
-        return finalURL
+        var newComp = self
+        newComp.scheme = baseURL.scheme
+        newComp.host = baseURL.host
+        newComp.port = baseURL.port
+        newComp.path = baseURL.path + newComp.path
+        return newComp.url
     }
     
 }
