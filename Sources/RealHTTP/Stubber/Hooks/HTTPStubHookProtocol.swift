@@ -9,7 +9,7 @@
 //  Authors:
 //   - Daniele Margutti <hello@danielemargutti.com>
 //
-//  Copyright ©2021 Immobiliare.it SpA.
+//  Copyright ©2022 Immobiliare.it SpA.
 //  Licensed under MIT License.
 //
 
