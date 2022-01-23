@@ -49,10 +49,29 @@ public class HTTPRequest {
         UserInfoKeys.fingerprint: UUID().uuidString
     ]
     
-    /// If you are downloading a file with `transferMode = .largeData` and you
-    /// call `cancel()` with resume data, you can pass this data here to attempt
-    /// to resume the download.
-    /// This property will be automatically read by the library which adjust the request.
+    /// This property will be automatically read by the library. If not nil it
+    /// will be used to attempt to resume the request's download.
+    /// It works only when `transferMode = .largeData`.
+    ///
+    /// The data you pass here can come from 2 cases:
+    ///
+    /// 1. EXTERNAL CAUSE
+    /// Your connection has dropped, timeout or something not related to the user interaction:
+    /// You should monitor `progress` variable in order to catch the `failed` event.
+    ///
+    /// ```swift
+    /// request.$progress.sink { progress in
+    ///        if progress?.event == .failed, let partialData = progress?.partialData {
+    ///             // save it somewhere or assign directly to a new request's `.partialData`
+    ///        }
+    /// }.store(in: &observerBag)
+    /// ```
+    ///
+    /// Now you just assign `.partialData` to the value you get and restart your download.
+    ///
+    /// 2. CANCELLED TASK
+    /// You can cancel a running task using `cancel(byProducingResumeData:)` in order to
+    /// get a resumable data to use in a new request's as `.partialData`.
     public var partialData: Data?
     
     /// Timeout interval.

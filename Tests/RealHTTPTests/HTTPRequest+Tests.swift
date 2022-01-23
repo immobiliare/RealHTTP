@@ -290,38 +290,49 @@ class HTTPRequest_Tests: XCTestCase {
         HTTPStubber.shared.enable()
     }
     
+    // Test the resumable download.
     func testRequest_longRunningDownloadWithResume() async throws {
         HTTPStubber.shared.disable() // we should connect to the remote network
+        
+        var resumeEventOccurred = false
+        var resumedDownloadFinished = false
 
         let partDownloadURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("partial-download")
 
         let req = HTTPRequest {
-            $0.url = URL(string: "http://ipv4.download.thinkbroadband.com/100MB.zip")!
+            $0.url = URL(string: "http://ipv4.download.thinkbroadband.com/5MB.zip")!
             $0.transferMode = .largeData
             $0.method = .get
         }
         
         req.$progress.sink { progress in
             print("Progress: \(progress?.percentage ?? 0)")
+            if progress?.event == .resumed {
+                resumeEventOccurred = true
+            } else if progress?.percentage == 1 {
+                resumedDownloadFinished = true
+            }
         }.store(in: &observerBag)
         
         // At certain point we want to break the download
-        /*DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 1, execute: {
+        DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 0.5, execute: {
             // And produce some resumable data for test
             req.cancel { partialData in
-                print("Resumed data: \(partialData?.count ?? 0)")
-                req.partialData = partialData
+                print("Produced partial data: \(partialData?.count ?? 0) bytes")
+                req.partialData = partialData // set the partial data to request to allows resume!
             }
-        })*/
+        })
         
         // Start the first download
         let _ = try await req.fetch(client)
   
         // Attempt to resume the download
-       // let _ = try await req.fetch(client)
+        let _ = try await req.fetch(client)
 
         HTTPStubber.shared.enable()
 
+        XCTAssert(resumeEventOccurred, "Failed to resume download")
+        XCTAssert(resumedDownloadFinished, "Failed to complete resumed download")
     }
     
 }
