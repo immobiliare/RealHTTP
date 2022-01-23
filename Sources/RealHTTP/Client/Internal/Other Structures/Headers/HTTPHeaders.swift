@@ -19,11 +19,21 @@ import Foundation
 public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral,
                             Sequence, Collection,
                             CustomStringConvertible,
-                            Equatable, Hashable {
+                           Equatable, Hashable {
+    
     // MARK: - Private Properties
     
     /// Storage for headers.
-    private var headers = [HTTPHeaders.Element]()
+    fileprivate var headers = [HTTPHeaders.Element]()
+    
+    // MARK: - Keys
+    
+    /// All the keys of headers.
+    public var keys: [HTTPHeaders.Element.Name] {
+        headers.map {
+            $0.name
+        }
+    }
     
     // MARK: - Initialization
     
@@ -240,6 +250,10 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     
     static func + (left: HTTPHeaders, right: HTTPHeaders) -> HTTPHeaders {
         HTTPHeaders(headers: left.headers + right.headers)
+    }
+    
+    public static func == (lhs: HTTPHeaders, rhs: HTTPHeaders) -> Bool {
+        lhs.headers.sorted() == rhs.headers.sorted()
     }
 
 }

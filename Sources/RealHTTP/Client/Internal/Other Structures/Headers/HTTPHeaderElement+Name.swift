@@ -94,6 +94,7 @@ public extension HTTPHeaders.Element {
         case acceptDatetime
         case acceptEncoding
         case acceptLanguage
+        case acceptRanges
         case accessControlRequestMethod
         case accessControlRequestHeaders
         case authorization
@@ -149,6 +150,7 @@ public extension HTTPHeaders.Element {
             case .acceptDatetime: return "Accept-Datetime"
             case .acceptEncoding: return "Accept-Encoding"
             case .acceptLanguage: return "Accept-Language"
+            case .acceptRanges: return "Accept-Ranges"
             case .accessControlRequestMethod: return "Access-Control-Request-Method"
             case .accessControlRequestHeaders: return "Access-Control-Request-Headers"
             case .authorization: return "Authorization"
