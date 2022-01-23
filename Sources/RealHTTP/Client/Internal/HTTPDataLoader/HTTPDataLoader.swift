@@ -289,6 +289,8 @@ private extension HTTPDataLoader {
     ///   - task: target task finished.
     ///   - error: error received, if any.
     func completeTask(_ task: URLSessionTask, error: Error?) {
+        dataLoadersMap[task]?.urlResponse = task.response
+        
         guard let handler = dataLoadersMap[task] else {
             return
         }
@@ -313,6 +315,8 @@ private extension HTTPDataLoader {
             completion(request)
             return
         }
+        
+        dataLoadersMap[task]?.urlResponse = response
         
         // For some reason both body, headers and method is not copied
         var newRequest = request
