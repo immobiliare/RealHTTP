@@ -69,6 +69,9 @@ internal class HTTPDataLoader: NSObject,
         }
         
         let sessionTask = try request.urlSessionTask(inClient: client)
+        request.sessionTask = sessionTask
+        request.client = nil
+        
         let box = Box()
         return try await withTaskCancellationHandler(handler: {
             // Support for task cancellation
@@ -208,7 +211,7 @@ internal class HTTPDataLoader: NSObject,
                            didSendBodyData bytesSent: Int64,
                            totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
 
-        let progress = HTTPProgress(operation: .upload,
+        let progress = HTTPProgress(event: .upload,
                                     progress: task.progress,
                                     currentLength: totalBytesSent, expectedLength: totalBytesExpectedToSend)
         dataLoadersMap[task]?.request.progress = progress
@@ -233,7 +236,7 @@ internal class HTTPDataLoader: NSObject,
                            didWriteData bytesWritten: Int64,
                            totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         
-        let progress = HTTPProgress(operation: .download,
+        let progress = HTTPProgress(event: .download,
                                     progress: downloadTask.progress,
                                     currentLength: totalBytesWritten, expectedLength: totalBytesExpectedToWrite)
         dataLoadersMap[downloadTask]?.request.progress = progress
@@ -242,8 +245,10 @@ internal class HTTPDataLoader: NSObject,
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
                            didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {
         
-        let progress = HTTPProgress(progress: downloadTask.progress,
-                                    currentLength: fileOffset, expectedLength: expectedTotalBytes)
+        let progress = HTTPProgress(event: .resumed,
+                                    progress: downloadTask.progress,
+                                    currentLength: fileOffset,
+                                    expectedLength: expectedTotalBytes)
         dataLoadersMap[downloadTask]?.request.progress = progress
     }
     
@@ -279,6 +284,11 @@ private extension HTTPDataLoader {
         for handler in allHandlers {
             var response = HTTPResponse(errorType: .sessionError, error: error)
             response.request = handler.request
+            
+            // Reset the link to the client
+            handler.request.client = nil
+            handler.request.sessionTask = nil
+            
             handler.completion(response)
         }
     }
@@ -294,6 +304,21 @@ private extension HTTPDataLoader {
         guard let handler = dataLoadersMap[task] else {
             return
         }
+        
+        if handler.request.transferMode == .largeData,
+            let error = error, let  nsError = error as NSError?,
+           let resumableData = nsError.userInfo[NSURLSessionDownloadTaskResumeData] as? Data {
+            // When download fails task will be completed with an error and the error contains
+            // a resumable set of data.
+            // <https://developer.apple.com/forums/thread/24770>
+            handler.request.progress = HTTPProgress(event: .failed,
+                                                    currentLength: 0,
+                                                    expectedLength: 0, partialData: resumableData)
+        }
+        
+        // Reset the link to the client
+        handler.request.client = nil
+        handler.request.sessionTask = nil
         
         dataLoadersMap[task] = nil
         

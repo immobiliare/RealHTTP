@@ -36,7 +36,20 @@ public struct HTTPResponse {
     }
     
     /// Raw data received from server.
-    public let data: Data?
+    /// If the file is saved on disk (`dataFileURL != nil`) calling this method
+    /// will cause the system to read file and get it as output.
+    public var data: Data? {
+        if let dataFileURL = dataFileURL {
+            return try? Data(contentsOf: dataFileURL)
+        } else {
+            return innerData
+        }
+    }
+    
+    /// If it's a large data transfer (`transferMode = .largeData`) the output
+    /// of the call is automatically saved on disk at this link.
+    /// The file is your responsibility, you should delete if once you've done.
+    public let dataFileURL: URL?
     
     /// Error parsed.
     public let error: HTTPError?
@@ -54,6 +67,10 @@ public struct HTTPResponse {
         httpResponse?.status
     }
     
+    // MARK: - Private Properties
+    
+    private var innerData: Data?
+    
     // MARK: - Initialization
     
     /// Initialize to produce an error.
@@ -63,16 +80,18 @@ public struct HTTPResponse {
     ///   - error: optional error instance received.
     internal init(errorType: HTTPError.ErrorType = .internal, error: Error?) {
         self.error = HTTPError(errorType, error: error)
-        self.data = nil
+        self.innerData = nil
         self.metrics = nil
         self.urlResponse = nil
+        self.dataFileURL = nil
     }
     
     /// Initialize with response from data loader.
     ///
     /// - Parameter response: response received.
     internal init(response: HTTPDataLoaderResponse) {
-        self.data = response.data
+        self.innerData = response.data
+        self.dataFileURL = response.dataFileURL
         self.metrics = HTTPMetrics(metrics: response.metrics)
         self.request = response.request
         self.urlResponse = response.urlResponse

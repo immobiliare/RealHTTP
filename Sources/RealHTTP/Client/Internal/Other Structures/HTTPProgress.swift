@@ -24,18 +24,23 @@ public struct HTTPProgress {
     /// Kind of operation which identify the progress.
     /// - `upload`: upload operation to remote server.
     /// - `download`: download operation from a remote server.
-    public enum Operation {
+    /// - `failed`: download failed. Typically inside `partialData` you can found resumable data to use with
+    ///             `HTTPRequest`'s `partialData` to resume the download.
+    /// - `resumed`: this evenet is triggered when `URLSession` found a way to resume the download from partial data.
+    public enum Event {
         case upload
         case download
+        case failed
+        case resumed
     }
     
     // MARK: - Public Properties
     
     /// Kind of transfer.
-    public internal(set) var operation: Operation = .download
+    public internal(set) var event: Event = .download
     
     /// Progress object which contains additional informations.
-    public let progress: Progress
+    public let progress: Progress?
     
     /// The number of bytes sent/received since the last time this delegate method was called.
     public let currentLength: Int64
@@ -50,22 +55,30 @@ public struct HTTPProgress {
     /// this value return `nil`.
     public let percentage: Float?
     
+    /// If a download fails you can receive a `.failed` `HTTProgress` update where this value
+    /// is not `nil`. You can save this data and pass it to `partialData` of a new `HTTPRequest`
+    /// in order to attempt to resume download.
+    public let partialData: Data?
+    
     // MARK: - Initialization
     
     /// Initialize a new progress structure with the data.
     ///
     /// - Parameters:
-    ///   - operation: kind of operation.
-    ///   - progress: progress instance.
-    ///   - current: current downloaded/uploaded bytes.
-    ///   - expected: expected bytes.
-    internal init(operation: Operation = .download,
-                  progress: Progress,
-                  currentLength: Int64, expectedLength: Int64) {
-        self.operation = operation
+    ///   - event: kind of event which is represented by the progress object.
+    ///   - progress: progress instance when available.
+    ///   - current: current downloaded/uploaded bytes (valid values are different from 0).
+    ///   - expected: expected bytes (if 0 or -1 no estimation is available).
+    ///   - partialData: partially downloaded data in case it's available and operation is `failed`.
+    internal init(event: Event = .download,
+                  progress: Progress? = nil,
+                  currentLength: Int64, expectedLength: Int64,
+                  partialData: Data? = nil) {
+        self.event = event
         self.progress = progress
         self.currentLength = currentLength
         self.expectedLength = expectedLength
+        self.partialData = partialData
         
         if expectedLength != NSURLSessionTransferSizeUnknown, expectedLength != 0 {
             let slice = Float(1.0)/Float(expectedLength)

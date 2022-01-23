@@ -37,11 +37,23 @@ public class HTTPRequest {
     /// By default is set to `background`.
     public var priority: TaskPriority = .background
     
+    /// Session task currently in execution.
+    public internal(set) weak var sessionTask: URLSessionTask?
+    
+    /// Client in which the task is running.
+    public internal(set) weak var client: HTTPClient?
+    
     /// An user info dictionary where you can add your own data.
     /// Initially only the `fingerprint` key is set with an unique id of the request.
     public var userInfo: [AnyHashable : Any] = [
         UserInfoKeys.fingerprint: UUID().uuidString
     ]
+    
+    /// If you are downloading a file with `transferMode = .largeData` and you
+    /// call `cancel()` with resume data, you can pass this data here to attempt
+    /// to resume the download.
+    /// This property will be automatically read by the library which adjust the request.
+    public var partialData: Data?
     
     /// Timeout interval.
     ///
@@ -195,6 +207,27 @@ public class HTTPRequest {
         try await client.fetch(self).decode(decode)
     }
     
+    // MARK: - Task Management
+    
+    /// Cancel request if it's running.
+    ///
+    /// - Parameter byProducingResumeData: only when `transferMode = .largeData` you can choose to produce resumable data and handle it in this callback.
+    /// - Returns: Bool
+    @discardableResult
+    public func cancel(byProducingResumeData: ((Data?) -> Void)?) -> Bool {
+        if transferMode == .largeData {
+            if let dataProducer = byProducingResumeData {
+                (sessionTask as? URLSessionDownloadTask)?.cancel(byProducingResumeData: dataProducer)
+            } else {
+                sessionTask?.cancel()
+            }
+        } else {
+            sessionTask?.cancel()
+        }
+        
+        return sessionTask != nil
+    }
+    
     // MARK: - Public Functions
     
     /// Set cookies for a given request.
@@ -323,11 +356,11 @@ extension HTTPRequest {
             case .default:
                 task = client.session.dataTask(with: urlRequest)
             case .largeData:
-                //if let resumeData = resumeData {
-                //  task = client.session.downloadTask(withResumeData: resumeData)
-                //} else {
-                task = client.session.downloadTask(with: urlRequest)
-                //}
+                if let partialData = partialData {
+                    task = client.session.downloadTask(withResumeData: partialData)
+                } else {
+                    task = client.session.downloadTask(with: urlRequest)
+                }
             }
         }
         

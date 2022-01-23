@@ -15,9 +15,12 @@
 
 import Foundation
 import XCTest
+import Combine
 @testable import RealHTTP
 
 class HTTPRequest_Tests: XCTestCase {
+    
+    private var observerBag = Set<AnyCancellable>()
     
     private lazy var client: HTTPClient = {
         var configuration = URLSessionConfiguration.default
@@ -247,6 +250,79 @@ class HTTPRequest_Tests: XCTestCase {
         XCTAssert(parsedParams.params("p4").count == 2, "Failed to encode array")
     }
     
+    func testRequest_stream() async throws {
+        guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
+            throw TestError("Failed to found assets file")
+        }
+        
+        let data = try Data(contentsOf: rawImageURL)
+        
+        let req = HTTPRequest {
+            $0.path = "/image/test_image"
+            $0.body = .stream(.fileURL(rawImageURL))
+            $0.transferMode = .largeData
+            $0.method = .post
+        }
+        
+        let response = try await req.fetch(client)
+        XCTAssert(response.data?.count == data.count, "Failed to transfer all data")
+    }
+    
+    /// Note: this task uses a remote server so it's more an integration test.
+    func testRequest_longRunningDownloadWithProgress() async throws {
+        HTTPStubber.shared.disable() // we should connect to the remote network
+        var progressionReports = 0
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://ipv4.download.thinkbroadband.com/5MB.zip")!
+            $0.transferMode = .largeData
+            $0.method = .get
+        }
+        
+        req.$progress.sink { progress in
+            progressionReports += 1
+        }.store(in: &observerBag)
+        
+        let response = try await req.fetch(client)
+        XCTAssert(progressionReports > 0, "Failed to receive updates from 5MB file download")
+        XCTAssert(response.data?.count ?? 0 > 0, "Failed to receive data")
+
+        HTTPStubber.shared.enable()
+    }
+    
+    func testRequest_longRunningDownloadWithResume() async throws {
+        HTTPStubber.shared.disable() // we should connect to the remote network
+
+        let partDownloadURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("partial-download")
+
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://ipv4.download.thinkbroadband.com/100MB.zip")!
+            $0.transferMode = .largeData
+            $0.method = .get
+        }
+        
+        req.$progress.sink { progress in
+            print("Progress: \(progress?.percentage ?? 0)")
+        }.store(in: &observerBag)
+        
+        // At certain point we want to break the download
+        /*DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 1, execute: {
+            // And produce some resumable data for test
+            req.cancel { partialData in
+                print("Resumed data: \(partialData?.count ?? 0)")
+                req.partialData = partialData
+            }
+        })*/
+        
+        // Start the first download
+        let _ = try await req.fetch(client)
+  
+        // Attempt to resume the download
+       // let _ = try await req.fetch(client)
+
+        HTTPStubber.shared.enable()
+
+    }
     
 }
 
