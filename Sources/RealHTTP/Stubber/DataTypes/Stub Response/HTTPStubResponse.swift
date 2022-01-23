@@ -15,29 +15,39 @@
 
 import Foundation
 
-public class HTTPStubResponse {
+open class HTTPStubResponse {
     
     /// The HTTP status code to return with the response.
-    public var statusCode: HTTPStatusCode = .none
+    open var statusCode: HTTPStatusCode = .none
     
     /// Content type of the response.
-    public var contentType: HTTPContentType? = nil
+    open var contentType: HTTPContentType? = nil
     
     /// Once set this value is returned instead of the data set.
-    public var failError: Error? = nil
+    open var failError: Error? = nil
     
     /// Contains a map of the data to return.
-    public var body: HTTPStubDataConvertible? = nil
+    open var body: HTTPStubDataConvertible? = nil
     
     /// The headers to send back with the response.
-    public var headers =  HTTPHeaders()
+    open var headers =  HTTPHeaders()
     
     /// Allow response caching. Usually you dont want to have a cached response
     /// so the default behaviour is set to `notAllowed`.
-    public var cachePolicy: URLCache.StoragePolicy = .notAllowed
+    open var cachePolicy: URLCache.StoragePolicy = .notAllowed
     
     /// You can define a delay to return the reponse.
     /// If `nil` no delay is applied.
-    public var responseDelay: TimeInterval? = nil
+    open var responseDelay: TimeInterval? = nil
+    
+    // MARK: - Internal Functions
+    
+    /// You can use it to adapt the stub response for a particular request.
+    ///
+    /// - Parameter request: request.
+    /// - Returns: `HTTPStubResponse`
+    open func adaptForRequest(_ request: URLRequest) -> HTTPStubResponse {
+        self
+    }
     
 }

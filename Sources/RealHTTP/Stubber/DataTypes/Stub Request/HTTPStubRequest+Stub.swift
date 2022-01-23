@@ -16,7 +16,7 @@
 import Foundation
 
 extension HTTPStubRequest {
-    
+        
     // MARK: - Builder
     
     /// Create (and replace if exists) a new stub response for a given method and allows you
@@ -30,6 +30,18 @@ extension HTTPStubRequest {
         var response = HTTPStubResponse()
         responses[method] = response
         builder(&response)
+        return self
+    }
+    
+    // MARK: - Echo
+    
+    /// Response with the same request's data.
+    ///
+    /// - Returns: Self
+    public func stubEcho() -> Self {
+        for method in HTTPMethod.allCases {
+            responses[method] = HTTPEchoResponse()
+        }
         return self
     }
     

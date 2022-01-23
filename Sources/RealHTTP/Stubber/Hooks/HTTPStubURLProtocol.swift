@@ -85,7 +85,7 @@ public class HTTPStubURLProtocol: URLProtocol {
         
         // Find the stubbed response for this request.
         guard  let httpMethod = request.method,
-               let stubResponse = HTTPStubber.shared.suitableStubForRequest(request)?.responses[httpMethod],
+               let stubResponse = HTTPStubber.shared.suitableStubForRequest(request)?.responses[httpMethod]?.adaptForRequest(request),
                request.url != nil else {
             // If not found we throw an error
             client?.urlProtocol(self, didFailWithError: HTTPStubberErrors.matchStubNotFound(request))
