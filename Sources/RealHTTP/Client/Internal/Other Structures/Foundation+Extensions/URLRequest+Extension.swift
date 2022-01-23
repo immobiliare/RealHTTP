@@ -84,4 +84,14 @@ extension URLRequest {
         }
     }
     
+    /// Request's header fields in forms of `HTTPHeaders` object.
+    public var headers: HTTPHeaders {
+        get {
+            HTTPHeaders(rawDictionary: allHTTPHeaderFields)
+        }
+        set {
+            allHTTPHeaderFields = newValue.asDictionary
+        }
+    }
+    
 }

@@ -81,12 +81,26 @@ internal extension Bundle {
 // MARK: - String Extension
 extension String {
     
+    // MARK: - Public Properties
+    
     /// Create an RFC 3986 compliant string used to compose query string in URL.
     ///
     /// - Parameter string: source string.
     /// - Returns: String
     public var queryEscaped: String {
         self.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowedSet) ?? self
+    }
+    
+    // MARK: - Private Properties
+    
+    /// Return `true` if it's a valid full URL, `false` if it's relative URL.
+    internal var isAbsoluteURL: Bool {
+        if hasPrefix("localhost") {
+            return true
+        }
+        let regEx = "((?:http|https)://)?(?:www\\.)?[\\w\\d\\-_]+\\.\\w{2,3}(\\.\\w{2})?(/(?<=/)(?:[\\w\\d\\-./_]+)?)?"
+        let predicate = NSPredicate(format: "SELF MATCHES %@", argumentArray: [regEx])
+        return predicate.evaluate(with: self)
     }
     
     /// Return the suggested mime type for path extension of the receiver.
@@ -250,4 +264,16 @@ extension URL {
         }
     }
     
+}
+
+// MARK: - Array
+
+/// Same of += but for single items.
+///
+/// - Parameters:
+///   - left: source array.
+///   - right: right item to add.
+/// - Returns: source array plus new item.
+func += <V> ( left: inout [V], right: V) {
+    left.append(right)
 }
