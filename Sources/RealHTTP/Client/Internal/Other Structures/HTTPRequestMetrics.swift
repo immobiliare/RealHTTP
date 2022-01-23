@@ -17,6 +17,7 @@ import Foundation
 
 // MARK: - HTTPMetrics
 
+/// It includes all the metrics related to a request+response executed.
 public struct HTTPMetrics {
     
     /// Each metrics  contains the taskInterval and redirectCount, as well as metrics for each

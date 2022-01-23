@@ -58,7 +58,15 @@ public class HTTPRequest {
     /// If you specify a relative path and you need the destination HTTPClient instance
     /// to get the full URL, this value maybe wrong.
     public var url: URL? {
-        urlComponents.url
+        get {
+            urlComponents.url
+        }
+        set {
+            if let url = newValue,
+                let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                urlComponents = components
+            }
+        }
     }
     
     /// Headers to send along the request.
@@ -227,9 +235,19 @@ public extension HTTPRequest {
     }
     
     /// Set the path component of the URL.
+    ///
+    /// NOTE:
+    /// If you pass a full URL it will replace any existing set for scheme, host, and port.
     var path: String {
         get { urlComponents.path }
-        set { urlComponents.path = newValue }
+        set {
+            if newValue.isAbsoluteURL, let parsed = URLComponents(string: newValue) {
+                // An absolute URL will replace any settings from destination client.
+                urlComponents = parsed
+            } else {
+                urlComponents.path = newValue
+            }
+        }
     }
     
     /// Setup a list of query string parameters.
@@ -303,14 +321,12 @@ extension HTTPRequest {
         task.priority = httpPriority.urlTaskPriority
         return task
     }
-    
-    // MARK: - Private Functions
-    
+        
     /// Create the `URLRequest` instance for a client instance.
     ///
     /// - Parameter client: client instance.
     /// - Returns: `URLRequest`
-    private func urlRequest(inClient client: HTTPClient) throws -> URLRequest {
+    internal func urlRequest(inClient client: HTTPClient) throws -> URLRequest {
         guard let fullURL = urlComponents.fullURLInClient(client) else {
             throw HTTPError(.invalidURL)
         }
@@ -325,23 +341,20 @@ extension HTTPRequest {
                                         cachePolicy: requestCachePolicy,
                                         timeout: requestTimeout,
                                         headers: requestHeaders)
+        urlRequest.httpShouldHandleCookies = true
         try urlRequest.setHTTPBody(body) // setup the body
         return urlRequest
     }
-    
     
 }
 
 extension URLComponents {
     
     mutating func fullURLInClient(_ client: HTTPClient?) -> URL? {
-        // Path must start with "/" in order to generate a valid url.
-        // We want to "fix" it automatically if we can.
-        if !path.isEmpty, path.first != "/" { path = "/\(path)" }
-        
         // If we have not specified an absolute URL the URL
         // must be composed using the base components of the set client.
-        return (host == nil ? url(relativeTo: client?.baseURL) : url)
+        let finalURL = (host == nil ? url(relativeTo: client?.baseURL) : url)
+        return finalURL
     }
     
 }

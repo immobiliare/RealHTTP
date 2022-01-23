@@ -54,8 +54,8 @@ public class HTTPClient {
     public var security: HTTPSecurity?
     
     /// Cookies storage.
-    public var cookies: HTTPCookieStorage? {
-        loader.session.configuration.httpCookieStorage
+    public var cookieStorage: HTTPCookieStorage? {
+        session.configuration.httpCookieStorage
     }
     
     /// Follow or not redirects. By default the value is `follow` which uses
@@ -109,6 +109,16 @@ public class HTTPClient {
         self.loader = HTTPDataLoader(configuration: configuration,
                                      maxConcurrentOperations: maxConcurrentOperations ?? OperationQueue.defaultMaxConcurrentOperationCount)
         self.loader.client = self
+    }
+    
+    // MARK: - Public Functions
+    
+    /// Return cookies for a given URL.
+    ///
+    /// - Parameter url: URL.
+    /// - Returns: `[HTTCookie]`
+    public func cookies(forURL url: URL) -> [HTTPCookie] {
+        session.configuration.httpCookieStorage?.cookies(for: url) ?? []
     }
     
     // MARK: - Internal Functions
