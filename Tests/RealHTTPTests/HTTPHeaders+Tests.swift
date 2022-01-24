@@ -161,10 +161,15 @@ class HTTPHeaders_Tests: XCTestCase {
     
 }
 
-public struct TestError: Error, ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
+public struct TestError: Error, ExpressibleByStringLiteral, ExpressibleByStringInterpolation, LocalizedError {
     let message: String
     
     public init(stringLiteral value: StringLiteralType) {
         self.message = value
     }
+    
+    public var errorDescription: String? {
+        message
+    }
+    
 }

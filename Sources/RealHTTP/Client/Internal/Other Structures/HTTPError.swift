@@ -49,7 +49,7 @@ public struct HTTPError: LocalizedError {
         self.error = error
         self.userInfo = userInfo
         self.cocoaCode = cocoaCode
-        self.message = nil
+        self.message = error?.localizedDescription
     }
     
     public init(_ type: ErrorType, message: String) {

@@ -486,7 +486,7 @@ class HTTPRequest_Tests: XCTestCase {
                 data + crlf
             )
                         
-            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+            XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
         }
         
         HTTPStubber.shared.disable()
@@ -532,7 +532,7 @@ class HTTPRequest_Tests: XCTestCase {
                 "😃👍🏻🍻🎉".data(using: .utf8)! +
                 crlf
             )
-            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+            XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
         }
         
         HTTPStubber.shared.disable()
@@ -572,7 +572,7 @@ class HTTPRequest_Tests: XCTestCase {
                 crlf
             )
             
-            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+            XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
             
             HTTPStubber.shared.disable()
         }
@@ -618,11 +618,8 @@ class HTTPRequest_Tests: XCTestCase {
                 "Content-Type: image/jpeg".data(using: .utf8)! + crlf + crlf +
                 image2Data + crlf
             )
-            
-            try expectedData.write(to: URL(fileURLWithPath: "/Users/daniele/Desktop/expected.txt"))
-            try encodedData.write(to: URL(fileURLWithPath: "/Users/daniele/Desktop/original.txt"))
 
-            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+            XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
         }
         
         HTTPStubber.shared.disable()
@@ -669,12 +666,131 @@ class HTTPRequest_Tests: XCTestCase {
                 crlf
             )
             
-            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+            XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
         }
         
         HTTPStubber.shared.disable()
     }
+    
+    func test_multipart_encodingMultipleBodyPartsWithVaryingTypes() throws {
+        HTTPStubber.shared.enable()
+        
+        guard let image1URL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png"),
+              let image2URL = Bundle.module.url(forResource: "mac_icon", withExtension: "jpg")
+        else {
+            throw TestError("Failed to found assets files")
+        }
+        
+        let loremData = Data("Lorem ipsum.".utf8)
+        let image2DataLength = UInt64((try! Data(contentsOf: image2URL)).count)
+        let image2Stream = InputStream(url: image2URL)!
+        
+        let req = try HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = try .multipart({ form in
+                form.add(data: loremData, name: "lorem")
+                try form.add(fileURL: image1URL, name: "image1")
+                form.add(stream: image2Stream,
+                         withLength: image2DataLength,
+                         name: "image2",
+                         fileName: "mac_icon.jpg",
+                         mimeType: MIMEType.jpg.rawValue)
+            })
+        }
+        
+        // Encoded data should be not nil
+        let encodedData = try req.body.content.encodedData()
+        XCTAssertNotNil(encodedData, "Encoded data should not be nil")
+                
+        // Verify the encoded string format
+        if let form = req.body.content as? HTTPBody.MultipartForm {
+            let delimiter = "--\(form.boundaryID)".data(using: .utf8)!
+            let crlf = "\r\n".data(using: .utf8)!
+            
+            let image1Data = try Data(contentsOf: image1URL)
+            let image2Data = try Data(contentsOf: image2URL)
 
+            let expectedData: Data = (
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"lorem\"".data(using: .utf8)! + crlf + crlf +
+                loremData + crlf +
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"image1\"; filename=\"test_rawdata.png\"".data(using: .utf8)! + crlf +
+                "Content-Type: image/png".data(using: .utf8)! + crlf + crlf +
+                image1Data + crlf +
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"image2\"; filename=\"mac_icon.jpg\"".data(using: .utf8)! + crlf +
+                "Content-Type: image/jpeg".data(using: .utf8)! + crlf + crlf +
+                image2Data +
+                crlf
+            )
+            
+            try expectedData.write(to: URL(fileURLWithPath: "/Users/daniele/Desktop/expected.txt"))
+            try encodedData.write(to: URL(fileURLWithPath: "/Users/daniele/Desktop/original.txt"))
+            
+            XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
+        }
+        
+        HTTPStubber.shared.disable()
+    }
+    
+    // MARK: - Validators
+    
+    func test_validatorValidationSequence() async throws {
+        HTTPStubber.shared.enable()
+
+        var passedValidators = 0
+        let errorMessage = "It should be fail! that's okay"
+        
+        // Setup a custom client
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.validators = [
+            CallbackValidator { response, request in
+                passedValidators += 1
+                return .success
+            },
+            CallbackValidator { response, request in
+                passedValidators += 1
+                return .success
+            },
+            CallbackValidator { response, request in
+                passedValidators += 1
+                return .fail(TestError(stringLiteral: errorMessage))
+            },
+            CallbackValidator { response, request in
+                passedValidators += 1 // it should never arrive here
+                return .success
+            },
+        ]
+        
+        // Setup request
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+        }
+        
+        let response = try await req.fetch(newClient)
+        
+        XCTAssert(response.isError == true, "Call should be invalidated by the last provider")
+        XCTAssert(passedValidators == 3, "Call should be invalidated by the last provider")
+        XCTAssert(response.error?.message == errorMessage, "Error from call must be overriden by the validator's error")
+        
+        HTTPStubber.shared.disable()
+    }
+
+}
+
+// MARK: - Support Structures
+
+fileprivate struct CallbackValidator: HTTPResponseValidator {
+    
+    var onValidate: ((_ response: HTTPResponse, _ request: HTTPRequest) -> HTTPResponseValidatorResult)?
+    
+    func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
+        onValidate?(response, request) ?? .success
+    }
+    
 }
 
 public func + (lhs: Data, rhs: Data) -> Data {
@@ -682,8 +798,6 @@ public func + (lhs: Data, rhs: Data) -> Data {
     newData.append(rhs)
     return newData
 }
-
-// MARK: - Support Structures
 
 fileprivate struct TestUser: Codable, Equatable {
     var firstName: String
