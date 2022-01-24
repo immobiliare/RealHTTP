@@ -349,6 +349,15 @@ public extension HTTPRequest {
         }
     }
     
+    /// Add query items from a passed dictionary of elements.
+    ///
+    /// - Parameter parameters: parameters dictionary.
+    func add(parameters: [String: String]) {
+        parameters.forEach { item in
+            add(queryItem: URLQueryItem(name: item.key, value: item.value))
+        }
+    }
+    
 }
 
 // MARK: - URLRequest and URLSessionTask Builders

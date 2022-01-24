@@ -939,10 +939,95 @@ class HTTPRequest_Tests: XCTestCase {
         XCTAssert(response.statusCode == .unauthorized, "Main call should fail with unathorized")
         XCTAssert(response.data?.asString() == mainCallErrorResponse, "Failed to validate main call error")
     }
+    
+    func test_POSTRequestWithUnicodeParameters() async throws {
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
+        let parameters = ["french": "français",
+                          "japanese": "日本語",
+                          "arabic": "العربية",
+                          "emoji": "😃"]
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080/execute")!
+            $0.method = .post
+            $0.body = .form(values: parameters)
+        }
+        
+        // Execute
+        let response = try await req.fetch()
+
+        
+        // Verify
+        XCTAssertNotNil(response.data)
+        
+        if let dataString = response.data?.asString(),
+               let forms = URLComponents(string: "http://example.com?\(dataString)") {
+                   XCTAssertEqual(forms.valueForQueryItem("french"), parameters["french"])
+                   XCTAssertEqual(forms.valueForQueryItem("japanese"), parameters["japanese"])
+                   XCTAssertEqual(forms.valueForQueryItem("arabic"), parameters["arabic"])
+                   XCTAssertEqual(forms.valueForQueryItem("emoji"), parameters["emoji"])
+               } else {
+                   XCTFail("Failed to validate fields")
+               }
+    }
+    
+    func test_POSTRequestWithBase64EncodedImages() async throws {
+        // Given
+        let pngBase64EncodedString: String = {
+            let fileURL = url(forResource: "test_rawdata", withExtension: "png")
+            let data = try! Data(contentsOf: fileURL)
+
+            return data.base64EncodedString(options: .lineLength64Characters)
+        }()
+
+        let jpegBase64EncodedString: String = {
+            let fileURL = url(forResource: "mac_icon", withExtension: "jpg")
+            let data = try! Data(contentsOf: fileURL)
+
+            return data.base64EncodedString(options: .lineLength64Characters)
+        }()
+
+        let parameters = ["email": "user@realhttp.com",
+                          "png_image": pngBase64EncodedString,
+                          "jpeg_image": jpegBase64EncodedString]
+
+
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080/execute")!
+            $0.method = .post
+            $0.body = .form(values: parameters)
+        }
+        
+        // Execute
+        let response = try await req.fetch()
+
+        // Then
+        XCTAssertNotNil(response.data)
+        XCTAssertEqual(response.isError, false)
+
+        if let dataString = response.data?.asString(),
+               let forms = URLComponents(string: "http://example.com?\(dataString)") {
+            XCTAssertEqual(forms.valueForQueryItem("email"), parameters["email"])
+            XCTAssertEqual(forms.valueForQueryItem("png_image"), parameters["png_image"])
+            XCTAssertEqual(forms.valueForQueryItem("jpeg_image"), parameters["jpeg_image"])
+        } else {
+            XCTFail("Failed to validate fields")
+        }
+    }
 
 }
 
 // MARK: - Support Structures
+
+func url(forResource: String, withExtension: String) -> URL {
+    guard let fileURL = Bundle.module.url(forResource: forResource, withExtension: withExtension) else {
+        fatalError("Failed to retrive assets")
+    }
+    
+    return fileURL
+}
 
 fileprivate struct CallbackValidator: HTTPResponseValidator {
     

@@ -75,4 +75,12 @@ extension URLComponents: URLConvertible {
         return url
     }
     
+    /// Get the value for a query item with givem key.
+    ///
+    /// - Parameter key: key.
+    /// - Returns: `String?`
+    public func valueForQueryItem(_ key: String) -> String? {
+        queryItems?.first(where: { $0.name == key })?.value
+    }
+    
 }
