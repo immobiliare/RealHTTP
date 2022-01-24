@@ -321,6 +321,40 @@ class HTTPRequest_Tests: XCTestCase {
         XCTAssert(response.data?.count ?? 0 > 0, "Failed to receive data")
     }
     
+    func test_largeFileProgressActivity() async throws {
+        stopStubber()
+
+        var progressValues = [HTTPProgress]()
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://ipv4.download.thinkbroadband.com/5MB.zip")!
+            $0.transferMode = .largeData
+            $0.method = .get
+        }
+        
+        req.$progress.sink { progress in
+            if let progress = progress {
+                progressValues.append(progress)
+            }
+        }.store(in: &observerBag)
+        
+        let _ = try await req.fetch(client)
+        
+        // Check the progress
+        var previousProgress: Double = progressValues.first?.percentage ?? 0.0
+        
+        for progress in progressValues {
+            XCTAssertGreaterThanOrEqual(progress.percentage, previousProgress)
+            previousProgress = progress.percentage
+        }
+        
+        if let lastProgressValue = progressValues.last?.percentage {
+            XCTAssertEqual(lastProgressValue, 1.0)
+        } else {
+            XCTFail("last item in progressValues should not be nil")
+        }
+    }
+    
     // Test the resumable download.
     func test_largeFileTestResume() async throws {
         stopStubber()

@@ -72,6 +72,7 @@ public struct HTTPResponse {
     
     // MARK: - Private Properties
     
+    /// Data retrived from server when `transferMode != largeData`.
     private var innerData: Data?
     
     // MARK: - Initialization

@@ -17,7 +17,7 @@ import Foundation
 
 /// `HTTPProgress` is used to send periodic updates about an upload or a download
 /// session. It contains all the relevant information about the current state of the operation.
-public struct HTTPProgress {
+public struct HTTPProgress: Comparable, Equatable {
     
     // MARK: - Support Structures
     
@@ -51,9 +51,9 @@ public struct HTTPProgress {
     /// Local uploades includes this value automatically when made using the library.
     public let expectedLength: Int64
     
-    /// The percentage of the progression. If no percentage can be determined by the data
-    /// this value return `nil`.
-    public let percentage: Float?
+    /// The percentage of the progression.
+    /// When not available value is 0.0.
+    public let percentage: Double
     
     /// If a download fails you can receive a `.failed` `HTTProgress` update where this value
     /// is not `nil`. You can save this data and pass it to `partialData` of a new `HTTPRequest`
@@ -81,11 +81,15 @@ public struct HTTPProgress {
         self.partialData = partialData
         
         if expectedLength != NSURLSessionTransferSizeUnknown, expectedLength != 0 {
-            let slice = Float(1.0)/Float(expectedLength)
-            self.percentage = slice*Float(currentLength)
+            let slice = Double(1.0)/Double(expectedLength)
+            self.percentage = slice*Double(currentLength)
         } else {
-            self.percentage = nil
+            self.percentage = 0
         }
+    }
+    
+    public static func < (lhs: HTTPProgress, rhs: HTTPProgress) -> Bool {
+        lhs.percentage < rhs.percentage
     }
 
 }
