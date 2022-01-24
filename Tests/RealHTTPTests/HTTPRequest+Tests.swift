@@ -430,7 +430,7 @@ class HTTPRequest_Tests: XCTestCase {
     
     // MARK: - Multipart Form Data
     
-    func test_multipartFormData_contentTypeContainsBoundary() throws {
+    func test_multipart_contentTypeContainsBoundary() throws {
         let boundary = HTTPBody.MultipartForm.Boundary()
         let body = HTTPBody.multipart(boundary: boundary.id) { _ in }
                 
@@ -440,7 +440,7 @@ class HTTPRequest_Tests: XCTestCase {
         XCTAssertEqual(formData!.contentType, expectedContentType, "contentType should match expected value")
     }
     
-    func test_multipartFormData_contentLengthMatchesTotalBodyPartSize() {
+    func test_multipart_contentLengthMatchesTotalBodyPartSize() {
         let data1 = Data("Lorem ipsum dolor sit amet.".utf8)
         let data2 = Data("Vim at integre alterum.".utf8)
         
@@ -458,7 +458,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     /// Test Multipart-Form Data
-    func test_multipartFormData_encoding() async throws {
+    func test_multipart_encoding() async throws {
         HTTPStubber.shared.enable()
 
         let data = Data("Lorem ipsum dolor sit amet.".utf8)
@@ -492,7 +492,7 @@ class HTTPRequest_Tests: XCTestCase {
         HTTPStubber.shared.disable()
     }
     
-    func test_multipartFormData_encodingBodyParts() throws {
+    func test_multipart_encodingBodyParts() throws {
         HTTPStubber.shared.enable()
 
         let frenchData = Data("français".utf8)
@@ -538,7 +538,7 @@ class HTTPRequest_Tests: XCTestCase {
         HTTPStubber.shared.disable()
     }
     
-    func test_multipartFormData_encodingFileBodyPart() throws {
+    func test_multipart_encodingFileBodyPart() throws {
         HTTPStubber.shared.enable()
 
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
@@ -578,7 +578,7 @@ class HTTPRequest_Tests: XCTestCase {
         }
     }
     
-    func test_multipartFormData_encodingMultipleFileBodyParts() throws {
+    func test_multipart_encodingMultipleFileBodyParts() throws {
         HTTPStubber.shared.enable()
         
         guard let image1URL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png"),
@@ -628,7 +628,53 @@ class HTTPRequest_Tests: XCTestCase {
         HTTPStubber.shared.disable()
     }
     
-    
+    func test_multipart_encodingStreamBodyPart() throws {
+        HTTPStubber.shared.enable()
+        
+        guard let imageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
+            throw TestError("Failed to found assets files")
+        }
+        
+        let imageDataLength = UInt64((try! Data(contentsOf: imageURL)).count)
+        let imageStream = InputStream(url: imageURL)!
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = .multipart({ form in
+                form.add(stream: imageStream,
+                         withLength: imageDataLength,
+                         name: "image",
+                         fileName: "test_rawdata.png",
+                         mimeType: MIMEType.png.rawValue)
+            })
+        }
+        
+        // Encoded data should be not nil
+        let encodedData = try req.body.content.encodedData()
+        XCTAssertNotNil(encodedData, "Encoded data should not be nil")
+        
+        // Verify the encoded string format
+        if let form = req.body.content as? HTTPBody.MultipartForm {
+            let delimiter = "--\(form.boundaryID)".data(using: .utf8)!
+            let crlf = "\r\n".data(using: .utf8)!
+            
+            let imageData = try Data(contentsOf: imageURL)
+            
+            let expectedData: Data = (
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"image\"; filename=\"test_rawdata.png\"".data(using: .utf8)! + crlf +
+                "Content-Type: image/png".data(using: .utf8)! + crlf + crlf +
+                imageData +
+                crlf
+            )
+            
+            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+        }
+        
+        HTTPStubber.shared.disable()
+    }
+
 }
 
 public func + (lhs: Data, rhs: Data) -> Data {
