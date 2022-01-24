@@ -19,6 +19,48 @@ import Network
 
 /// Network reachability changes can be monitored using the built-in
 /// Combine publisher or an async stream.
+/// It uses `NWPathMonitor`  under the hoodto provide functionalities.
+///
+/// Usages:
+///
+/// Plain:
+///
+/// ```swift
+/// if Reachability.shared.currentPath.isReachable {
+///     // online
+/// } else {
+///     // offline
+/// }
+/// ```
+///
+/// Async/Await:
+///
+/// ```swift
+/// Task {
+///     for await path in Reachability.shared.asyncStream {
+///         if path.isReachable {
+///             // online
+///         } else {
+///             // offline
+///         }
+///     }
+/// }
+/// ```
+///
+/// or via Combine:
+///
+/// ```swift
+/// var subscriptions = Set<AnyCancellable>()
+///
+/// Reachability.shared.publisher.sink { path in
+///    if path.isReachable {
+///       // online
+///    } else {
+///       // offline
+///    }
+/// }.store(in: &subscriptions)
+/// ```
+///
 public final class HTTPNetReachability: ObservableObject {
     
     // MARK: - Public Properties
@@ -35,7 +77,7 @@ public final class HTTPNetReachability: ObservableObject {
     public private(set) lazy var publisher = createPublisher()
     
     /// AsyncStream publisher.
-    public private(set) lazy var stream = createAsyncStream()
+    public private(set) lazy var asyncStream = createAsyncStream()
 
     // MARK: - Private Properties
     
@@ -54,9 +96,9 @@ public final class HTTPNetReachability: ObservableObject {
     /// configuration.
     ///
     /// - Parameters:
-    ///   - requiredInterface: required interfaces to monitor, by default is `nil`.
-    ///   - prohibitedInterfaces: excluded interfaces, by default is `nil`.
-    ///   - queue: dispatch queue, by default is `main`.
+    ///   - requiredInterface: required interfaces to monitor (by default is `nil`).
+    ///   - prohibitedInterfaces: excluded interfaces (by default is `nil`).
+    ///   - queue: dispatch queue where the monitor works (by default is `main`).
     public init(requiredInterface: NWInterface.InterfaceType? = nil,
                 prohibitedInterfaces: [NWInterface.InterfaceType]? = nil,
                 queue: DispatchQueue = .main) {
