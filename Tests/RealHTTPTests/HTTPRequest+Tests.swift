@@ -57,7 +57,7 @@ class HTTPRequest_Tests: XCTestCase {
     
     /// We tests how replacing the `url` property the final executed url does
     /// not contains the `baseURL` of the destination `HTTPClient` instance.
-    func testRequest_fullURL() throws {
+    func test_validateFullRequestURL() throws {
         let fullURL = URL(string: "http://127.0.0.1:8080")!
         let req = HTTPRequest {
             $0.url = fullURL
@@ -68,7 +68,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     /// Using an IP it should still works returning the full URL and ignoring the client's base url.
-    func testRequest_fullURL_2() throws {
+    func test_validateFullRequestURLWithIP() throws {
         let fullURL = URL(string: "http://127.0.0.1:8080")!
         let req = HTTPRequest {
             $0.url = fullURL
@@ -80,7 +80,7 @@ class HTTPRequest_Tests: XCTestCase {
     
     /// If we specify just the path of an URL the final URL must be the
     /// URL of the request composed with the destination client's baseURL.
-    func testRequest_composedURL() throws {
+    func test_validateRelativeRequestURL() throws {
         let req = HTTPRequest {
             $0.path = "user"
         }
@@ -91,7 +91,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     /// This test verify the query parameters you can add to the url.
-    func testRequest_queryParameters() throws {
+    func test_validateQueryParameters() throws {
         HTTPStubber.shared.enable()
 
         let queryParams = [
@@ -148,7 +148,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     /// This test check if the body of the request is correctly assigned when it's a raw data.
-    func testRequest_rawBody() async throws {
+    func test_validateRawDataBody() async throws {
         HTTPStubber.shared.enable()
 
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
@@ -176,7 +176,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     /// Test the encoding of a raw string for a request.
-    func testRequest_stringBody() async throws {
+    func test_validateStringBody() async throws {
         HTTPStubber.shared.enable()
 
         let body = "This an amazing post with emoji 👍"
@@ -192,7 +192,7 @@ class HTTPRequest_Tests: XCTestCase {
         HTTPStubber.shared.disable()
     }
     
-    func testRequest_urlParametersBody() async throws {
+    func test_validateURLParamsBody() async throws {
         HTTPStubber.shared.enable()
 
         let urlParamsBody = HTTPBody.URLParametersData([
@@ -243,7 +243,7 @@ class HTTPRequest_Tests: XCTestCase {
         HTTPStubber.shared.disable()
     }
     
-    func testRequest_urlParametersBodyAltEncoding() async throws {
+    func test_validateURLParametersBodyAltEncoding() async throws {
         HTTPStubber.shared.enable()
 
         let urlParamsBody = HTTPBody.URLParametersData([
@@ -270,7 +270,7 @@ class HTTPRequest_Tests: XCTestCase {
         HTTPStubber.shared.disable()
     }
     
-    func testRequest_stream() async throws {
+    func test_streamUpload() async throws {
         HTTPStubber.shared.enable()
 
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
@@ -293,7 +293,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     /// Note: this task uses a remote server so it's more an integration test.
-    func testRequest_longRunningDownloadWithProgress() async throws {
+    func test_largeFileDownloadWithProgress() async throws {
         HTTPStubber.shared.disable() // we should connect to the remote network
         
         var progressionReports = 0
@@ -316,7 +316,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     // Test the resumable download.
-    func testRequest_longRunningDownloadWithResume() async throws {
+    func test_largeFileTestResume() async throws {
         HTTPStubber.shared.disable() // we should connect to the remote network
         
         var resumeEventOccurred = false
@@ -359,7 +359,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     // Test JSON encoding via Codable
-    func testRequest_jsonDataWithCodable() async throws {
+    func test_json_decodeWithCodable() async throws {
         HTTPStubber.shared.enable()
         
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
@@ -390,7 +390,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     /// A simple JSON request using JSONObjectSerialization
-    func testRequest_jsonData() async throws {
+    func test_json_decodeRawData() async throws {
         HTTPStubber.shared.enable()
 
         let jsonData: [String: Any] = [
@@ -458,35 +458,44 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     /// Test Multipart-Form Data
-    func testRequest_multipartFormData() async throws {
-        HTTPStubber.shared.enable()
+    func test_multipartFormDataEncoding() async throws {
+        let data = Data("Lorem ipsum dolor sit amet.".utf8)
         
-        let imageFileName = "test_rawdata"
-        guard let imageFileURL = Bundle.module.url(forResource: imageFileName, withExtension: "png") else {
-            throw TestError("Failed to found assets file")
-        }
-        
-        let imageData = try Data(contentsOf: imageFileURL)
-        let imageMimeType = imageFileURL.mimeType()
-
-        let req = try HTTPRequest {
+        let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8080")!
             $0.method = .post
-            $0.body = try .multipart({ form in
-                form.add(data: imageData, name: "Image", fileName: imageFileName, mimeType: imageMimeType)
-                try form.add(string: "Value1", name: "Param1")
-                try form.add(string: "Value2", name: "Param2")
+            $0.body = .multipart({ form in
+                form.add(data: data, name: "data")
             })
         }
         
-        let response = try await req.fetch(client)
+        // Encoded data should be not nil
+        let encodedData = try req.body.content.encodedData()
+        XCTAssertNotNil(encodedData, "encoded data should not be nil")
 
-        let data = response.data
-        print(response.data?.count)
-        
-        HTTPStubber.shared.disable()
+        // Verify the encoded string format
+        if let form = req.body.content as? HTTPBody.MultipartForm {
+            let delimiter = "--\(form.boundaryID)".data(using: .utf8)!
+            let clrf = "\r\n".data(using: .utf8)!
+            
+            let expectedData = (
+                delimiter +
+                clrf +
+                "Content-Disposition: form-data; name=\"data\"".data(using: .utf8)! + clrf + clrf +
+                data +
+                clrf
+            )
+                        
+            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+        }
     }
     
+}
+
+public func + (lhs: Data, rhs: Data) -> Data {
+    var newData = lhs
+    newData.append(rhs)
+    return newData
 }
 
 // MARK: - Support Structures

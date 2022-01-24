@@ -46,7 +46,7 @@ extension HTTPBody {
         // MARK: - Private Properties
         
         /// The boundary used to separate the body parts in the encoded form data.
-        private let boundary: Boundary
+        internal let boundary: Boundary
         
         /// Body contents of the form.
         private var formItems = [MultipartForm.Item]()
@@ -232,7 +232,7 @@ fileprivate extension HTTPHeaders {
         let clrf = HTTPBody.MultipartForm.Boundary.crlf
         
         return map {
-            "\($0.name): \($0.value)\(clrf)"
+            "\($0.name.rawValue): \($0.value)\(clrf)"
         }.joined()
     }
     

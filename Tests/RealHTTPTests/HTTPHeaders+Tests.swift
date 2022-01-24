@@ -50,7 +50,7 @@ class HTTPHeaders_Tests: XCTestCase {
     
     /// The following tests evaluate headers passed in type-safe
     /// and not type-safe manner checking if the echo response is equal.
-    func testHeaders() async throws {
+    func test_headersPresetsAndCustoms() async throws {
         let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8080")!
             $0.method = .post
@@ -83,7 +83,7 @@ class HTTPHeaders_Tests: XCTestCase {
     
     /// The following test check if custom headers are written and available correctly
     /// inside the request instance.
-    func testAuthorizationHeaders() async throws {
+    func test_headers_authorizationHeaders() async throws {
         
         let authsList: [(header: HTTPHeaders.Element, valueToCheck: String)] = [
             // Custom Authorization Scheme
@@ -115,7 +115,7 @@ class HTTPHeaders_Tests: XCTestCase {
     }
     
     /// Test the presence of the default headers into the call.
-    func testDefaultHeaders() async throws {
+    func test_headers_defaultHeaders() async throws {
         let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8080")!
             $0.headers = HTTPHeaders.default
@@ -126,7 +126,7 @@ class HTTPHeaders_Tests: XCTestCase {
     }
     
     /// Test the default encoding value if present and it's correct.
-    func testDefaultAcceptEncoding() async throws {
+    func test_headers_validateDefaultAcceptEncoding() async throws {
         let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8080")!
             $0.headers = HTTPHeaders.default
