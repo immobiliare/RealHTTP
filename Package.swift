@@ -29,6 +29,7 @@ let package = Package(
             dependencies: ["RealHTTP"],
             resources: [
                 .copy("Resources/test_rawdata.png"),
+                .copy("Resources/mac_icon.jpg")
             ]),
     ]
 )

@@ -459,6 +459,8 @@ class HTTPRequest_Tests: XCTestCase {
     
     /// Test Multipart-Form Data
     func test_multipartFormData_encoding() async throws {
+        HTTPStubber.shared.enable()
+
         let data = Data("Lorem ipsum dolor sit amet.".utf8)
         
         let req = HTTPRequest {
@@ -486,9 +488,13 @@ class HTTPRequest_Tests: XCTestCase {
                         
             XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
         }
+        
+        HTTPStubber.shared.disable()
     }
     
     func test_multipartFormData_encodingBodyParts() throws {
+        HTTPStubber.shared.enable()
+
         let frenchData = Data("français".utf8)
         let japaneseData = Data("日本語".utf8)
         let emojiData = Data("😃👍🏻🍻🎉".utf8)
@@ -528,30 +534,102 @@ class HTTPRequest_Tests: XCTestCase {
             )
             XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
         }
-
+        
+        HTTPStubber.shared.disable()
     }
     
+    func test_multipartFormData_encodingFileBodyPart() throws {
+        HTTPStubber.shared.enable()
+
+        guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
+            throw TestError("Failed to found assets file")
+        }
+        
+        let req = try HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = try .multipart({ form in
+                try form.add(fileURL: rawImageURL, name: "finder")
+            })
+        }
+
+        // Encoded data should be not nil
+        let encodedData = try req.body.content.encodedData()
+        XCTAssertNotNil(encodedData, "Encoded data should not be nil")
+
+        // Verify the encoded string format
+        if let form = req.body.content as? HTTPBody.MultipartForm {
+            let delimiter = "--\(form.boundaryID)".data(using: .utf8)!
+            let crlf = "\r\n".data(using: .utf8)!
+            
+            let imageData = try Data(contentsOf: rawImageURL)
+            
+            let expectedData: Data = (
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"finder\"; filename=\"test_rawdata.png\"".data(using: .utf8)! + crlf +
+                "Content-Type: image/png".data(using: .utf8)! + crlf + crlf +
+                imageData +
+                crlf
+            )
+            
+            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+            
+            HTTPStubber.shared.disable()
+        }
+    }
+    
+    func test_multipartFormData_encodingMultipleFileBodyParts() throws {
+        HTTPStubber.shared.enable()
+        
+        guard let image1URL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png"),
+              let image2URL = Bundle.module.url(forResource: "mac_icon", withExtension: "jpg")
+        else {
+            throw TestError("Failed to found assets files")
+        }
+        
+        let req = try HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = try .multipart({ form in
+                try form.add(fileURL: image1URL, name: "image1")
+                try form.add(fileURL: image2URL, name: "image2")
+            })
+        }
+        
+        // Encoded data should be not nil
+        let encodedData = try req.body.content.encodedData()
+        XCTAssertNotNil(encodedData, "Encoded data should not be nil")
+        
+        // Verify the encoded string format
+        if let form = req.body.content as? HTTPBody.MultipartForm {
+            let delimiter = "--\(form.boundaryID)".data(using: .utf8)!
+            let crlf = "\r\n".data(using: .utf8)!
+            
+            let image1Data = try Data(contentsOf: image1URL)
+            let image2Data = try Data(contentsOf: image2URL)
+            
+            let expectedData: Data = (
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"image1\"; filename=\"test_rawdata.png\"".data(using: .utf8)! + crlf +
+                "Content-Type: image/png".data(using: .utf8)! + crlf + crlf +
+                image1Data + crlf +
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"image2\"; filename=\"mac_icon.jpg\"".data(using: .utf8)! + crlf +
+                "Content-Type: image/jpeg".data(using: .utf8)! + crlf + crlf +
+                image2Data + crlf
+            )
+            
+            try expectedData.write(to: URL(fileURLWithPath: "/Users/daniele/Desktop/expected.txt"))
+            try encodedData.write(to: URL(fileURLWithPath: "/Users/daniele/Desktop/original.txt"))
+
+            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+        }
+        
+        HTTPStubber.shared.disable()
+    }
+    
+    
 }
-
-/*
-let expectedString = (
-               BoundaryGenerator.boundary(forBoundaryType: .initial, boundaryKey: boundary) +
-                   "Content-Disposition: form-data; name=\"french\"\(crlf)\(crlf)" +
-                   "français" +
-                   BoundaryGenerator.boundary(forBoundaryType: .encapsulated, boundaryKey: boundary) +
-                   "Content-Disposition: form-data; name=\"japanese\"\(crlf)" +
-                   "Content-Type: text/plain\(crlf)\(crlf)" +
-                   "日本語" +
-                   BoundaryGenerator.boundary(forBoundaryType: .encapsulated, boundaryKey: boundary) +
-                   "Content-Disposition: form-data; name=\"emoji\"\(crlf)" +
-                   "Content-Type: text/plain\(crlf)\(crlf)" +
-                   "😃👍🏻🍻🎉" +
-                   BoundaryGenerator.boundary(forBoundaryType: .final, boundaryKey: boundary)
-           )
-           let expectedData = Data(expectedString.utf8)
-
-           XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
-*/
 
 public func + (lhs: Data, rhs: Data) -> Data {
     var newData = lhs
