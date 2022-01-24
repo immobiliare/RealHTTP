@@ -140,12 +140,12 @@ public class HTTPClient {
     internal func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
         for validator in validators {
             let result = validator.validate(response: response, forRequest: request)
-            guard case .success = result else {
+            guard case .nextValidator = result else {
                 return result
             }
         }
         
-        return .success
+        return .nextValidator
     }
     
 }

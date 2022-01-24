@@ -32,13 +32,13 @@ public protocol HTTPResponseValidator {
 // MARK: - HTTPResponseValidatorResult
 
 /// Result of validation. It's used to perform additional actions:
-/// - `fail`: fail operation with given error.
+/// - `failChain`: fail validaton chain reporting with given error.
 /// - `retry`: retry - if possible - with set strategy.
-/// - `success`: operation succeded.
+/// - `nextValidator`: operation succeded, move to next validator or complete all.
 public enum HTTPResponseValidatorResult {
-    case fail(Error)
+    case failChain(Error)
     case retry(HTTPRetryStrategy)
-    case success
+    case nextValidator
 }
 
 // MARK: - HTTPRetryStrategy

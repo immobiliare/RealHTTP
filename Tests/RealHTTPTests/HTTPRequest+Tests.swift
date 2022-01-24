@@ -22,6 +22,19 @@ class HTTPRequest_Tests: XCTestCase {
     
     private var observerBag = Set<AnyCancellable>()
     
+    private func setupStubber(echo: Bool = true) {
+        HTTPStubber.shared.enable()
+        HTTPStubber.shared.removeAllStubs()
+        
+        if echo {
+            HTTPStubber.shared.add(stub: HTTPStubRequest().match(urlRegex: "*").stubEcho())
+        }
+    }
+    
+    private func stopStubber() {
+        HTTPStubber.shared.disable()
+    }
+    
     private lazy var client: HTTPClient = {
         var configuration = URLSessionConfiguration.default
 
@@ -149,7 +162,8 @@ class HTTPRequest_Tests: XCTestCase {
     
     /// This test check if the body of the request is correctly assigned when it's a raw data.
     func test_validateRawDataBody() async throws {
-        HTTPStubber.shared.enable()
+        setupStubber(echo: true)
+        defer { stopStubber() }
 
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
             throw TestError("Failed to found assets file")
@@ -171,14 +185,13 @@ class HTTPRequest_Tests: XCTestCase {
 
         let response = try await req.fetch(client)
         XCTAssert(rawImageData == response.data, "Body is not the same we sent")
-        
-        HTTPStubber.shared.disable()
     }
     
     /// Test the encoding of a raw string for a request.
     func test_validateStringBody() async throws {
-        HTTPStubber.shared.enable()
-
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
         let body = "This an amazing post with emoji 👍"
         let req = HTTPRequest {
             $0.path = "/image/test_image"
@@ -188,13 +201,12 @@ class HTTPRequest_Tests: XCTestCase {
         
         let response = try await req.fetch(client)
         XCTAssert(response.data?.asString() == body, "Body is not the same we sent")
-        
-        HTTPStubber.shared.disable()
     }
     
     func test_validateURLParamsBody() async throws {
-        HTTPStubber.shared.enable()
-
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
         let urlParamsBody = HTTPBody.URLParametersData([
             "page": "1",
             "offset": "22",
@@ -239,13 +251,12 @@ class HTTPRequest_Tests: XCTestCase {
         // Ensure dictionary is encoded correctly
         XCTAssert(parsedParams.params("p5[k1]").first?.value == "v1", "Failed to encode dictionary")
         XCTAssert(parsedParams.params("p5[k2]").first?.value == "0", "Failed to encode dictionary")
-        
-        HTTPStubber.shared.disable()
     }
     
     func test_validateURLParametersBodyAltEncoding() async throws {
-        HTTPStubber.shared.enable()
-
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
         let urlParamsBody = HTTPBody.URLParametersData([
             "p3": false,
             "p4": ["a","b"]
@@ -266,13 +277,12 @@ class HTTPRequest_Tests: XCTestCase {
         
         XCTAssert(parsedParams.params("p3").first?.value == "false", "Failed to encode boolean")
         XCTAssert(parsedParams.params("p4").count == 2, "Failed to encode array")
-        
-        HTTPStubber.shared.disable()
     }
     
     func test_streamUpload() async throws {
-        HTTPStubber.shared.enable()
-
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
             throw TestError("Failed to found assets file")
         }
@@ -288,13 +298,11 @@ class HTTPRequest_Tests: XCTestCase {
         
         let response = try await req.fetch(client)
         XCTAssert(response.data?.count == data.count, "Failed to transfer all data")
-        
-        HTTPStubber.shared.disable()
     }
     
     /// Note: this task uses a remote server so it's more an integration test.
     func test_largeFileDownloadWithProgress() async throws {
-        HTTPStubber.shared.disable() // we should connect to the remote network
+        stopStubber()
         
         var progressionReports = 0
         
@@ -311,13 +319,11 @@ class HTTPRequest_Tests: XCTestCase {
         let response = try await req.fetch(client)
         XCTAssert(progressionReports > 0, "Failed to receive updates from 5MB file download")
         XCTAssert(response.data?.count ?? 0 > 0, "Failed to receive data")
-
-        HTTPStubber.shared.enable()
     }
     
     // Test the resumable download.
     func test_largeFileTestResume() async throws {
-        HTTPStubber.shared.disable() // we should connect to the remote network
+        stopStubber()
         
         var resumeEventOccurred = false
         var resumedDownloadFinished = false
@@ -352,15 +358,14 @@ class HTTPRequest_Tests: XCTestCase {
         // Attempt to resume the download
         let _ = try await req.fetch(client)
 
-        HTTPStubber.shared.enable()
-
         XCTAssert(resumeEventOccurred, "Failed to resume download")
         XCTAssert(resumedDownloadFinished, "Failed to complete resumed download")
     }
     
     // Test JSON encoding via Codable
     func test_json_decodeWithCodable() async throws {
-        HTTPStubber.shared.enable()
+        setupStubber(echo: true)
+        defer { stopStubber() }
         
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
             throw TestError("Failed to found assets file")
@@ -385,14 +390,13 @@ class HTTPRequest_Tests: XCTestCase {
         XCTAssert(response.headers[.contentType]?.contains("application/json") ?? false, "Invalid content type")
         XCTAssert((response.headers[.contentLength]?.isEmpty ?? true) == false, "Invalid content length")
         XCTAssert(responseUser == user, "Failed to correctly send/decode codable object")
-        
-        HTTPStubber.shared.disable()
     }
     
     /// A simple JSON request using JSONObjectSerialization
     func test_json_decodeRawData() async throws {
-        HTTPStubber.shared.enable()
-
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
         let jsonData: [String: Any] = [
             "user" : "Mark",
             "age": 12,
@@ -424,8 +428,6 @@ class HTTPRequest_Tests: XCTestCase {
   
         XCTAssert(response.headers[.contentType]?.contains("application/json") ?? false, "Invalid content type")
         XCTAssert((response.headers[.contentLength]?.isEmpty ?? true) == false, "Invalid content length")
-   
-        HTTPStubber.shared.disable()
     }
     
     // MARK: - Multipart Form Data
@@ -459,8 +461,9 @@ class HTTPRequest_Tests: XCTestCase {
     
     /// Test Multipart-Form Data
     func test_multipart_encoding() async throws {
-        HTTPStubber.shared.enable()
-
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
         let data = Data("Lorem ipsum dolor sit amet.".utf8)
         
         let req = HTTPRequest {
@@ -488,13 +491,12 @@ class HTTPRequest_Tests: XCTestCase {
                         
             XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
         }
-        
-        HTTPStubber.shared.disable()
     }
     
     func test_multipart_encodingBodyParts() throws {
-        HTTPStubber.shared.enable()
-
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
         let frenchData = Data("français".utf8)
         let japaneseData = Data("日本語".utf8)
         let emojiData = Data("😃👍🏻🍻🎉".utf8)
@@ -534,13 +536,12 @@ class HTTPRequest_Tests: XCTestCase {
             )
             XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
         }
-        
-        HTTPStubber.shared.disable()
     }
     
     func test_multipart_encodingFileBodyPart() throws {
-        HTTPStubber.shared.enable()
-
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
             throw TestError("Failed to found assets file")
         }
@@ -573,13 +574,12 @@ class HTTPRequest_Tests: XCTestCase {
             )
             
             XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
-            
-            HTTPStubber.shared.disable()
         }
     }
     
     func test_multipart_encodingMultipleFileBodyParts() throws {
-        HTTPStubber.shared.enable()
+        setupStubber(echo: true)
+        defer { stopStubber() }
         
         guard let image1URL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png"),
               let image2URL = Bundle.module.url(forResource: "mac_icon", withExtension: "jpg")
@@ -621,12 +621,11 @@ class HTTPRequest_Tests: XCTestCase {
 
             XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
         }
-        
-        HTTPStubber.shared.disable()
     }
     
     func test_multipart_encodingStreamBodyPart() throws {
-        HTTPStubber.shared.enable()
+        setupStubber(echo: true)
+        defer { stopStubber() }
         
         guard let imageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
             throw TestError("Failed to found assets files")
@@ -668,12 +667,11 @@ class HTTPRequest_Tests: XCTestCase {
             
             XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
         }
-        
-        HTTPStubber.shared.disable()
     }
     
     func test_multipart_encodingMultipleBodyPartsWithVaryingTypes() throws {
-        HTTPStubber.shared.enable()
+        setupStubber(echo: true)
+        defer { stopStubber() }
         
         guard let image1URL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png"),
               let image2URL = Bundle.module.url(forResource: "mac_icon", withExtension: "jpg")
@@ -731,15 +729,14 @@ class HTTPRequest_Tests: XCTestCase {
             
             XCTAssertEqual(encodedData, expectedData, "Encoded data should match expected data")
         }
-        
-        HTTPStubber.shared.disable()
     }
     
     // MARK: - Validators
     
     func test_validatorValidationSequence() async throws {
-        HTTPStubber.shared.enable()
-
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
         var passedValidators = 0
         let errorMessage = "It should be fail! that's okay"
         
@@ -748,19 +745,19 @@ class HTTPRequest_Tests: XCTestCase {
         newClient.validators = [
             CallbackValidator { response, request in
                 passedValidators += 1
-                return .success
+                return .nextValidator
             },
             CallbackValidator { response, request in
                 passedValidators += 1
-                return .success
+                return .nextValidator
             },
             CallbackValidator { response, request in
                 passedValidators += 1
-                return .fail(TestError(stringLiteral: errorMessage))
+                return .failChain(TestError(stringLiteral: errorMessage))
             },
             CallbackValidator { response, request in
                 passedValidators += 1 // it should never arrive here
-                return .success
+                return .nextValidator
             },
         ]
         
@@ -775,12 +772,11 @@ class HTTPRequest_Tests: XCTestCase {
         XCTAssert(response.isError == true, "Call should be invalidated by the last provider")
         XCTAssert(passedValidators == 3, "Call should be invalidated by the last provider")
         XCTAssert(response.error?.message == errorMessage, "Error from call must be overriden by the validator's error")
-        
-        HTTPStubber.shared.disable()
     }
     
     func test_validatorRetryMechanism() async throws {
-        HTTPStubber.shared.enable()
+        setupStubber(echo: true)
+        defer { stopStubber() }
         
         let maxAttempts = 5
         let respondOkAtAttempt = 3
@@ -789,7 +785,7 @@ class HTTPRequest_Tests: XCTestCase {
         newClient.validators = [
             CallbackValidator { response, request in
                 if request.currentRetry == respondOkAtAttempt {
-                    return .success
+                    return .nextValidator
                 }
                 
                 return .retry(.immediate)
@@ -808,16 +804,14 @@ class HTTPRequest_Tests: XCTestCase {
         
         XCTAssert(req.currentRetry == 3, "Failed to retry \(respondOkAtAttempt) times as expected")
         XCTAssert(response.data?.asString() == "test", "Expected response not satisfied")
-
-        HTTPStubber.shared.disable()
     }
     
     func test_validatorRetryMechanismAfterAltRequest() async throws {
-        HTTPStubber.shared.enable()
+        setupStubber(echo: true)
+        defer { stopStubber() }
         
         var receivedAltCallResponse: String?
         
-        // Setup request
         let altReq = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8080")!
             $0.method = .post
@@ -829,7 +823,7 @@ class HTTPRequest_Tests: XCTestCase {
             CallbackValidator { response, request in
                 if request === altReq {
                     // alternate request return success
-                    return .success
+                    return .nextValidator
                 }
                 
                 if request.currentRetry == 0 {
@@ -839,7 +833,7 @@ class HTTPRequest_Tests: XCTestCase {
                     }))
                 } else {
                     // the next time is okay
-                    return .success
+                    return .nextValidator
                 }
             }
         ]
@@ -852,10 +846,64 @@ class HTTPRequest_Tests: XCTestCase {
         }
         
         let response = try await req.fetch(newClient)
-        XCTAssert(response.data?.asString() == "doSomething", "Response received after retry with alt call is wrong")
+        let responseString = response.data?.asString()
+        XCTAssert(responseString == "doSomething", "Response received after retry with alt call is wrong")
         XCTAssert(receivedAltCallResponse == "loginAndRetry", "Response received on alt call is wrong")
+    }
+    
+    func test_validatorRetryMechanismAfterAltRequestAndFail() async throws {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+        
+        var loginCallResponse: HTTPResponse?
+        let loginCallErrorResponse = "login failed! check credentials"
+        let mainCallErrorResponse = "login required"
+        
+        // Network calls
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080/execute")!
+        }
+        let loginCall = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080/login")!
+        }
+        
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.validators = [
+            CallbackValidator { response, request in
+                if request === loginCall {
+                    return .nextValidator
+                } else {
+                    return .retry(.after(loginCall, 0, { request, response in
+                        loginCallResponse = response
+                    }))
+                }
+                
+            }
+        ]
 
-        HTTPStubber.shared.disable()
+        // Stubber to catch /execute call
+        let stubReq = HTTPStubRequest().match(urlRegex: "/execute").stub(for: .get) { response in
+            response.statusCode = .unauthorized
+            response.body = mainCallErrorResponse
+        }
+        HTTPStubber.shared.add(stub: stubReq)
+        
+        let altStubReq = HTTPStubRequest().match(urlRegex: "/login").stub(for: .get) { response in
+            response.statusCode = .internalServerError
+            response.body = loginCallErrorResponse
+        }
+        HTTPStubber.shared.add(stub: altStubReq)
+        
+        // Execute
+        let response = try await req.fetch(newClient)
+        
+        // Check alternate call
+        XCTAssert(loginCallResponse?.statusCode == .internalServerError, "Login call should fail with internal server error")
+        XCTAssert(loginCallResponse?.data?.asString() == loginCallErrorResponse, "Failed to validate login call error")
+
+        // Check main call
+        XCTAssert(response.statusCode == .unauthorized, "Main call should fail with unathorized")
+        XCTAssert(response.data?.asString() == mainCallErrorResponse, "Failed to validate main call error")
     }
 
 }
@@ -867,7 +915,7 @@ fileprivate struct CallbackValidator: HTTPResponseValidator {
     var onValidate: ((_ response: HTTPResponse, _ request: HTTPRequest) -> HTTPResponseValidatorResult)?
     
     func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
-        onValidate?(response, request) ?? .success
+        onValidate?(response, request) ?? .nextValidator
     }
     
 }

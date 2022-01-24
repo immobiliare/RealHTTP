@@ -221,13 +221,12 @@ public enum HTTPStatusCode: Int, Error {
     /// If no valid code can be extracted the `.none` is set.
     ///
     /// - Parameter urlResponse: url response instance
-    public init?(URLResponse: URLResponse?) {
+    public static func fromResponse(_ URLResponse: URLResponse?) -> HTTPStatusCode {
         guard let statusCode = (URLResponse as? HTTPURLResponse)?.statusCode else {
-            self = .none
-            return
+            return .none
         }
         
-        self.init(rawValue: statusCode)
+        return HTTPStatusCode(rawValue: statusCode) ?? .none
     }
 
 }

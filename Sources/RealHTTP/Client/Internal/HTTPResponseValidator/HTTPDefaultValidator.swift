@@ -56,25 +56,21 @@ open class HTTPDefaultValidator: HTTPResponseValidator {
     /// - Returns: HTTPResponseValidatorAction
     ///
     open func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
-        if let error = response.error {
-            if let allowedRetryMode = allowedRetry(forResponse: response, error: error) {
-                // Some errors allows retry of the call.
-                // Retry option is managed by the HTTPRequest itself (if we reached the
-                // maximum amount of retries or no retries are allowed by request this
-                // request will be ignored).
-                return allowedRetryMode
-            } else {
-                // Some other fails
-                return .fail(error)
-            }
+        if let error = response.error,
+           let allowedRetryMode = allowedRetry(forResponse: response, error: error) {
+            // Some errors allows retry of the call.
+            // Retry option is managed by the HTTPRequest itself (if we reached the
+            // maximum amount of retries or no retries are allowed by request this
+            // request will be ignored).
+            return allowedRetryMode
         }
         
         if !allowsEmptyResponses && (response.data?.isEmpty ?? true) {
             // If empty response are not allowed it fails with `.emptyResponse` code.
-            return .fail(HTTPError(.emptyResponse))
+            return .failChain(HTTPError(.emptyResponse))
         }
         
-        return .success
+        return .nextValidator
     }
     
     /// Return `true` if error received should allow retry of the call.
@@ -88,8 +84,7 @@ open class HTTPDefaultValidator: HTTPResponseValidator {
     /// - Returns: `HTTPResponseValidatorResult` or `nil` if retry is not supported
     open func allowedRetry(forResponse response: HTTPResponse, error: Error) -> HTTPResponseValidatorResult? {
         // If error is part of retriable http status code we want to try again the call.
-        if let httpStatusCode = response.statusCode,
-           let retryInterval = retriableHTTPStatusCodes[httpStatusCode] {
+        if let retryInterval = retriableHTTPStatusCodes[response.statusCode] {
             return .retry(.delayed(retryInterval))
         }
         

@@ -63,9 +63,7 @@ public struct HTTPResponse {
     public internal(set) weak var request: HTTPRequest?
     
     /// HTTP status code of the response, if available.
-    public var statusCode: HTTPStatusCode? {
-        httpResponse?.status
-    }
+    public let statusCode: HTTPStatusCode
     
     /// Headers received into the response.
     public var headers: HTTPHeaders {
@@ -89,12 +87,14 @@ public struct HTTPResponse {
         self.metrics = nil
         self.urlResponse = nil
         self.dataFileURL = nil
+        self.statusCode = .none
     }
     
     /// Initialize with response from data loader.
     ///
     /// - Parameter response: response received.
     internal init(response: HTTPDataLoaderResponse) {
+        self.statusCode = HTTPStatusCode.fromResponse(response.urlResponse)
         self.innerData = response.data
         self.dataFileURL = response.dataFileURL
         self.metrics = HTTPMetrics(metrics: response.metrics)

@@ -90,7 +90,7 @@ internal class HTTPDataLoader: NSObject,
             /// response. Validator return the action to perform in case of failure.
             let validationAction = self.client!.validate(response: response, forRequest: request)
             switch validationAction {
-            case .fail(let error):
+            case .failChain(let error):
                 // Fail network operation with given error object.
                 return HTTPResponse(error: error)
                 
@@ -107,7 +107,7 @@ internal class HTTPDataLoader: NSObject,
                     return retryResponse
                 }
                 
-            case .success:
+            case .nextValidator:
                 // Everything goes fine, we want to return the response of the call.
                 return response
             }
