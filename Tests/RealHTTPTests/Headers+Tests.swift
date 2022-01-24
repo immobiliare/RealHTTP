@@ -17,7 +17,7 @@ import Foundation
 import XCTest
 @testable import RealHTTP
 
-class HTTPHeaders_Tests: XCTestCase {
+class HeadersTests: XCTestCase {
     
     private lazy var client: HTTPClient = {
         var configuration = URLSessionConfiguration.default

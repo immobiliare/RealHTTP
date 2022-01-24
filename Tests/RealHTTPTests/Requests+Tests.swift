@@ -18,7 +18,7 @@ import XCTest
 import Combine
 @testable import RealHTTP
 
-class HTTPRequest_Tests: XCTestCase {
+class RequestsTests: XCTestCase {
     
     private var observerBag = Set<AnyCancellable>()
     
@@ -738,6 +738,26 @@ class HTTPRequest_Tests: XCTestCase {
         } else {
             XCTFail("Network call should fail")
         }
+    }
+    
+    func test_combineFetchPublisher() {
+        stopStubber()
+        
+        let exp = expectation(description: "first listener notified")
+
+        let req = HTTPRequest {
+            $0.url = URL(string: "https://jsonplaceholder.typicode.com/todos/1")!
+            $0.method = .get
+        }
+        
+        req.fetchPublisher().sink { result in
+            print("")
+        } receiveValue: { response in
+            XCTAssertNotNil(response.data)
+            exp.fulfill()
+        }.store(in: &observerBag)
+
+        wait(for: [exp], timeout: 30)
     }
 
 }
