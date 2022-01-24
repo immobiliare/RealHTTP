@@ -778,6 +778,85 @@ class HTTPRequest_Tests: XCTestCase {
         
         HTTPStubber.shared.disable()
     }
+    
+    func test_validatorRetryMechanism() async throws {
+        HTTPStubber.shared.enable()
+        
+        let maxAttempts = 5
+        let respondOkAtAttempt = 3
+        
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.validators = [
+            CallbackValidator { response, request in
+                if request.currentRetry == respondOkAtAttempt {
+                    return .success
+                }
+                
+                return .retry(.immediate)
+            }
+        ]
+
+        // Setup request
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = .string("test")
+            $0.maxRetries = maxAttempts
+        }
+        
+        let response = try await req.fetch(newClient)
+        
+        XCTAssert(req.currentRetry == 3, "Failed to retry \(respondOkAtAttempt) times as expected")
+        XCTAssert(response.data?.asString() == "test", "Expected response not satisfied")
+
+        HTTPStubber.shared.disable()
+    }
+    
+    func test_validatorRetryMechanismAfterAltRequest() async throws {
+        HTTPStubber.shared.enable()
+        
+        var receivedAltCallResponse: String?
+        
+        // Setup request
+        let altReq = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = .string("loginAndRetry")
+        }
+        
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.validators = [
+            CallbackValidator { response, request in
+                if request === altReq {
+                    // alternate request return success
+                    return .success
+                }
+                
+                if request.currentRetry == 0 {
+                    // first call attempt retry return after executing alt call
+                    return .retry(.after(altReq, 0, { request, response in
+                        receivedAltCallResponse = response.data?.asString()
+                    }))
+                } else {
+                    // the next time is okay
+                    return .success
+                }
+            }
+        ]
+
+        // Setup request
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = .string("doSomething")
+        }
+        
+        let response = try await req.fetch(newClient)
+        XCTAssert(response.data?.asString() == "doSomething", "Response received after retry with alt call is wrong")
+        XCTAssert(receivedAltCallResponse == "loginAndRetry", "Response received on alt call is wrong")
+
+        HTTPStubber.shared.disable()
+    }
 
 }
 

@@ -27,8 +27,7 @@ final class RealHTTPTests: XCTestCase {
                 //.fetch().decode(User.self)
             
             let user = try await req.fetch(HTTPClient.shared)
-         
-            print("ok")
+            print(user.data?.asString())
             expectation.fulfill()
         }
         

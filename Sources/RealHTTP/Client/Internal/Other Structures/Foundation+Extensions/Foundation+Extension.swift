@@ -14,7 +14,9 @@
 //
 
 import Foundation
+#if !os(macOS)
 import MobileCoreServices
+#endif
 
 internal extension Bundle {
     

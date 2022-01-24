@@ -84,7 +84,7 @@ internal class HTTPDataLoader: NSObject,
                     continuation.resume(returning: response)
                 })
             })
-            
+
             /// Once we receive the response we would to use validators to validate received response.
             /// It evaluates each validator in order and stops to the first one who send a non `.success`
             /// response. Validator return the action to perform in case of failure.
@@ -96,16 +96,16 @@ internal class HTTPDataLoader: NSObject,
                 
             case .retry(let strategy):
                 // Perform a retry attempt using specified strategy.
-                guard request.isAltRequest == false else {
+                if request.isAltRequest || request.currentRetry > request.maxRetries {
                     // retry strategy cannot be executed if call is an alternate request
                     // created as retry strategy, otherwise we'll get an infinite loop.
                     // In this case we want just return the response itself.
                     return response
+                } else {
+                    // Perform the retry strategy to apply and return the result
+                    let retryResponse = try await performRetryStrategy(strategy, forRequest: request, withResponse: response)
+                    return retryResponse
                 }
-                
-                // Perform the retry strategy to apply and return the result
-                let retryResponse = try await performRetryStrategy(strategy, forRequest: request)
-                return retryResponse
                 
             case .success:
                 // Everything goes fine, we want to return the response of the call.
@@ -119,38 +119,34 @@ internal class HTTPDataLoader: NSObject,
     /// - Parameters:
     ///   - strategy: strategy to execute for retry.
     ///   - request: request who failed to be validated.
+    ///   - response: response received from the request failed.
     /// - Returns: `HTTPResponse`
-    private func performRetryStrategy(_ strategy: HTTPRetryStrategy, forRequest request: HTTPRequest) async throws -> HTTPResponse {
+    private func performRetryStrategy(_ strategy: HTTPRetryStrategy, forRequest request: HTTPRequest,
+                                      withResponse response: HTTPResponse) async throws -> HTTPResponse {
         switch strategy {
-        case .after(let altRequest, let delay, let catcher):
+        case .after(let altRequest, let delayToRetryMainCall, let catcher):
             // If `request` did fail we want to execute an alternate request and retry again the original one.
             // An example of this case is the auth expiration; we want to perform an authentication refresh
             // and retry again the original call.
             altRequest.isAltRequest = true
+            request.currentRetry += 1
             let altRequestResponse = try await self.fetch(altRequest)
             // we can specify an async callback function to execute once we receive the response of the alt request.
             // (in the example above we would use it to setup and store the authentication data received before retry the call).
             try await catcher?(altRequest, altRequestResponse)
             // wait before retry the original call, if set.
-            try await Task.sleep(seconds: delay)
+            try await Task.sleep(seconds: delayToRetryMainCall)
             
-            return altRequestResponse
+            return response
             
         default:
             // Retry mechanism is made with a specified interval.
-            var lastResponse: HTTPResponse!
-            
-            // If we can make a further attempt...
-            while request.currentRetry <= request.maxRetries {
-                // wait a certain amount of time depending by the strategy set...
-                try await Task.sleep(seconds: strategy.retryInterval(forRequest: request))
-                // try again the same request...
-                lastResponse = try await self.fetch(request)
-                // ...and increment the attempts counter
-                request.currentRetry += 1
-            }
-            
-            return lastResponse
+            // wait a certain amount of time depending by the strategy set...
+            try await Task.sleep(seconds: strategy.retryInterval(forRequest: request))
+            // try again the same request and increment the attempts counter
+            request.currentRetry += 1
+            let response = try await self.fetch(request)
+            return response
         }
     }
     
