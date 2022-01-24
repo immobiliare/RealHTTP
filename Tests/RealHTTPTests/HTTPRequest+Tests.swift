@@ -92,6 +92,8 @@ class HTTPRequest_Tests: XCTestCase {
     
     /// This test verify the query parameters you can add to the url.
     func testRequest_queryParameters() throws {
+        HTTPStubber.shared.enable()
+
         let queryParams = [
             ("page", "1"),
             ("offset", "22"),
@@ -141,10 +143,14 @@ class HTTPRequest_Tests: XCTestCase {
             XCTAssert(encodedQueryItems[i].0 == originalQueryItems[i].0, "Query item key is not what we expect")
             XCTAssert(encodedQueryItems[i].1 == originalQueryItems[i].1, "Query item value is not what we expect")
         }
+        
+        HTTPStubber.shared.disable()
     }
     
     /// This test check if the body of the request is correctly assigned when it's a raw data.
     func testRequest_rawBody() async throws {
+        HTTPStubber.shared.enable()
+
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
             throw TestError("Failed to found assets file")
         }
@@ -165,10 +171,14 @@ class HTTPRequest_Tests: XCTestCase {
 
         let response = try await req.fetch(client)
         XCTAssert(rawImageData == response.data, "Body is not the same we sent")
+        
+        HTTPStubber.shared.disable()
     }
     
     /// Test the encoding of a raw string for a request.
     func testRequest_stringBody() async throws {
+        HTTPStubber.shared.enable()
+
         let body = "This an amazing post with emoji 👍"
         let req = HTTPRequest {
             $0.path = "/image/test_image"
@@ -178,9 +188,13 @@ class HTTPRequest_Tests: XCTestCase {
         
         let response = try await req.fetch(client)
         XCTAssert(response.data?.asString() == body, "Body is not the same we sent")
+        
+        HTTPStubber.shared.disable()
     }
     
     func testRequest_urlParametersBody() async throws {
+        HTTPStubber.shared.enable()
+
         let urlParamsBody = HTTPBody.URLParametersData([
             "page": "1",
             "offset": "22",
@@ -225,9 +239,13 @@ class HTTPRequest_Tests: XCTestCase {
         // Ensure dictionary is encoded correctly
         XCTAssert(parsedParams.params("p5[k1]").first?.value == "v1", "Failed to encode dictionary")
         XCTAssert(parsedParams.params("p5[k2]").first?.value == "0", "Failed to encode dictionary")
+        
+        HTTPStubber.shared.disable()
     }
     
     func testRequest_urlParametersBodyAltEncoding() async throws {
+        HTTPStubber.shared.enable()
+
         let urlParamsBody = HTTPBody.URLParametersData([
             "p3": false,
             "p4": ["a","b"]
@@ -248,9 +266,13 @@ class HTTPRequest_Tests: XCTestCase {
         
         XCTAssert(parsedParams.params("p3").first?.value == "false", "Failed to encode boolean")
         XCTAssert(parsedParams.params("p4").count == 2, "Failed to encode array")
+        
+        HTTPStubber.shared.disable()
     }
     
     func testRequest_stream() async throws {
+        HTTPStubber.shared.enable()
+
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
             throw TestError("Failed to found assets file")
         }
@@ -266,11 +288,14 @@ class HTTPRequest_Tests: XCTestCase {
         
         let response = try await req.fetch(client)
         XCTAssert(response.data?.count == data.count, "Failed to transfer all data")
+        
+        HTTPStubber.shared.disable()
     }
     
     /// Note: this task uses a remote server so it's more an integration test.
     func testRequest_longRunningDownloadWithProgress() async throws {
         HTTPStubber.shared.disable() // we should connect to the remote network
+        
         var progressionReports = 0
         
         let req = HTTPRequest {
@@ -400,6 +425,66 @@ class HTTPRequest_Tests: XCTestCase {
         XCTAssert(response.headers[.contentType]?.contains("application/json") ?? false, "Invalid content type")
         XCTAssert((response.headers[.contentLength]?.isEmpty ?? true) == false, "Invalid content length")
    
+        HTTPStubber.shared.disable()
+    }
+    
+    // MARK: - Multipart
+    
+    func test_multipart_contentTypeContainsBoundary() throws {
+        let boundary = HTTPBody.MultipartForm.Boundary()
+        let body = HTTPBody.multipart(boundary: boundary.id) { _ in }
+                
+        let formData = (body.content as? HTTPBody.MultipartForm)
+        
+        let expectedContentType = "multipart/form-data; boundary=\(boundary.id)"
+        XCTAssertEqual(formData!.contentType, expectedContentType, "contentType should match expected value")
+    }
+    
+    func test_multipart_contentLengthMatchesTotalBodyPartSize() {
+        let data1 = Data("Lorem ipsum dolor sit amet.".utf8)
+        let data2 = Data("Vim at integre alterum.".utf8)
+        
+        let body = HTTPBody.multipart({
+            $0.add(data: data1, name: "data1")
+            $0.add(data: data2, name: "data2")
+        })
+        let multipartFormData = (body.content as? HTTPBody.MultipartForm)
+
+        // Then
+        let expectedContentLength = UInt64(data1.count + data2.count)
+        XCTAssertEqual(multipartFormData?.contentLength,
+                       expectedContentLength,
+                       "content length should match expected value")
+    }
+    
+    /// Test Multipart-Form Data
+    func testRequest_multipartFormData() async throws {
+        HTTPStubber.shared.enable()
+        
+        let imageFileName = "test_rawdata"
+        guard let imageFileURL = Bundle.module.url(forResource: imageFileName, withExtension: "png") else {
+            throw TestError("Failed to found assets file")
+        }
+        
+        let imageData = try Data(contentsOf: imageFileURL)
+        let imageMimeType = imageFileURL.mimeType()
+
+        let req = try HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = try .multipart({ form in
+                form.add(data: imageData, name: "Image", fileName: imageFileName, mimeType: imageMimeType)
+                try form.add(string: "Value1", name: "Param1")
+                try form.add(string: "Value2", name: "Param2")
+            })
+        }
+        
+        let response = try await req.fetch(client)
+
+        let data = response.data
+        print(response.data?.count)
+        
+        HTTPStubber.shared.disable()
     }
     
 }
@@ -450,7 +535,7 @@ fileprivate extension Dictionary {
     /// Get the value at specified keypath.
     ///
     /// - Returns: T?
-    fileprivate func valueForKeyPath<T>(keyPath: String) -> T? {
+    func valueForKeyPath<T>(keyPath: String) -> T? {
         var keys = keyPath.components(separatedBy: ".")
         guard let first = keys.first as? Key else {
             return nil

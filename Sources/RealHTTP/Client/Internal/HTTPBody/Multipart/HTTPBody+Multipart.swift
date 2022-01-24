@@ -27,7 +27,7 @@ extension HTTPBody {
                                  _ configure: ((inout MultipartForm) throws -> Void)) rethrows -> HTTPBody {
         var formData = MultipartForm(boundary: boundary)
         try configure(&formData)
-        return HTTPBody.empty
+        return HTTPBody(content: formData)
     }
     
     
