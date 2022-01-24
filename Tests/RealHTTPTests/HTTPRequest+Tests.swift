@@ -428,9 +428,9 @@ class HTTPRequest_Tests: XCTestCase {
         HTTPStubber.shared.disable()
     }
     
-    // MARK: - Multipart
+    // MARK: - Multipart Form Data
     
-    func test_multipart_contentTypeContainsBoundary() throws {
+    func test_multipartFormData_contentTypeContainsBoundary() throws {
         let boundary = HTTPBody.MultipartForm.Boundary()
         let body = HTTPBody.multipart(boundary: boundary.id) { _ in }
                 
@@ -440,7 +440,7 @@ class HTTPRequest_Tests: XCTestCase {
         XCTAssertEqual(formData!.contentType, expectedContentType, "contentType should match expected value")
     }
     
-    func test_multipart_contentLengthMatchesTotalBodyPartSize() {
+    func test_multipartFormData_contentLengthMatchesTotalBodyPartSize() {
         let data1 = Data("Lorem ipsum dolor sit amet.".utf8)
         let data2 = Data("Vim at integre alterum.".utf8)
         
@@ -458,7 +458,7 @@ class HTTPRequest_Tests: XCTestCase {
     }
     
     /// Test Multipart-Form Data
-    func test_multipartFormDataEncoding() async throws {
+    func test_multipartFormData_encoding() async throws {
         let data = Data("Lorem ipsum dolor sit amet.".utf8)
         
         let req = HTTPRequest {
@@ -476,21 +476,82 @@ class HTTPRequest_Tests: XCTestCase {
         // Verify the encoded string format
         if let form = req.body.content as? HTTPBody.MultipartForm {
             let delimiter = "--\(form.boundaryID)".data(using: .utf8)!
-            let clrf = "\r\n".data(using: .utf8)!
+            let crlf = "\r\n".data(using: .utf8)!
             
-            let expectedData = (
-                delimiter +
-                clrf +
-                "Content-Disposition: form-data; name=\"data\"".data(using: .utf8)! + clrf + clrf +
-                data +
-                clrf
+            let expectedData: Data = (
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"data\"".data(using: .utf8)! + crlf + crlf +
+                data + crlf
             )
                         
             XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
         }
     }
     
+    func test_multipartFormData_encodingBodyParts() throws {
+        let frenchData = Data("français".utf8)
+        let japaneseData = Data("日本語".utf8)
+        let emojiData = Data("😃👍🏻🍻🎉".utf8)
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = .multipart({ form in
+                form.add(data: frenchData, name: "french")
+                form.add(data: japaneseData, name: "japanese", mimeType: MIMEType.textPlain.rawValue)
+                form.add(data: emojiData, name: "emoji", mimeType: MIMEType.textPlain.rawValue)
+            })
+        }
+
+        // Encoded data should be not nil
+        let encodedData = try req.body.content.encodedData()
+        XCTAssertNotNil(encodedData, "Encoded data should not be nil")
+
+        // Verify the encoded string format
+        if let form = req.body.content as? HTTPBody.MultipartForm {
+            let delimiter = "--\(form.boundaryID)".data(using: .utf8)!
+            let crlf = "\r\n".data(using: .utf8)!
+            
+            let expectedData: Data = (
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"french\"".data(using: .utf8)! + crlf + crlf +
+                "français".data(using: .utf8)! + crlf +
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"japanese\"".data(using: .utf8)! + crlf +
+                "Content-Type: text/plain".data(using: .utf8)! + crlf + crlf +
+                "日本語".data(using: .utf8)! + crlf +
+                delimiter + crlf +
+                "Content-Disposition: form-data; name=\"emoji\"".data(using: .utf8)! + crlf +
+                "Content-Type: text/plain".data(using: .utf8)! + crlf + crlf +
+                "😃👍🏻🍻🎉".data(using: .utf8)! +
+                crlf
+            )
+            XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+        }
+
+    }
+    
 }
+
+/*
+let expectedString = (
+               BoundaryGenerator.boundary(forBoundaryType: .initial, boundaryKey: boundary) +
+                   "Content-Disposition: form-data; name=\"french\"\(crlf)\(crlf)" +
+                   "français" +
+                   BoundaryGenerator.boundary(forBoundaryType: .encapsulated, boundaryKey: boundary) +
+                   "Content-Disposition: form-data; name=\"japanese\"\(crlf)" +
+                   "Content-Type: text/plain\(crlf)\(crlf)" +
+                   "日本語" +
+                   BoundaryGenerator.boundary(forBoundaryType: .encapsulated, boundaryKey: boundary) +
+                   "Content-Disposition: form-data; name=\"emoji\"\(crlf)" +
+                   "Content-Type: text/plain\(crlf)\(crlf)" +
+                   "😃👍🏻🍻🎉" +
+                   BoundaryGenerator.boundary(forBoundaryType: .final, boundaryKey: boundary)
+           )
+           let expectedData = Data(expectedString.utf8)
+
+           XCTAssertEqual(encodedData, expectedData, "encoded data should match expected data")
+*/
 
 public func + (lhs: Data, rhs: Data) -> Data {
     var newData = lhs
