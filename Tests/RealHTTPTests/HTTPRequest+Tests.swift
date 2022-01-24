@@ -297,8 +297,6 @@ class HTTPRequest_Tests: XCTestCase {
         var resumeEventOccurred = false
         var resumedDownloadFinished = false
 
-        let partDownloadURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("partial-download")
-
         let req = HTTPRequest {
             $0.url = URL(string: "http://ipv4.download.thinkbroadband.com/5MB.zip")!
             $0.transferMode = .largeData
@@ -333,6 +331,47 @@ class HTTPRequest_Tests: XCTestCase {
 
         XCTAssert(resumeEventOccurred, "Failed to resume download")
         XCTAssert(resumedDownloadFinished, "Failed to complete resumed download")
+    }
+    
+    // Test the multipart form data encoding
+    func testRequest_jsonDataWithCodable() async throws {
+        HTTPStubber.shared.enable()
+
+        guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
+            throw TestError("Failed to found assets file")
+        }
+        
+        
+        struct TestUser: Codable, Equatable {
+            var firstName: String
+            var lastName: String
+            var age: Int
+            var bornDate: Date?
+            var info: Info
+            
+            struct Info: Codable, Equatable {
+                var acceptedLicense: Bool
+                var avatar: Data
+            }
+        }
+                
+        let avatarImageData = try Data(contentsOf: rawImageURL)
+        let user = TestUser(firstName: "Mark",
+                            lastName: "Ross",
+                            age: 26,
+                            bornDate: Date(),
+                            info: .init(acceptedLicense: true, avatar: avatarImageData))
+
+        let req = try HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = try .json(user)
+        }
+        
+        let responseUser = try await req.fetch(client).decode(TestUser.self)
+        XCTAssert(responseUser == user, "Failed to correctly send/decode codable object")
+        
+        HTTPStubber.shared.disable()
     }
     
 }
