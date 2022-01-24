@@ -92,7 +92,6 @@ extension HTTPBody {
                 
                 // Encode an Array
             case let array as [Any]:
-                print(array)
                 array.forEach {
                     allComponents += encodeKey(arrayEncoding.encode(key), withValue: $0)
                 }
