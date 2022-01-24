@@ -743,21 +743,21 @@ class RequestsTests: XCTestCase {
     func test_combineFetchPublisher() {
         stopStubber()
         
-        let exp = expectation(description: "first listener notified")
+        let exp = expectation(description: "Waiting for sink result")
 
         let req = HTTPRequest {
             $0.url = URL(string: "https://jsonplaceholder.typicode.com/todos/1")!
             $0.method = .get
         }
         
-        req.fetchPublisher().sink { result in
-            print("")
+        req.fetchPublisher().sink { _ in
+
         } receiveValue: { response in
             XCTAssertNotNil(response.data)
             exp.fulfill()
         }.store(in: &observerBag)
 
-        wait(for: [exp], timeout: 30)
+        wait(for: [exp], timeout: 10)
     }
 
 }
