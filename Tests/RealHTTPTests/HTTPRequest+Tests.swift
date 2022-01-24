@@ -333,26 +333,12 @@ class HTTPRequest_Tests: XCTestCase {
         XCTAssert(resumedDownloadFinished, "Failed to complete resumed download")
     }
     
-    // Test the multipart form data encoding
+    // Test JSON encoding via Codable
     func testRequest_jsonDataWithCodable() async throws {
         HTTPStubber.shared.enable()
-
+        
         guard let rawImageURL = Bundle.module.url(forResource: "test_rawdata", withExtension: "png") else {
             throw TestError("Failed to found assets file")
-        }
-        
-        
-        struct TestUser: Codable, Equatable {
-            var firstName: String
-            var lastName: String
-            var age: Int
-            var bornDate: Date?
-            var info: Info
-            
-            struct Info: Codable, Equatable {
-                var acceptedLicense: Bool
-                var avatar: Data
-            }
         }
                 
         let avatarImageData = try Data(contentsOf: rawImageURL)
@@ -368,12 +354,69 @@ class HTTPRequest_Tests: XCTestCase {
             $0.body = try .json(user)
         }
         
-        let responseUser = try await req.fetch(client).decode(TestUser.self)
+        let response = try await req.fetch(client)
+        let responseUser = try response.decode(TestUser.self)
+        
+        XCTAssert(response.headers[.contentType]?.contains("application/json") ?? false, "Invalid content type")
+        XCTAssert((response.headers[.contentLength]?.isEmpty ?? true) == false, "Invalid content length")
         XCTAssert(responseUser == user, "Failed to correctly send/decode codable object")
         
         HTTPStubber.shared.disable()
     }
     
+    /// A simple JSON request using JSONObjectSerialization
+    func testRequest_jsonData() async throws {
+        HTTPStubber.shared.enable()
+
+        let jsonData: [String: Any] = [
+            "user" : "Mark",
+            "age": 12,
+            "data": [
+                "born": "2021-01-01",
+                "acceptedLicense": true
+            ],
+            "some_string": "bla bla bla".data?.base64EncodedString() ?? ""
+        ]
+        
+        let req = try HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = try .json(jsonData)
+        }
+        
+        let response = try await req.fetch(client)
+        let rDict = try response.decodeJSONData([String: Any].self)
+        
+        let rUser: String? = rDict?.valueForKeyPath(keyPath: "user")
+        XCTAssert(rUser == "Mark", "Invalid decode of a key")
+
+        let rBorn: String? = rDict?.valueForKeyPath(keyPath: "data.born")
+        XCTAssert(rBorn == "2021-01-01", "Invalid decode of a key")
+        
+        let base64Origin: String? = jsonData.valueForKeyPath(keyPath: "some_string")
+        let rBase64: String? = rDict?.valueForKeyPath(keyPath: "some_string")
+        XCTAssert(base64Origin == rBase64, "Invalid decode of a key")
+  
+        XCTAssert(response.headers[.contentType]?.contains("application/json") ?? false, "Invalid content type")
+        XCTAssert((response.headers[.contentLength]?.isEmpty ?? true) == false, "Invalid content length")
+   
+    }
+    
+}
+
+// MARK: - Support Structures
+
+fileprivate struct TestUser: Codable, Equatable {
+    var firstName: String
+    var lastName: String
+    var age: Int
+    var bornDate: Date?
+    var info: Info
+    
+    struct Info: Codable, Equatable {
+        var acceptedLicense: Bool
+        var avatar: Data
+    }
 }
 
 fileprivate struct ParsedParams {
@@ -398,6 +441,32 @@ fileprivate struct ParsedParams {
         params.filter { item in
             item.key == key
         }
+    }
+    
+}
+
+fileprivate extension Dictionary {
+    
+    /// Get the value at specified keypath.
+    ///
+    /// - Returns: T?
+    fileprivate func valueForKeyPath<T>(keyPath: String) -> T? {
+        var keys = keyPath.components(separatedBy: ".")
+        guard let first = keys.first as? Key else {
+            return nil
+        }
+
+        guard let value = self[first] else {
+            return nil
+        }
+        
+        keys.remove(at: 0)
+        if !keys.isEmpty, let subDict = value as? [NSObject : AnyObject] {
+            let rejoined = keys.joined(separator: ".")
+            return subDict.valueForKeyPath(keyPath: rejoined)
+        }
+        
+        return value as? T
     }
     
 }

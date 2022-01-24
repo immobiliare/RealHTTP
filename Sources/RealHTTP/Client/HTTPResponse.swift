@@ -67,6 +67,11 @@ public struct HTTPResponse {
         httpResponse?.status
     }
     
+    /// Headers received into the response.
+    public var headers: HTTPHeaders {
+        httpResponse?.headers ?? HTTPHeaders()
+    }
+    
     // MARK: - Private Properties
     
     private var innerData: Data?
@@ -115,6 +120,17 @@ public struct HTTPResponse {
     /// - Returns: T or `nil` if response is empty.
     public func decode<T: HTTPDecodableResponse>(_ decodable: T.Type) throws -> T? {
         try decodable.decode(self)
+    }
+    
+    /// Decode raw JSON data using `JSONSerialization.jsonObject`.
+    ///
+    /// - Returns: T?
+    public func decodeJSONData<T>(_ decodable: T.Type,
+                                  options: JSONSerialization.ReadingOptions = []) throws -> T? {
+        guard let data = data else { return nil }
+
+        let object = try JSONSerialization.jsonObject(with: data, options: options)
+        return object as? T
     }
         
 }
