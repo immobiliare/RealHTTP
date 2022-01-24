@@ -1016,6 +1016,25 @@ class HTTPRequest_Tests: XCTestCase {
             XCTFail("Failed to validate fields")
         }
     }
+    
+    func test_downloadWithTimeout() async throws {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+        
+        let stub = HTTPStubRequest().match(urlRegex: "/login").stub(for: .get, delay: 30, code: .ok)
+        HTTPStubber.shared.add(stub: stub)
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080/login")!
+            $0.method = .get
+            $0.timeout = 3
+        }
+        
+        let response = try await req.fetch()
+
+        XCTAssert(response.error?.category == .timeout, "Request should fail due to timeout")
+        XCTAssertNil(response.data)
+    }
 
 }
 

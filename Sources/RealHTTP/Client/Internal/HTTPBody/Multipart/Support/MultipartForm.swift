@@ -106,7 +106,7 @@ extension HTTPBody {
                   !fileExtension.isEmpty, // extension is set
                   fileURL.isFileURL, // is it a file?
                   try fileURL.checkPromisedItemIsReachable() else { // is file reachable
-                      throw HTTPError(.multipartInvalidFile(fileURL))
+                      throw HTTPError(.multipartInvalidFile)
                   }
             
             let formHeaders = formItemHeaders(name: name, fileName: fileName, mimeType: mimeType)
@@ -114,7 +114,7 @@ extension HTTPBody {
             let fileSize = try FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as! NSNumber
             
             guard let fileStream = InputStream(url: fileURL) else {
-                throw HTTPError(.multipartInvalidFile(fileURL))
+                throw HTTPError(.multipartInvalidFile)
             }
             
             add(stream: fileStream, withLength: fileSize.uint64Value, headers: formHeaders)

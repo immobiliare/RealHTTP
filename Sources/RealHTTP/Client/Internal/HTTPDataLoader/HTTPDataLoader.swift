@@ -316,6 +316,10 @@ private extension HTTPDataLoader {
         handler.request.client = nil
         handler.request.sessionTask = nil
         
+        if let error = error {
+            handler.error = error
+        }
+        
         dataLoadersMap[task] = nil
         
         let response = HTTPResponse(response: handler)

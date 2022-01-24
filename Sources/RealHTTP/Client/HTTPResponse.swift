@@ -82,7 +82,7 @@ public struct HTTPResponse {
     /// - Parameters:
     ///   - errorType: error type.
     ///   - error: optional error instance received.
-    internal init(errorType: HTTPError.ErrorType = .internal, error: Error?) {
+    internal init(errorType: HTTPError.ErrorCategory = .internal, error: Error?) {
         self.error = HTTPError(errorType, error: error)
         self.innerData = nil
         self.metrics = nil
@@ -95,13 +95,13 @@ public struct HTTPResponse {
     ///
     /// - Parameter response: response received.
     internal init(response: HTTPDataLoaderResponse) {
+        self.urlResponse = response.urlResponse
+        self.error = HTTPError.fromResponse(response)
         self.statusCode = HTTPStatusCode.fromResponse(response.urlResponse)
         self.innerData = response.data
         self.dataFileURL = response.dataFileURL
         self.metrics = HTTPMetrics(metrics: response.metrics)
         self.request = response.request
-        self.urlResponse = response.urlResponse
-        self.error = HTTPError.fromResponse(response)
     }
     
     // MARK: - Decoding

@@ -29,7 +29,7 @@ public struct HTTPError: LocalizedError {
     public let error: Error?
     
     /// Category of the error.
-    public let type: ErrorType
+    public let category: ErrorCategory
     
     /// Additional user info.
     public var userInfo: [String: Any]?
@@ -39,12 +39,12 @@ public struct HTTPError: LocalizedError {
     
     // MARK: - Initialization
         
-    public init(_ type: ErrorType,
+    public init(_ type: ErrorCategory,
                 code: HTTPStatusCode = .none,
                 error: Error? = nil,
                 userInfo: [String: Any]? = nil,
                 cocoaCode: Int? = nil) {
-        self.type = type
+        self.category = type
         self.statusCode = code
         self.error = error
         self.userInfo = userInfo
@@ -52,8 +52,8 @@ public struct HTTPError: LocalizedError {
         self.message = error?.localizedDescription
     }
     
-    public init(_ type: ErrorType, message: String) {
-        self.type = type
+    public init(_ type: ErrorCategory, message: String) {
+        self.category = type
         self.message = message
         self.statusCode = .none
         self.cocoaCode = nil
@@ -100,9 +100,9 @@ public extension HTTPError {
     /// - `other`: any internal error, you can use it as your own handler.
     /// - `cancelled`: cancelled by user.
     /// - `internal`: internal library error occurred.
-    enum ErrorType {
+    enum ErrorCategory: Int {
         case invalidURL
-        case multipartInvalidFile(URL)
+        case multipartInvalidFile
         case multipartFailedStringEncoding
         case multipartStreamReadFailed
         case jsonEncodingFailed
@@ -118,6 +118,7 @@ public extension HTTPError {
         case sessionError
         case other
         case cancelled
+        case timeout
         case `internal`
     }
     
@@ -145,8 +146,7 @@ extension HTTPError {
         // Evaluate error kind
         let cocoaErrorCode = (response.error as NSError?)?.code
         let userInfo = (response.error as NSError?)?.userInfo
-        let isConnectionError = response.error?.isMissingConnection ?? false
-        let errorType: HTTPError.ErrorType = (isConnectionError ? .missingConnection : .network)
+        let errorType: HTTPError.ErrorCategory = (response.error as NSError?)?.errorType ?? .network
         
         return HTTPError(errorType,
                          code: httpCode,
@@ -159,17 +159,22 @@ extension HTTPError {
 
 // MARK: - Swift.Error
 
-extension Swift.Error {
+extension NSError {
     
-    /// Return `true` when error is related to the connection.
-    var isMissingConnection: Bool {
-        switch self {
-        case URLError.notConnectedToInternet,
-             URLError.networkConnectionLost,
-             URLError.cannotLoadFromNetwork:
-             return true
+    var errorType: HTTPError.ErrorCategory {
+        switch (domain, code) {
+        case (NSURLErrorDomain, URLError.notConnectedToInternet.rawValue):
+            return .missingConnection
+        case (NSURLErrorDomain, URLError.networkConnectionLost.rawValue):
+            return .missingConnection
+        case (NSURLErrorDomain, URLError.cannotLoadFromNetwork.rawValue):
+            return .missingConnection
+        case (NSURLErrorDomain, URLError.dataNotAllowed.rawValue):
+            return .missingConnection
+        case (NSURLErrorDomain, URLError.timedOut.rawValue):
+            return .timeout
         default:
-            return false
+            return .network
         }
     }
     
