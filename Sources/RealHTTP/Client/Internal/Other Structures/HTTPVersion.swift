@@ -17,7 +17,7 @@ import Foundation
 
 /// Defines the HTTP protocol version used for request.
 public struct HTTPVersion: Equatable, Hashable, Codable, RawRepresentable,
-                           ExpressibleByFloatLiteral {
+                           ExpressibleByFloatLiteral, CustomStringConvertible {
     
     // MARK: - Available Values
     
@@ -60,6 +60,10 @@ public struct HTTPVersion: Equatable, Hashable, Codable, RawRepresentable,
     /// Evaluate the format for request.
     public var standardFormat: String {
         "HTTP/\(rawValue)"
+    }
+    
+    public var description: String {
+        standardFormat
     }
     
 }

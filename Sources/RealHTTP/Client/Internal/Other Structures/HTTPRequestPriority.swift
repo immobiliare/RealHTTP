@@ -26,7 +26,7 @@ import Foundation
 /// <https://developer.apple.com/forums/thread/48371>
 /// <http://www.ietf.org/rfc/rfc7540.txt>)
 /// 
-public enum HTTPRequestPriority {
+public enum HTTPRequestPriority: String {
     case veryLow
     case low
     case normal
@@ -43,6 +43,10 @@ public enum HTTPRequestPriority {
         case .high:     return 0.7
         case .veryHigh: return 1.0
         }
+    }
+    
+    public var description: String {
+        rawValue
     }
     
 }

@@ -839,6 +839,34 @@ class RequestsTests: XCTestCase {
         XCTAssertTrue(response.data?.asString()?.contains("redirected") ?? false)
     }
     
+    public func test_interceptUrlRequestModifier() async throws {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+        
+        let newClient = HTTPClient(baseURL: nil)
+
+        let stubInitial = HTTPStubRequest().match(urlRegex: "/initial").stub(for: .get) { response in
+            response.statusCode = .ok
+        }
+        HTTPStubber.shared.add(stub: stubInitial)
+        
+        let stubModified = HTTPStubRequest().match(urlRegex: "/modified").stub(for: .get) { response in
+            response.statusCode = .badRequest
+        }
+        HTTPStubber.shared.add(stub: stubModified)
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8081/initial")!
+            $0.method = .get
+            $0.urlRequestModifier = { req in
+                req.url = URL(string: "http://127.0.0.1:8081/modified")!
+            }
+        }
+        
+        let response = try await req.fetch(newClient)
+        XCTAssertEqual(response.statusCode, .badRequest)
+    }
+    
     // MARK: - Private Functions
     
     private func setupRequestRedirect(_ redirect: HTTPRequest.RedirectMode) -> HTTPRequest {

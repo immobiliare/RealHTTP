@@ -15,7 +15,7 @@
 
 import Foundation
 
-public class HTTPRequest {
+public class HTTPRequest: CustomStringConvertible {
     public typealias RequestTask = Task<HTTPResponse, Error>
     public typealias RequestModifier = ((inout URLRequest) throws -> Void)
     internal static let DefaultTimeout = TimeInterval(10)
@@ -137,6 +137,11 @@ public class HTTPRequest {
     
     /// Request's body.
     public var body: HTTPBody = .empty
+    
+    /// Description of the request
+    public var description: String {
+        "[\(method)] \(url?.absoluteString ?? "")"
+    }
     
     // MARK: - Public Properties [Response]
     
