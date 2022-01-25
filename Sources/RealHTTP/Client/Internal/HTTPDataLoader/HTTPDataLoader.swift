@@ -316,6 +316,8 @@ private extension HTTPDataLoader {
         handler.request.client = nil
         handler.request.sessionTask = nil
         
+        handler.urlRequests = (task.originalRequest, task.currentRequest)
+        
         if let error = error {
             handler.error = error
         }

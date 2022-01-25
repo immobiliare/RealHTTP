@@ -43,6 +43,14 @@ internal class HTTPDataLoaderResponse {
     /// Parent request.
     var request: HTTPRequest
     
+    /// Report the URLRequests executed by the client.
+    /// - original: The original request object passed when the task was created.
+    /// - current:  The URL request object currently being handled by the task.
+    ///             This value is typically the same as the initial request (`original`)
+    ///             except when the server has responded to the initial request with a
+    ///             redirect to a different URL.
+    var urlRequests: (original: URLRequest?, current: URLRequest?) = (nil, nil)
+    
     // MARK: - Initialization
     
     /// Initialize a new response.

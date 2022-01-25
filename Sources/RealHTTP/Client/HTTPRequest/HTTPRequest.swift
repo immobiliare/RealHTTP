@@ -17,7 +17,8 @@ import Foundation
 
 public class HTTPRequest {
     public typealias RequestTask = Task<HTTPResponse, Error>
-    
+    public typealias RequestModifier = ((inout URLRequest) throws -> Void)
+
     // MARK: - Supported Structures
     
     internal static let DefaultTimeout = TimeInterval(10)
@@ -153,6 +154,13 @@ public class HTTPRequest {
 #else
     public internal(set) var progress: HTTPProgress?
 #endif
+    
+    // MARK: - Events
+    
+    /// Request modifier callback.
+    /// You can implement your own logic to modify a generated `URLRequest` for the request
+    /// running in a specified `HTTPClient` instance.
+    public var urlRequestModifier: RequestModifier?
     
     // MARK: - Private Properties
     
@@ -372,7 +380,10 @@ extension HTTPRequest {
     /// - Returns: `URLSessionTask`
     internal func urlSessionTask(inClient client: HTTPClient) throws -> URLSessionTask {
         // Generate the `URLRequest` instance.
-        let urlRequest = try urlRequest(inClient: client)
+        var urlRequest = try urlRequest(inClient: client)
+        
+        // Ask to the user to alter produced request.
+        try urlRequestModifier?(&urlRequest)
         
         // Create the `URLSessionTask` instance.
         var task: URLSessionTask!

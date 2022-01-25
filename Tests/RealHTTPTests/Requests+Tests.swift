@@ -760,6 +760,32 @@ class RequestsTests: XCTestCase {
         wait(for: [exp], timeout: 10)
     }
 
+    func test_urlRequestModifierInterceptor() async throws {
+        setupStubber(echo: true)
+        defer { stopStubber() }
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080/execute")!
+            $0.method = .post
+            $0.body = .form(values: ["p1" : "1", "p2": "asc"])
+        }
+        
+        req.urlRequestModifier = { urlRequest in
+            urlRequest.method = .patch
+            urlRequest.httpBody = "some data".data(using: .utf8)
+            urlRequest.allowsCellularAccess = false
+            urlRequest.setValue("Value", forHTTPHeaderField: "X-HEADER")
+        }
+        
+        // Execute
+        let response = try await req.fetch()
+        
+        XCTAssertEqual(response.urlRequests.original?.method, .patch)
+        XCTAssertEqual(response.data?.asString(), "some data")
+        XCTAssertEqual(response.urlRequests.original?.allowsCellularAccess, false)
+        XCTAssertEqual(response.urlRequests.original?.allHTTPHeaderFields?["X-HEADER"], "Value")
+    }
+    
 }
 
 // MARK: - Support Structures

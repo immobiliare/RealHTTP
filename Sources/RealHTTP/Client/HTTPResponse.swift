@@ -35,6 +35,14 @@ public struct HTTPResponse {
         urlResponse as? HTTPURLResponse
     }
     
+    /// Report the URLRequests executed by the client.
+    /// - original: The original request object passed when the task was created.
+    /// - current:  The URL request object currently being handled by the task.
+    ///             This value is typically the same as the initial request (`original`)
+    ///             except when the server has responded to the initial request with a
+    ///             redirect to a different URL.
+    public private(set) var urlRequests: (original: URLRequest?, current: URLRequest?) = (nil, nil)
+    
     /// Raw data received from server.
     /// If the file is saved on disk (`dataFileURL != nil`) calling this method
     /// will cause the system to read file and get it as output.
@@ -102,6 +110,7 @@ public struct HTTPResponse {
         self.dataFileURL = response.dataFileURL
         self.metrics = HTTPMetrics(metrics: response.metrics)
         self.request = response.request
+        self.urlRequests = response.urlRequests
     }
     
     // MARK: - Decoding
