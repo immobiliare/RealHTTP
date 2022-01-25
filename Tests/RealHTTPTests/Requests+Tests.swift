@@ -745,12 +745,13 @@ class RequestsTests: XCTestCase {
         
         let exp = expectation(description: "Waiting for sink result")
 
+        let newClient = HTTPClient(baseURL: nil)
         let req = HTTPRequest {
             $0.url = URL(string: "https://jsonplaceholder.typicode.com/todos/1")!
             $0.method = .get
         }
         
-        req.fetchPublisher().sink { _ in
+        req.fetchPublisher(in: newClient).sink { _ in
 
         } receiveValue: { response in
             XCTAssertNotNil(response.data)
