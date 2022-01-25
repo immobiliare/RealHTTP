@@ -67,7 +67,7 @@ public class HTTPClient {
     /// You can further customize and alter the behaviour per single request by implementing
     /// the `HTTPClientDelegate`'s `client(:willPerformRedirect:response:newRequest:)`
     /// function.
-    public var followRedirectsMode: HTTPRedirectFollow = .follow
+    public var redirectMode: HTTPRequest.RedirectMode = .follow
     
     /// Validators for response. Values are executed in order.
     public var validators: [HTTPResponseValidator] = [

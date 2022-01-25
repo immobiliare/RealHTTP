@@ -127,4 +127,27 @@ extension HTTPStubRequest {
         }
     }
     
+    /// Stub to produce a redirect call for the client.
+    /// A redirect is a call which contains `Location:URL` inside the body
+    /// and the appropriate redirect verb in http status code.
+    ///
+    /// - Parameters:
+    ///   - method: the http method which trigger this stubbed response.
+    ///   - statusCode: (optional) status code for response (should be part of the redirect category).
+    ///                 By default is `.found` (302).
+    ///   - redirectURL: final redirect url for client.
+    ///   - delay: delay interval in response.
+    ///   - headers: headers to set.
+    public func stub(method: HTTPMethod,
+                     statusCode: HTTPStatusCode = .found,
+                     redirectsTo redirectURL: URL, delay: TimeInterval? = nil,
+                     headers: HTTPHeaders = .init()) -> Self {
+        stub(for: method) { response in
+            response.body = "Location: \(redirectURL.absoluteString)"
+            response.statusCode = statusCode
+            response.headers = headers
+            response.responseDelay = delay
+        }
+    }
+    
 }

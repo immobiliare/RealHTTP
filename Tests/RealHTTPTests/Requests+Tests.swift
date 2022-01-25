@@ -786,7 +786,85 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(response.urlRequests.original?.allHTTPHeaderFields?["X-HEADER"], "Value")
     }
     
+    func test_testFollowRedirectRefuse() async throws {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+        
+        let newClient = HTTPClient(baseURL: nil)
+        
+        setupStubsForRedirectTest()
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8081/login")!
+            $0.method = .get
+            $0.timeout = 100
+            $0.redirectMode = .refuse
+        }
+    
+        // Execute
+        let response = try await req.fetch(newClient)
+        
+        XCTAssertEqual(response.statusCode, .found)
+        XCTAssertTrue(response.data?.asString()?.contains("Location:") ?? false)
+    }
+    
+    func test_followRedirectRefuse() async throws {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+        
+        let newClient = HTTPClient(baseURL: nil)
+        
+        setupStubsForRedirectTest()
+        
+        let req = setupRequestRedirect(.refuse)
+        let response = try await req.fetch(newClient)
+        
+        XCTAssertEqual(response.statusCode, .found)
+        XCTAssertTrue(response.data?.asString()?.contains("Location:") ?? false)
+    }
+    
+    func test_followRedirectFollow() async throws {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+        
+        let newClient = HTTPClient(baseURL: nil)
+        
+        setupStubsForRedirectTest()
+        
+        let req = setupRequestRedirect(.follow)
+        let response = try await req.fetch(newClient)
+        
+        XCTAssertEqual(response.statusCode, .ok)
+        XCTAssertTrue(response.data?.asString()?.contains("redirected") ?? false)
+    }
+    
+    // MARK: - Private Functions
+    
+    private func setupRequestRedirect(_ redirect: HTTPRequest.RedirectMode) -> HTTPRequest {
+        HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8081/login")!
+            $0.method = .get
+            $0.timeout = 100
+            $0.redirectMode = redirect
+        }
+    }
+    
+    private func setupStubsForRedirectTest() {
+        // Create redirect URL
+        let redirectURL = URL(string: "http://127.0.0.1:8081/redirected")!
+        let redirectStub = HTTPStubRequest().match(urlRegex: "/login").stub(method: .get, redirectsTo: redirectURL)
+        HTTPStubber.shared.add(stub: redirectStub)
+        
+        // Create final URL
+        let stubRedirect = HTTPStubRequest().match(urlRegex: "/redirected").stub(for: .get) { response in
+            response.statusCode = .ok
+            response.body = "redirected".data(using: .utf8)!
+        }
+        HTTPStubber.shared.add(stub: stubRedirect)
+    }
+    
 }
+
 
 // MARK: - Support Structures
 

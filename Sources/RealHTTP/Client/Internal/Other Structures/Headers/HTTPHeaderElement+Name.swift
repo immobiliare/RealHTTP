@@ -130,6 +130,7 @@ public extension HTTPHeaders.Element {
         case upgrade
         case via
         case warning
+        case location
         case custom(String)
         
         /// You can create a custom header name from a literal string.
@@ -186,6 +187,7 @@ public extension HTTPHeaders.Element {
             case .upgrade: return "Upgrade"
             case .via: return "Via"
             case .warning: return "Warning"
+            case .location: return "Location"
             case .custom(let v): return v
             }
         }

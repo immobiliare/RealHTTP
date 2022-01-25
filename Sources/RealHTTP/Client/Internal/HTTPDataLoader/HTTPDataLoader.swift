@@ -199,9 +199,11 @@ internal class HTTPDataLoader: NSObject,
         dataLoadersMap[dataTask]?.appendData(data)
     }
     
-    public func urlSession(_ session: URLSession, task: URLSessionTask,
-                           willPerformHTTPRedirection response: HTTPURLResponse,
-                           newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+    func urlSession(_ session: URLSession,
+                    task: URLSessionTask,
+                    willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest,
+                    completionHandler: @escaping (URLRequest?) -> Void) {
         evaluateRedirect(task: task, response: response, request: request, completion: completionHandler)
     }
     
@@ -380,31 +382,27 @@ private extension HTTPDataLoader {
         
         handler.urlResponse = response
         
+        let redirectMode = handler.request.redirectMode ?? client.redirectMode
+
         // For some reason both body, headers and method is not copied
-        var newRequest = request
-        
-        if client.followRedirectsMode == .followCopy {
+        var redirectRequest: URLRequest?
+
+        switch redirectMode {
+        case .follow:
+            redirectRequest = request
+        case .followWithOriginalSettings:
             // maintain http body, headers and method of the original request.
-            newRequest.httpBody = task.originalRequest?.httpBody
-            newRequest.allHTTPHeaderFields = task.originalRequest?.allHTTPHeaderFields
-            newRequest.httpMethod = task.originalRequest?.httpMethod
-        }
-        
-        // If delegate implements its own login we want to ask to him, if not we'll use the behaviour set
-        // in `followRedirectsMode` of the parent client.
-        let rawResponse = HTTPResponse(response: handler)
-        let action = client.delegate?.client(client, willPerformRedirect: (handler.request, task),
-                                             response: rawResponse,
-                                             newRequest: &newRequest) ??
-            // default client behaviour, follow with copy or original system follow
-            (client.followRedirectsMode == .followCopy ? .follow(newRequest) : .follow(request))
-        
-        switch action {
-        case .follow(let newRouteRequest):
-            completion(newRouteRequest)
+            redirectRequest = request
+            redirectRequest?.httpBody = task.originalRequest?.httpBody
+            redirectRequest?.allHTTPHeaderFields = task.originalRequest?.allHTTPHeaderFields
+            redirectRequest?.httpMethod = task.originalRequest?.httpMethod
+        case .followCustom(let urlRequestBuilder):
+            redirectRequest = urlRequestBuilder(request)
         case .refuse:
-            completion(nil)
+            redirectRequest = nil
         }
+        
+        completion(redirectRequest)
     }
     
     /// Evaluate authentication challange with the security option set.

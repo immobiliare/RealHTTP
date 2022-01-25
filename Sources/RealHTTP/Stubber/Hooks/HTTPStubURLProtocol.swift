@@ -136,6 +136,7 @@ public class HTTPStubURLProtocol: URLProtocol {
         
         if isRedirect, let location = stubResponse.body?.data?.redirectLocation {
             // Includes redirection call to client.
+            // A redirect to the client must contain `Location:<URL>` inside the body.
             var redirect = URLRequest(url: location)
             if let cookiesInRedirect = cookies.cookies(for: url) {
                 redirect.allHTTPHeaderFields = HTTPCookie.requestHeaderFields(with: cookiesInRedirect)

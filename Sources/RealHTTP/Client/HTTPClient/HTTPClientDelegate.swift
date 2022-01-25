@@ -51,17 +51,14 @@ public protocol HTTPClientDelegate: AnyObject {
     func client(_ client: HTTPClient, taskIsWaitingForConnectivity request: ExecutedRequest)
     
     /// Method is called when a http redirection is made.
-    /// Return `nil` to use the `followRedirectsMode` of the parent client.
     ///
     /// - Parameters:
     ///   - client: client target of the request.
-    ///   - request: request instance.
+    ///   - request: the original request.
     ///   - response: response received along with the redirect request.
-    ///   - newRequest: new request filled out with the new location.
-    ///                 It contains the same http body/method and parameters with the new url.
+    ///   - newRequest: the request to follow in redirect.
     func client(_ client: HTTPClient, willPerformRedirect request: ExecutedRequest,
-                response: HTTPResponse,
-                newRequest: inout URLRequest) -> HTTPRedirectAction?
+                response: HTTPResponse, with newRequest: URLRequest)
     
     /// Client receive an auth challenge which will be managed by the `security` property of the
     /// request itself or global client's one.

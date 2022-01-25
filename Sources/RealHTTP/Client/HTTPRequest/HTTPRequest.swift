@@ -18,18 +18,7 @@ import Foundation
 public class HTTPRequest {
     public typealias RequestTask = Task<HTTPResponse, Error>
     public typealias RequestModifier = ((inout URLRequest) throws -> Void)
-
-    // MARK: - Supported Structures
-    
     internal static let DefaultTimeout = TimeInterval(10)
-    
-    /// A set of common keys you can use to fill the `userInfo` keys of your request.
-    public enum UserInfoKeys: Hashable {
-        case fingerprint
-        case subsystem
-        case category
-        case data
-    }
     
     // MARK: - Public Properties
     
@@ -80,9 +69,14 @@ public class HTTPRequest {
     /// NOTE:
     /// When not specified the HTTPClient's value where the request is executed is used.
     public var timeout: TimeInterval?
-    
+        
     /// HTTP Method for request, by default `get`.
     public var method: HTTPMethod = .get
+    
+    /// This method defines how redirects are managed.
+    /// By default the behavior is driven by the `redirectMode` of the `HTTPClient`
+    /// where the request is begin executed.
+    public var redirectMode: HTTPRequest.RedirectMode? = nil
     
     /// Set the full absolute URL for the request by ignoring the the url components
     /// and the `baseURL` of the destination client.
@@ -118,7 +112,7 @@ public class HTTPRequest {
     /// resumable downloads and background downloads sessions.
     ///
     /// By default `default` is used.
-    public var transferMode: HTTPTransferMode = .default
+    public var transferMode: HTTPRequest.TransferMode = .default
     
     /// Cache policy.
     ///
@@ -148,12 +142,12 @@ public class HTTPRequest {
     
     /// If task is monitorable (`expectedDataType` is `large`) and data is available
     /// here you can found the latest progress stats.
-#if canImport(Combine)
+    #if canImport(Combine)
     @Published
     public internal(set) var progress: HTTPProgress?
-#else
+    #else
     public internal(set) var progress: HTTPProgress?
-#endif
+    #endif
     
     // MARK: - Events
     
@@ -433,6 +427,51 @@ extension HTTPRequest {
     }
     
 }
+
+// MARK: - Additional Data Structure for HTTPRequest
+
+extension HTTPRequest {
+    
+    /// A set of common keys you can use to fill the `userInfo` keys of your request.
+    public enum UserInfoKeys: Hashable {
+        case fingerprint
+        case subsystem
+        case category
+        case data
+    }
+    
+    /// Defines how the redirect request from server should be handled:
+    ///
+    /// - `follow`: follow the redirect from server with the proposed request received.
+    /// - `followWithOriginalSettings`: follow the redirect from server with the proposed request received and
+    ///                                 overriding the http method, body and headers with the one coming from your
+    ///                                 original request.
+    /// - `followCustom`: allows to specify your own redirect request receiving the proposed one in callback.
+    /// - `refuse`: refuse redirect.
+    public enum RedirectMode {
+        case follow
+        case followWithOriginalSettings
+        case followCustom((URLRequest) -> URLRequest?)
+        case refuse
+    }
+        
+    /// Describe what kind of data you are expecting from the server for a response.
+    /// This used to identify what kind of `URLSessionTask` subclass we should use.
+    ///
+    /// - `default`:  Data tasks are intended for short, often interactive requests from your app to a server.
+    ///               Data tasks can return data to your app one piece at a time after each piece of data is received,
+    ///               or all at once through a completion handler.
+    ///               Because data tasks do not store the data to a file, they are not supported in background sessions.
+    /// - `largeData`: Directly writes the response data to a temporary file.
+    ///            It supports background downloads when the app is not running.
+    ///            Download tasks retrieve data in the form of a file, and support background downloads while the app is not running.
+    public enum TransferMode {
+        case `default`
+        case largeData
+    }
+    
+}
+
 
 extension URLComponents {
     
