@@ -66,7 +66,7 @@ import Foundation
 /// - `zip`: ZIP Archive
 /// - `formUrlEncoded`: HTTP form: keys and values URL-encoded in key-value tuples separated by '&'
 /// - `formDataMultipart`: HTTP form: each value is sent as a block of data
-public enum HTTPContentType: String {
+public enum HTTPContentType: String, CustomStringConvertible {
     case aac = "audio/aac"
     case avi = "video/x-msvideo"
     case octetStream = "application/octet-stream"
@@ -116,4 +116,9 @@ public enum HTTPContentType: String {
     case zip = "application/zip"
     case formUrlEncoded = "application/x-www-form-urlencoded"
     case formDataMultipart = "multipart/form-data"
+    
+    public var description: String {
+        rawValue
+    }
+    
 }

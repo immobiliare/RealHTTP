@@ -19,8 +19,8 @@ import Foundation
 
 /// This is the raw response received from server. It includes all the
 /// data collected from the request including metrics and errors.
-public struct HTTPResponse {
-
+public struct HTTPResponse: CustomStringConvertible {
+    
     // MARK: - Public Properties
     
     /// Each metrics  contains the taskInterval and redirectCount, as well as metrics for each
@@ -76,6 +76,15 @@ public struct HTTPResponse {
     /// Headers received into the response.
     public var headers: HTTPHeaders {
         httpResponse?.headers ?? HTTPHeaders()
+    }
+    
+    /// Description of the response.
+    public var description: String {
+        if isError {
+            return "[\(statusCode)] \(error?.localizedDescription ?? "")"
+        } else {
+            return "[\(statusCode)] \(data?.count ?? 0) bytes"
+        }
     }
     
     // MARK: - Private Properties

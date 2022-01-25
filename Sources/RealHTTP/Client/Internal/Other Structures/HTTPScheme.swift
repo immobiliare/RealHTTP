@@ -16,7 +16,7 @@
 import Foundation
 
 /// Defines the protocol scheme for an URL.
-public struct HTTPScheme: Equatable, Hashable, Codable, RawRepresentable {
+public struct HTTPScheme: Equatable, Hashable, Codable, RawRepresentable, CustomStringConvertible {
     static let http: Self = "http"
     static let https: Self = "https"
     static let ftp: Self = "ftp"
@@ -30,6 +30,10 @@ public struct HTTPScheme: Equatable, Hashable, Codable, RawRepresentable {
 
     public init(rawValue: String) {
         self.rawValue = rawValue
+    }
+    
+    public var description: String {
+        rawValue
     }
     
 }

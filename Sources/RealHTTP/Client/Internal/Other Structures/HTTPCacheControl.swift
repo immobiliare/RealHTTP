@@ -45,7 +45,7 @@ import Foundation
 ///                   a 504 status code.
 ///                   Conditional headers such as If-None-Match should not be set.
 ///                   There is no effect if only-if-cached is set by a server as part of a response.
-public enum HTTPCacheControl {
+public enum HTTPCacheControl: CustomStringConvertible {
     case maxAge(seconds: TimeInterval)
     case maxStale(seconds: TimeInterval?)
     case minFresh(seconds: TimeInterval?)
@@ -79,6 +79,10 @@ public enum HTTPCacheControl {
         case .onlyIfCached:
             return "only-if-cached"
         }
+    }
+    
+    public var description: String {
+        headerValue
     }
     
 }
