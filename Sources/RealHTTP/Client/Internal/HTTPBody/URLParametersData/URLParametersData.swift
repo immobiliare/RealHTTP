@@ -74,6 +74,27 @@ extension HTTPBody {
             }.joinedWithAmpersands()
         }
         
+        /// Create a dictionary with all the keys of value from params.
+        ///
+        /// - Returns: [String: String]
+        internal func encodedParametersToDictionary() -> [String: String] {
+            guard let parameters = self.parameters, parameters.isEmpty == false else {
+                return [:]
+            }
+            
+            var components = [String: String]()
+            
+            for key in parameters.keys.sorted(by: <) {
+                let value = parameters[key]!
+                let results = encodeKey(key, withValue: value)
+                for result in results {
+                    components[result.0] = result.1
+                }
+            }
+            
+            return components
+        }
+        
         /// Encode a single object according to settings.
         ///
         /// - Parameters:

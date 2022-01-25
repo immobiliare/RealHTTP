@@ -17,11 +17,16 @@ import Foundation
 
 extension Data {
     
+    /// Convert a data to a string using utf8 encoding.
+    public var asString: String? {
+        asString(encoding: .utf8)
+    }
+    
     /// Convert a data to a string.
     ///
-    /// - Parameter encoding: encoding to use, `utf8` if not specified.
+    /// - Parameter encoding: encoding to use.
     /// - Returns: String?
-    public func asString(encoding: String.Encoding = .utf8) -> String? {
+    public func asString(encoding: String.Encoding) -> String? {
         String(data: self, encoding: encoding)
     }
     

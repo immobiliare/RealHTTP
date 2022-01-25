@@ -17,6 +17,19 @@ import Foundation
 
 extension HTTPBody {
     
+    /// Create a form by serializing in JSON an `Encodable` object.
+    ///
+    /// - Returns: HTTPBody
+    public static func form<T: Encodable>(object: T, encoder: JSONEncoder = .init()) throws -> HTTPBody {
+        let data = try encoder.encode(object)
+        guard let values = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] else {
+            throw HTTPError(.jsonEncodingFailed)
+        }
+        
+        let params = URLParametersData(values).encodedParametersToDictionary()
+        return HTTPBody.form(values: params)
+    }
+    
     /// Initialize a new body with a form values dictionary.
     ///
     /// - Parameter values: values.

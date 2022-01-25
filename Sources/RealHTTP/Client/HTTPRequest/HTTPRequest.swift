@@ -365,6 +365,17 @@ public extension HTTPRequest {
         }
     }
     
+    /// Add query items from a passed dictionary.
+    ///
+    /// - Parameter parameters: parameters dictionary.
+    func add(parameters: [String: Any]) {
+        let paramsData = HTTPBody.URLParametersData(parameters)
+        paramsData.boolEncoding = .asLiterals
+        paramsData.encodedParametersToDictionary().forEach { item in
+            add(queryItem: URLQueryItem(name: item.key, value: item.value))
+        }
+    }
+    
 }
 
 // MARK: - URLRequest and URLSessionTask Builders
