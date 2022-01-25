@@ -162,6 +162,10 @@ internal class HTTPDataLoader: NSObject,
         session.delegateQueue.addOperation {
             let response = HTTPDataLoaderResponse(request: request, completion: completion)
             self.dataLoadersMap[task] = response
+            
+            if let client = self.client {
+                client.delegate?.client(client, didEnqueue: (request, task))
+            }
         }
         task.resume()
         return task
@@ -199,6 +203,12 @@ internal class HTTPDataLoader: NSObject,
     func urlSession(_ session: URLSession, task: URLSessionTask,
                     didFinishCollecting metrics: URLSessionTaskMetrics) {
         dataLoadersMap[task]?.metrics = metrics
+        
+        if let delegate = client?.delegate, let client = client,
+            let request = dataLoadersMap[task],
+           let metrics = HTTPMetrics(metrics: metrics) {
+            delegate.client(client, didCollectedMetricsFor: (request.request, task), metrics: metrics)
+        }
     }
     
     // MARK: - Upload Progress
@@ -261,6 +271,17 @@ internal class HTTPDataLoader: NSObject,
             inputStream.open() // open the stream
             completionHandler(inputStream)
         }
+    }
+    
+    // MARK: - Other Events
+    
+    func urlSession(_ session: URLSession, taskIsWaitingForConnectivity task: URLSessionTask) {
+        guard let client = self.client,
+              let request = dataLoadersMap[task]?.request else {
+            return
+        }
+        
+        client.delegate?.client(client, taskIsWaitingForConnectivity: (request, task))
     }
     
 }
@@ -326,6 +347,10 @@ private extension HTTPDataLoader {
         
         let response = HTTPResponse(response: handler)
         handler.completion(response)
+        
+        if let client = self.client {
+            client.delegate?.client(client, didFinish: (handler.request, task), response: response)
+        }
     }
     
     /// Evaluate redirect of the requests.
@@ -338,12 +363,12 @@ private extension HTTPDataLoader {
     func evaluateRedirect(task: URLSessionTask, response: HTTPURLResponse, request: URLRequest,
                           completion: @escaping (URLRequest?) -> Void) {
         // missing components, continue to the default behaviour
-        guard let client = client else {
+        guard let client = client, let handler = dataLoadersMap[task] else {
             completion(request)
             return
         }
         
-        dataLoadersMap[task]?.urlResponse = response
+        handler.urlResponse = response
         
         // For some reason both body, headers and method is not copied
         var newRequest = request
@@ -357,7 +382,12 @@ private extension HTTPDataLoader {
         
         // If delegate implements its own login we want to ask to him, if not we'll use the behaviour set
         // in `followRedirectsMode` of the parent client.
-        let action: HTTPRedirectAction = (client.followRedirectsMode == .followCopy ? .follow(newRequest) : .follow(request))
+        let rawResponse = HTTPResponse(response: handler)
+        let action = client.delegate?.client(client, willPerformRedirect: (handler.request, task),
+                                             response: rawResponse,
+                                             newRequest: &newRequest) ??
+            // default client behaviour, follow with copy or original system follow
+            (client.followRedirectsMode == .followCopy ? .follow(newRequest) : .follow(request))
         
         switch action {
         case .follow(let newRouteRequest):
@@ -380,6 +410,10 @@ private extension HTTPDataLoader {
             // if not security is settings for both client and request we can use the default handling
             completionHandler(.performDefaultHandling, nil)
             return
+        }
+        
+        if let client = client {
+            client.delegate?.client(client, didReceiveAuthChallangeFor: (request, task), authChallenge: challenge)
         }
         
         // use request's security or client security

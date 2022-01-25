@@ -24,6 +24,9 @@ public class HTTPClient {
     /// Shared HTTPClient instance.
     public static let shared = HTTPClient(baseURL: nil)
     
+    /// Delegate of the client.
+    public var delegate: HTTPClientDelegate?
+    
     /// Base URL used to compose each request.
     ///
     /// NOTE:
