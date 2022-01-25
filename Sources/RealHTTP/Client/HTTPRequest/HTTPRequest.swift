@@ -256,17 +256,17 @@ public class HTTPRequest: CustomStringConvertible {
     
     // MARK: - Public Functions
     
-    /// Set cookies for a given request.
+    /// Set cookies for a given request inside header.
     ///
-    /// NOTES:
-    /// 1. When you set this cookie values are automatically to a `Cookie` header
+    /// IMPORTANT:
+    /// 1. When you set this cookies via this method values are automatically to a `Cookie` header
     ///    and attached to the `headers` properties, eventually replacing existing `Cookie` node.
     ///    If you want to set a shared cookies consider using the `HTTPCookieStorage` attached
     ///    to each destination `HTTPClient` instance.
     ///
     /// 2. Each new get call to cookies produce new instances of `HTTPCookie` even with the same values
     ///    (this because value is parsed on the fly from `headers` properties).
-    public func setCookies(_ cookies: [HTTPCookie]) {
+    public func setCookiesInHeaders(_ cookies: [HTTPCookie]) {
         let headerFields = HTTPCookie.requestHeaderFields(with: cookies).map { item in
             HTTPHeaders.Element(name: item.key, value: item.value)
         }

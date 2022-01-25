@@ -19,6 +19,7 @@ import Foundation
 public enum MIMEType: ExpressibleByStringLiteral {
     case wwwFormUtf8
     case jsonUtf8
+    case json
     case pdf
     case zip
     case gzip
@@ -50,6 +51,7 @@ public enum MIMEType: ExpressibleByStringLiteral {
         switch self {
         case .wwwFormUtf8:  return "application/x-www-form-urlencoded; charset=utf-8"
         case .jsonUtf8:     return "application/json; charset=utf-8"
+        case .json:         return "application/json"
         case .pdf:          return "application/pdf"
         case .zip:          return "application/zip"
         case .gzip:         return "application/gzip"

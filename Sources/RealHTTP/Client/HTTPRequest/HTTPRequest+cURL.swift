@@ -116,7 +116,7 @@ extension HTTPRequest {
         
         for header in headers {
             let escapedValue = header.value.replacingOccurrences(of: "\"", with: "\\\"")
-            components.append("-H \"\(header.name): \(escapedValue)\"")
+            components.append("-H \"\(header.name.rawValue): \(escapedValue)\"")
         }
     }
     

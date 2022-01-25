@@ -467,7 +467,7 @@ class RequestsTests: XCTestCase {
     
     // MARK: - Validators
     
-    func test_validatorValidationSequence() async throws {
+    func test_responseValidationSequence() async throws {
         setupStubber(echo: true)
         defer { stopStubber() }
         
@@ -508,7 +508,7 @@ class RequestsTests: XCTestCase {
         XCTAssert(response.error?.message == errorMessage, "Error from call must be overriden by the validator's error")
     }
     
-    func test_validatorRetryMechanism() async throws {
+    func test_retryMechanism() async throws {
         setupStubber(echo: true)
         defer { stopStubber() }
         
@@ -540,7 +540,7 @@ class RequestsTests: XCTestCase {
         XCTAssert(response.data?.asString() == "test", "Expected response not satisfied")
     }
     
-    func test_validatorRetryMechanismAfterAltRequest() async throws {
+    func test_retryMechanismAfterAltRequest() async throws {
         setupStubber(echo: true)
         defer { stopStubber() }
         
@@ -585,7 +585,7 @@ class RequestsTests: XCTestCase {
         XCTAssert(receivedAltCallResponse == "loginAndRetry", "Response received on alt call is wrong")
     }
     
-    func test_validatorRetryMechanismAfterAltRequestAndFail() async throws {
+    func test_retryMechanismAfterAltRequestAndFail() async throws {
         setupStubber(echo: false)
         defer { stopStubber() }
         
@@ -867,7 +867,131 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(response.statusCode, .badRequest)
     }
     
+    func test_cURLRequestGETDescription() {
+        let newClient = HTTPClient(baseURL: nil)
+
+        let url = URL(string: "http://127.0.0.1:8081/initial")!
+        let req = HTTPRequest {
+            $0.url = url
+            $0.method = .get
+        }
+        
+        let cURLDesc = req.cURLDescription(whenIn: newClient)
+        let components = cURLCommandComponents(from: cURLDesc)
+
+        // Then
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
+        XCTAssertTrue(components.contains("-X") == true)
+        XCTAssertEqual(components.last, "\"\(url)\"")
+    }
+    
+    func test_cURLRequestWithCustomHeader() {
+        let newClient = HTTPClient(baseURL: nil)
+
+        let url = URL(string: "http://127.0.0.1:8081/initial")!
+        let req = HTTPRequest {
+            $0.url = url
+            $0.method = .get
+            $0.headers = .init(headers: [
+                .init(name: "X-Custom-Header", value: "{\"key\": \"value\"}")
+            ])
+        }
+
+        let cURLDesc = req.cURLDescription(whenIn: newClient)
+
+        XCTAssertNotNil(cURLDesc.range(of: "-H \"X-Custom-Header: {\\\"key\\\": \\\"value\\\"}\""))
+    }
+
+    func test_cURLRequestPOSTDescription() {
+        let newClient = HTTPClient(baseURL: nil)
+
+        let url = URL(string: "http://127.0.0.1:8081/initial")!
+        let req = HTTPRequest {
+            $0.url = url
+            $0.method = .post
+            $0.headers = .init(headers: [
+                .init(name: "X-Custom-Header", value: "{\"key\": \"value\"}")
+            ])
+        }
+
+        let cURLDesc = req.cURLDescription(whenIn: newClient)
+        let components = cURLCommandComponents(from: cURLDesc)
+
+        // Then
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
+        XCTAssertEqual(components[3..<5], ["-X", "POST"])
+        XCTAssertEqual(components.last, "\"\(url)\"")
+    }
+    
+    func test_cURLRequestPOSTRequestWithJSONParameters() throws {
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.headers = .init()
+
+        let url = URL(string: "http://127.0.0.1:8081/initial")!
+        let req = try HTTPRequest {
+            $0.url = url
+            $0.method = .post
+            $0.headers = .init(headers: [
+                .contentType(.json)
+            ])
+            $0.body = try .json( ["foo": "bar",
+                                  "fo\"o": "b\"ar",
+                                  "f'oo": "ba'r"])
+        }
+
+        let cURLDesc = req.cURLDescription(whenIn: newClient)
+        let components = cURLCommandComponents(from: cURLDesc)
+
+        // Then
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
+        XCTAssertEqual(components[3..<5], ["-X", "POST"])
+
+        XCTAssertNotNil(cURLDesc.range(of: "-d \"{"))
+        XCTAssertNotNil(cURLDesc.range(of: "\\\"f'oo\\\":\\\"ba'r\\\""))
+        XCTAssertNotNil(cURLDesc.range(of: "\\\"fo\\\\\\\"o\\\":\\\"b\\\\\\\"ar\\\""))
+        XCTAssertNotNil(cURLDesc.range(of: "\\\"foo\\\":\\\"bar\\"))
+        XCTAssertNotNil(cURLDesc.range(of: "-H \"Content-Type: application/json\""))
+
+        XCTAssertEqual(components.last, "\"\(url)\"")
+    }
+    
+    func testPOSTRequestWithCookieCURLDescription() {
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.headers = .init()
+
+        let url = URL(string: "http://127.0.0.1:8081/initial")!
+        let cookie = HTTPCookie(properties: [.domain: url.host as Any,
+                                             .path: url.path,
+                                             .name: "foo",
+                                             .value: "bar"])!
+        
+        newClient.cookieStorage?.setCookie(cookie)
+        let req = HTTPRequest {
+            $0.url = url
+            $0.method = .post
+            $0.headers = .init(headers: [
+                .contentType(.json)
+            ])
+        }
+        
+
+        let cURLDesc = req.cURLDescription(whenIn: newClient)
+        let components = cURLCommandComponents(from: cURLDesc)
+
+        
+        // Then
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
+        XCTAssertEqual(components[3..<5], ["-X", "POST"])
+        XCTAssertEqual(components.last, "\"\(url)\"")
+        XCTAssertEqual(components[5..<6], ["-b"])
+    }
+    
     // MARK: - Private Functions
+    
+    private func cURLCommandComponents(from cURLString: String) -> [String] {
+        cURLString.components(separatedBy: .whitespacesAndNewlines)
+            .filter { $0 != "" && $0 != "\\" }
+    }
     
     private func setupRequestRedirect(_ redirect: HTTPRequest.RedirectMode) -> HTTPRequest {
         HTTPRequest {

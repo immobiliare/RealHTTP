@@ -86,7 +86,7 @@ extension HTTPStubRequest {
     ///   - string: json string (encoded as utf8).
     /// - Returns: Self
     public func stub(for method: HTTPMethod, delay: TimeInterval? = nil, json string: String?) -> Self {
-        stub(for: method, delay: delay, contentType: .jsonUTF8, body: string)
+        stub(for: method, delay: delay, contentType: .json, body: string)
     }
     
     /// Generic stub response with custom content type and response get from file at specified url.

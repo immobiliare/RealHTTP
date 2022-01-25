@@ -76,8 +76,8 @@ extension HTTPBody {
     /// - Returns: HTTPBody
     public static func json<T: Encodable>(_ object: T, encoder: JSONEncoder = JSONEncoder()) throws -> HTTPBody {
         let content = try encoder.encode(object)
-        var body = HTTPBody.data(content, contentType: MIMEType.jsonUtf8)
-        body.headers[.contentType] = MIMEType.jsonUtf8.rawValue
+        var body = HTTPBody.data(content, contentType: MIMEType.json)
+        body.headers[.contentType] = MIMEType.json.rawValue
         return body
     }
     
@@ -90,8 +90,8 @@ extension HTTPBody {
     /// - Returns: HTTPBody
     public static func json(_ object: Any, options: JSONSerialization.WritingOptions = []) throws -> HTTPBody {
         let content = try JSONSerialization.data(withJSONObject: object, options: options)
-        var body = HTTPBody.data(content, contentType: MIMEType.jsonUtf8)
-        body.headers[.contentType] = MIMEType.jsonUtf8.rawValue
+        var body = HTTPBody.data(content, contentType: MIMEType.json)
+        body.headers[.contentType] = MIMEType.json.rawValue
         return body
     }
     
