@@ -26,6 +26,18 @@ public protocol HTTPClientDelegate: AnyObject {
     ///   - request: request instance.
     func client(_ client: HTTPClient, didEnqueue request: ExecutedRequest)
     
+    
+    /// This method is called when a request is about to be retry due to failure.
+    ///
+    ///- Parameters:
+    /// - `client`: client target of the request.
+    /// - `request`: request to be re-executed.
+    /// - `strategy`: retry strategy to follow.
+    /// - `response`: original response which caused the retry strategy.
+    func client(_ client: HTTPClient, request: ExecutedRequest,
+                willRetryWithStrategy strategy: HTTPRetryStrategy,
+                afterResponse response: HTTPResponse)
+    
     /// The task is waiting until suitable connectivity is available before beginning the network load.
     /// This method is called if the waitsForConnectivity property of URLSessionConfiguration is true,
     /// and sufficient connectivity is unavailable.

@@ -103,7 +103,9 @@ internal class HTTPDataLoader: NSObject,
                     return response
                 } else {
                     // Perform the retry strategy to apply and return the result
-                    let retryResponse = try await performRetryStrategy(strategy, forRequest: request, withResponse: response)
+                    let retryResponse = try await performRetryStrategy(strategy,
+                                                                       forRequest: request, task: sessionTask,
+                                                                       withResponse: response)
                     return retryResponse
                 }
                 
@@ -121,8 +123,16 @@ internal class HTTPDataLoader: NSObject,
     ///   - request: request who failed to be validated.
     ///   - response: response received from the request failed.
     /// - Returns: `HTTPResponse`
-    private func performRetryStrategy(_ strategy: HTTPRetryStrategy, forRequest request: HTTPRequest,
+    private func performRetryStrategy(_ strategy: HTTPRetryStrategy,
+                                      forRequest request: HTTPRequest, task: URLSessionTask,
                                       withResponse response: HTTPResponse) async throws -> HTTPResponse {
+        
+        if request.isAltRequest, let client = self.client {
+            client.delegate?.client(client, request: (request, task),
+                                    willRetryWithStrategy: strategy,
+                                    afterResponse: response)
+        }
+        
         switch strategy {
         case .after(let altRequest, let delayToRetryMainCall, let catcher):
             // If `request` did fail we want to execute an alternate request and retry again the original one.
