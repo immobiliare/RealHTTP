@@ -180,17 +180,20 @@ public class HTTPRequest: CustomStringConvertible {
     /// Initialize a new request.
     ///
     /// - Parameters:
-    ///   - url: full URL if applicable.
     ///   - configure: configure callback.
-    public init(url: URLConvertible? = nil,
-                _ configure: (inout HTTPRequest) throws -> Void) rethrows {
+    public init(with configure: ((inout HTTPRequest) throws -> Void)) rethrows {
         var this = self
         try configure(&this)
-        
-        if let url = url,
-           let components = try? URLComponents(url: url.asURL(), resolvingAgainstBaseURL: false) {
-            self.urlComponents = components
-        }
+    }
+    
+    /// Initialize a new HTTP request with a given URL.
+    ///
+    /// - Parameters:
+    ///   - method: http method to use, default is `.get`.
+    ///   - url: absolute URL.
+    public init(method: HTTPMethod = .get, _ url: URL) throws {
+        self.url = url
+        self.method = method
     }
     
     /// Initialize a new request with given URI template for path component.
@@ -202,7 +205,7 @@ public class HTTPRequest: CustomStringConvertible {
     public convenience init(URI template: String, variables: [String: Any],
                             _ configure: (inout HTTPRequest) throws -> Void) rethrows {
         let path = URITemplate(template: template).expand(variables)
-        try self.init(url: nil, configure)
+        try self.init(with: configure)
         self.path = path
     }
     
@@ -220,16 +223,16 @@ public class HTTPRequest: CustomStringConvertible {
     /// Object must be conform to `HTTPDecodableResponse` if you want to implement custom decode.
     ///
     /// - Returns: T?
-    public func fetch<T: HTTPDecodableResponse>(_ client: HTTPClient = .shared,
-                                                decode: T.Type) async throws -> T? {
+    public func fetch<T: HTTPDecodableResponse>(client: HTTPClient = .shared,
+                                                _ decode: T.Type) async throws -> T? {
         try await client.fetch(self).decode(decode)
     }
     
     /// Fetch data asynchronously and return the decoded object by using `Decodable` conform type.
     ///
     /// - Returns: T?
-    public func fetch<T: Decodable>(_ client: HTTPClient = .shared,
-                                    decode: T.Type, decoder: JSONDecoder = .init()) async throws -> T? {
+    public func fetch<T: Decodable>(client: HTTPClient = .shared,
+                                    _ decode: T.Type, decoder: JSONDecoder = .init()) async throws -> T? {
         try await client.fetch(self).decode(decode)
     }
     

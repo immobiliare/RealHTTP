@@ -122,7 +122,7 @@ public class HTTPStubber {
     ///   - options: options for matching, by default is set to `.default`.
     /// - Returns: Self
     @discardableResult
-    public func add(ignoreURL url: String, options: HTTPStubURLMatcher.Options = .default) -> Self {
+    public func add(ignoreURL url: URL, options: HTTPStubURLMatcher.Options = .default) -> Self {
         guard let matcher = HTTPStubURLMatcher(URL: url, options: options) else {
             return self
         }

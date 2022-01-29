@@ -15,6 +15,16 @@
 
 import Foundation
 
+extension URL: ExpressibleByStringLiteral {
+    public init(stringLiteral value: StaticString) {
+        guard let url = URL(string: "\(value)") else {
+            fatalError("Invalid URL string literal: \(value)")
+        }
+        self = url
+    }
+}
+
+/*
 // MARK: - URLConvertible
 
 /// Any type conform to `URLConvertible` protocol can be used to construct `URL`s
@@ -83,4 +93,4 @@ extension URLComponents: URLConvertible {
         queryItems?.first(where: { $0.name == key })?.value
     }
     
-}
+}*/

@@ -33,13 +33,9 @@ public class HTTPStubURLMatcher: HTTPStubMatcherProtocol {
     /// - Parameters:
     ///   - URL: URL to match. If not valid initialization fails.
     ///   - ignoreQuery: `true` to params should be ignored by the matcher.
-    public init?(URL: URLConvertible, options: Options) {
-        do {
-            self.URL = try URL.asURL()
-            self.options = options
-        } catch {
-            return nil
-        }
+    public init?(URL url: URL, options: Options) {
+        self.URL = url
+        self.options = options
     }
     
     // MARK: - Conformance

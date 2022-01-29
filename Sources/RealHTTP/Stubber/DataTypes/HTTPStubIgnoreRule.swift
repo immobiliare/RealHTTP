@@ -54,7 +54,7 @@ public class HTTPStubIgnoreRule: Equatable {
     ///   - URL: URL target.
     ///   - options: comparison options for URL matcher.
     /// - Returns: Self
-    public func match(url: String, options: HTTPStubURLMatcher.Options = .default) -> Self {
+    public func match(url: URL, options: HTTPStubURLMatcher.Options = .default) -> Self {
         guard let matcher = HTTPStubURLMatcher(URL: url, options: options) else {
             return self
         }

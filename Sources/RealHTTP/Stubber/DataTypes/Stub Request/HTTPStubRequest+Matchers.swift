@@ -88,7 +88,7 @@ extension HTTPStubRequest {
     ///   - URL: URL target.
     ///   - options: comparison options for URL matcher.
     /// - Returns: Self
-    public func match(URL: URLConvertible, options: HTTPStubURLMatcher.Options = .default) -> Self {
+    public func match(URL: URL, options: HTTPStubURLMatcher.Options = .default) -> Self {
         guard let matcher = HTTPStubURLMatcher(URL: URL, options: options) else {
             return self
         }

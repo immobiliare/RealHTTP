@@ -28,11 +28,11 @@ extension URLRequest {
     ///   - timeout: timeout interval.
     ///   - headers: headers to use.
     /// - Throws: throw an exception if url is not valid and cannot be converted to request.
-    public init(url: URLConvertible, method: HTTPMethod,
+    public init(url: URL, method: HTTPMethod,
                 cachePolicy: URLRequest.CachePolicy,
                 timeout: TimeInterval,
                 headers: HTTPHeaders? = nil) throws {
-        let url = try url.asURL()
+        let url = url
 
         self.init(url: url)
 

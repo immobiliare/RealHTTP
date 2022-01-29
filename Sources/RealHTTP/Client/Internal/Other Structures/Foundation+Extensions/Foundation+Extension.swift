@@ -215,21 +215,6 @@ extension URL {
     public func mimeType() -> String {
         self.pathExtension.suggestedMimeType()
     }
-            
-    /// Create URL from a valid string.
-    /// It allows to pass `String` instances where `URL` is required.
-    ///
-    /// NOTE:
-    /// The URL string must be valid otherwise a fatal error will be triggered.
-    ///
-    /// - Parameter value: URL string.
-    public init(stringLiteral value: StaticString) {
-        guard let url = URL(string: "\(value)") else {
-            fatalError("Failed to create URL from literal: \(value)")
-        }
-        
-        self = url
-    }
     
     // MARK: - Public Functions
 
