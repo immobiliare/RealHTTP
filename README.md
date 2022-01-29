@@ -8,7 +8,7 @@ The goal of this project is to make an easy to use, effortless http client based
 This is a simple http call in RealHTTP
 
 ```swift
-let todo: Todo? = try await HTTPRequest("https://jsonplaceholder.typicode.com/todos/1").fetch(Todo.self)
+let todo = try await HTTPRequest("https://jsonplaceholder.typicode.com/todos/1").fetch(Todo.self)
 ```
 One line of code, including the automatic decode from JSON to object.  
 Of course you can fully configure the request with many other parameters, that's just a silly example.
