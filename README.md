@@ -53,18 +53,22 @@ And for pro users:
 
 ## Documentation
 
-- 
+RealHTTP is provided with an extensive documentation.  
+
+- [Introduction](./Documentation/1.Introduction.md)
+- [Build a Request](Documentation/2.Build_Request.md)
 
 ## Test
 
-RealHTTP has an extensive unit test suite
+RealHTTP has an extensive unit test suite which covers many of the standard and edge cases including request build, parameter encoding, queuing and retry strategies.  
+See the XCTest suite inside `Tests/RealHTTPTests` folder.
 
 ## Requirements
 
 RealHTTP can be installed in any platform which supports:
 
 - iOS 13+, macOS Catalin+, watchOS 6+, tvOS 13+
-- Xcode 13+  
+- Xcode 13.2+ 
 - Swift 5.5+  
 
 ## Installation
