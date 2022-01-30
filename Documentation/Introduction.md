@@ -10,8 +10,12 @@ RealHTTP defines the following foundamental objects as HTTP client:
 
 - `HTTPClient`: this is the container where requests are executed. It handles common requests configuration options along with session data (cookies, headers and so on). According to your needs you can create a custom client or use the `shared` one.
 - `HTTPRequest`: defines a single request along with their configuration, url, parameters, body and so on. It allows you to easily define a single request in a type-safe manner without the hassle to setup the raw settings of an http communication (for example it supports multipart, json encoding, different parasmeters encoding, progress tracking, metrics collection and more).
-- `HTTPResponse`: Request's `fetch()` function produces an async response. This objects contains all the relevant information of the response including error parsing, raw data and url connection stats.
+- `HTTPResponse`: Request's `fetch()` function produces an async response. This objects contains all the relevant information of the response including error parsing, raw data and url connection stats. `decode()` function of response allows you to transform a raw response to a valid business object.
 - `HTTPValidator`: when a request is received it can be validates by client's `validators`. Validators can be chained and each one can ask for a retry, transform the result or handle the custom business logic and error handling of your web service implementations.
+
+This is a simple flow of an http request from the beginning to the end decode phase:
+
+![](assets/client-flow.png)
 
 ## Stub Components
 
