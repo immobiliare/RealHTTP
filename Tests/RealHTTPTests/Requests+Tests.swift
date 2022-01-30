@@ -1137,6 +1137,26 @@ class RequestsTests: XCTestCase {
         HTTPStubber.shared.add(stub: stubRedirect)
     }
     
+    // MARK: - Requests Initialize
+    
+    func test_postRequestInitialization() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+        
+        let req = try HTTPRequest(method: .post, "https://jsonplaceholder.typicode.com/posts",
+                                  body: try .json(["title": "foo", "body": "bar", "userId": 1]))
+        let result = try await req.fetch(newClient)
+        XCTAssertEqual(result.statusCode, .ok)
+    }
+    
+    func test_uriTemplateInitialization() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+        
+        let req = try HTTPRequest(URI: "https://jsonplaceholder.typicode.com/posts/{postId}",
+                                  variables: ["postId": 1])
+        let result = try await req.fetch(newClient)
+        XCTAssertEqual(result.statusCode, .ok)
+    }
+    
 }
 
 // MARK: - Support Structures

@@ -191,21 +191,33 @@ public class HTTPRequest: CustomStringConvertible {
     /// - Parameters:
     ///   - method: http method to use, default is `.get`.
     ///   - url: absolute URL.
-    public init(method: HTTPMethod = .get, _ url: URL) throws {
+    ///   - params: optional query parameters.
+    ///   - body: optional body content.
+    public init(method: HTTPMethod = .get, _ url: URL,
+                params: [String: Any]? = nil, body: HTTPBody? = nil) throws {
         self.url = url
         self.method = method
+        if let params = params {
+            self.add(parameters: params)
+        }
+        if let body = body {
+            self.body = body
+        }
     }
     
     /// Initialize a new request with given URI template for path component.
     ///
     /// - Parameters:
-    ///   - template: template.
-    ///   - variables: variables to expand.
-    ///   - configure: configure callback.
-    public convenience init(URI template: String, variables: [String: Any],
-                            _ configure: (inout HTTPRequest) throws -> Void) rethrows {
+    ///   - method: http method to use, default is `.get`.
+    ///   - template: URI template to expand.
+    ///   - variables: variables to expand from `template`.
+    ///   - configure: optional configure callback.
+    public convenience init(method: HTTPMethod = .get,
+                            URI template: String, variables: [String: Any],
+                            _ configure: (inout HTTPRequest) throws -> Void = { _ in }) rethrows {
         let path = URITemplate(template: template).expand(variables)
         try self.init(with: configure)
+        self.method = method
         self.path = path
     }
     

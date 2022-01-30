@@ -100,7 +100,8 @@ extension String {
         if hasPrefix("localhost") {
             return true
         }
-        let regEx = "((?:http|https)://)?(?:www\\.)?[\\w\\d\\-_]+\\.\\w{2,3}(\\.\\w{2})?(/(?<=/)(?:[\\w\\d\\-./_]+)?)?"
+        
+        let regEx = #"(\b(https?|ftp|file):\/\/)?[-A-Za-z0-9+&@#\/%?=~_|!:,.;]+[-A-Za-z0-9+&@#\/%=~_|]"#
         let predicate = NSPredicate(format: "SELF MATCHES %@", argumentArray: [regEx])
         return predicate.evaluate(with: self)
     }
