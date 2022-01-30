@@ -19,7 +19,7 @@ import Foundation
 
 /// This is a generic protocol you can adopt to create and set validators for data
 /// received by an `HTTPClient` instance.
-public protocol HTTPResponseValidator {
+public protocol HTTPValidator {
     
     /// Validate the reponse of an HTTP operation and execute specified action.
     /// - Parameters:

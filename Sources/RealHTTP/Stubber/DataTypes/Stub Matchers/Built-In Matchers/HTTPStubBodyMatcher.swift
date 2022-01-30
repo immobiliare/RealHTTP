@@ -17,7 +17,7 @@ import Foundation
 
 /// This is a simple matcher which compares the content of the body request
 /// with the value assigned here.
-open class HTTPStubBodyMatcher: HTTPStubMatcherProtocol {
+open class HTTPStubBodyMatcher: HTTPStubMatcher {
     
     // MARK: - Private Properties
     

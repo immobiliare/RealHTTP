@@ -30,7 +30,7 @@ extension HTTPStubIgnoreRule: HTTPMatcherSource {}
 
 // MARK: - HTTPStubMatcherProtocol
 
-public protocol HTTPStubMatcherProtocol {
+public protocol HTTPStubMatcher {
     
     /// Validate if source can match received request.
     ///

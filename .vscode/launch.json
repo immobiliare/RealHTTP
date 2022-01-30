@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Test RealHTTP",
+            "program": "/Applications/Xcode_13.2.1.app/Contents/Developer/usr/bin/xctest",
+            "args": [
+                ".build/debug/RealHTTPPackageTests.xctest"
+            ],
+            "cwd": "${workspaceFolder:RealHTTPAW}",
+            "preLaunchTask": "swift: Build All"
+        }
+    ]
+}

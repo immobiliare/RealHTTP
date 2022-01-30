@@ -34,7 +34,7 @@ import Foundation
 /// ```
 ///
 /// Stub is triggered for this particular object value.
-public class HTTPStubJSONMatcher<T: Decodable & Hashable>: HTTPStubMatcherProtocol {
+public class HTTPStubJSONMatcher<T: Decodable & Hashable>: HTTPStubMatcher {
     
     // MARK: - Private Properties
     

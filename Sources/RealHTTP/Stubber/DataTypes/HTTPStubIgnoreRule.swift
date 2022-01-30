@@ -25,14 +25,14 @@ public class HTTPStubIgnoreRule: Equatable {
     
     /// Matcher which validate the ignore rule. When all matchers are valid
     /// the request will be ignored.
-    public private(set) var matchers: [HTTPStubMatcherProtocol]
+    public private(set) var matchers: [HTTPStubMatcher]
     
     // MARK: - Initialization
     
     /// Initialize with matchers list.
     ///
     /// - Parameter matchers: matchers.
-    public init(_ matchers: HTTPStubMatcherProtocol...) {
+    public init(_ matchers: HTTPStubMatcher...) {
         self.matchers = matchers
     }
     
@@ -42,7 +42,7 @@ public class HTTPStubIgnoreRule: Equatable {
     ///
     /// - Parameter matcher: matcher to add.
     /// - Returns: Self
-    public func match(_ matcher: HTTPStubMatcherProtocol) -> Self {
+    public func match(_ matcher: HTTPStubMatcher) -> Self {
         matchers.append(matcher)
         return self
     }

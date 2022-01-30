@@ -70,7 +70,7 @@ public class HTTPClient {
     public var redirectMode: HTTPRequest.RedirectMode = .follow
     
     /// Validators for response. Values are executed in order.
-    public var validators: [HTTPResponseValidator] = [
+    public var validators: [HTTPValidator] = [
         HTTPDefaultValidator() // standard validator for http responses
     ]
     

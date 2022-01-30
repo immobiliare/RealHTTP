@@ -25,7 +25,7 @@ public class HTTPStubRequest: Equatable {
     ///
     /// NOTE:
     /// Matchers are evaluted in AND, so all matchers must be valid in order to make the stub valid for a request.
-    public var matchers = [HTTPStubMatcherProtocol]()
+    public var matchers = [HTTPStubMatcher]()
         
     /// Response to produce for each http method which match this request.
     public var responses = [HTTPMethod: HTTPStubResponse]()

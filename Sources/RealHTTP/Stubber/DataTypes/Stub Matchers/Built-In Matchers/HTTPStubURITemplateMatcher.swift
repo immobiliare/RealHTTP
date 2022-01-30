@@ -28,7 +28,7 @@ import Foundation
 ///
 /// Original implementation of the URITemplate (see URITemplate.swift) was
 /// made by Kyle Fuller <https://github.com/kylef>.
-public class HTTPStubURITemplateMatcher: HTTPStubMatcherProtocol {
+public class HTTPStubURITemplateMatcher: HTTPStubMatcher {
     
     // MARK: - Private Properties
     

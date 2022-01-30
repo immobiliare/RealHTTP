@@ -16,7 +16,7 @@
 import Foundation
 
 /// A simple URL matcher.
-public class HTTPStubURLMatcher: HTTPStubMatcherProtocol {
+public class HTTPStubURLMatcher: HTTPStubMatcher {
     
     // MARK: - Private Mat
     

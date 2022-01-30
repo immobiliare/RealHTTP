@@ -15,7 +15,7 @@
 
 import Foundation
 
-public struct HTTPStubCustomMatcher: HTTPStubMatcherProtocol {
+public struct HTTPStubCustomMatcher: HTTPStubMatcher {
     public typealias Handler = (URLRequest, HTTPMatcherSource) -> Bool
     
     // MARK: - Private Properties

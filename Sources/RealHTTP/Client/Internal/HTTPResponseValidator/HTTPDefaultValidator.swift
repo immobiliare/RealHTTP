@@ -21,7 +21,7 @@ import Foundation
 /// This validator allows you to configure:
 /// - Allows/Deny Empty responses: to allows or generate an error in case of empty response by server.
 /// - Configure Retry Policy: allows you to configure what kind of `Error` should trigger a retry attempt for request.
-open class HTTPDefaultValidator: HTTPResponseValidator {
+open class HTTPDefaultValidator: HTTPValidator {
     
     // MARK: - Public Properties
     

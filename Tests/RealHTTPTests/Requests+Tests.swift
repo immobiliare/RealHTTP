@@ -314,6 +314,7 @@ class RequestsTests: XCTestCase {
         
         req.$progress.sink { progress in
             progressionReports += 1
+            print("Downloading \(progress?.percentage ?? 0)")
         }.store(in: &observerBag)
         
         let response = try await req.fetch(client)
@@ -1154,7 +1155,7 @@ func url(forResource: String, withExtension: String) -> URL {
     return fileURL
 }
 
-fileprivate struct CallbackValidator: HTTPResponseValidator {
+fileprivate struct CallbackValidator: HTTPValidator {
     
     var onValidate: ((_ response: HTTPResponse, _ request: HTTPRequest) -> HTTPResponseValidatorResult)?
     

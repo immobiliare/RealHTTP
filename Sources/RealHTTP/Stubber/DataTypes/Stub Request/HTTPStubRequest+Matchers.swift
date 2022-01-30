@@ -21,7 +21,7 @@ extension HTTPStubRequest {
     ///
     /// - Parameter matcher: matcher to add.
     /// - Returns: Self
-    public func match(_ matcher: HTTPStubMatcherProtocol) -> Self {
+    public func match(_ matcher: HTTPStubMatcher) -> Self {
         matchers.append(matcher)
         return self
     }

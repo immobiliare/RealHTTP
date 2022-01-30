@@ -42,6 +42,7 @@ Some of them are:
 And for pro users:
 
 - Powerful integrated **HTTP Stub** for your mocks
+- **Combine** publisher adapter 
 - **URI templating** system
 - **Resumable download/uploads** with progress tracking
 - Native **Multipart Form Data** support
@@ -49,3 +50,67 @@ And for pro users:
 - **SSL Pinning**, Basic/Digest Auth
 - **TSL Certificate** & Public Key Pinning
 - **cURL** debugger
+
+## Documentation
+
+- 
+
+## Test
+
+RealHTTP has an extensive unit test suite
+
+## Requirements
+
+RealHTTP can be installed in any platform which supports:
+
+- iOS 13+, macOS Catalin+, watchOS 6+, tvOS 13+
+- Xcode 13+  
+- Swift 5.5+  
+
+## Installation
+
+### Swift Package Manager
+
+Aadd it as a dependency in a Swift Package, add it to your Package.swift:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/immobiliare/RealHTTP.git", from: "1.0.0")
+]
+```
+
+And add it as a dependency of your target:
+
+```swift
+targets: [
+    .target(name: "MyTarget", dependencies: [
+        .product(name: "https://github.com/immobiliare/RealHTTP.git", package: "RealHTTP")
+    ])
+]
+```
+
+In Xcode 11+ you can also navigate to the File menu and choose Swift Packages -> Add Package Dependency..., then enter the repository URL and version details.
+
+### CocoaPods
+
+RealHTTP can be installed with CocoaPods by adding pod 'RealHTTP' to your Podfile.
+
+```ruby
+pod 'RealHTTP'
+```
+
+## Powered Apps
+
+RealHTTP was created by the amazing mobile team at ImmobiliareLabs, the Tech dept at Immobiliare.it, the first real estate site in Italy.  
+We are currently using RealHTTP in all of our products.
+
+**If you are using RealHTTP in your app [drop us a message](mailto:mobile@immobiliare.it), we'll add below**.
+
+<a href="https://apps.apple.com/us/app/immobiiiare-it-indomio/id335948517"><img src="./Documentation/immobiliare-app.png" alt="Indomio" width="270"/></a>
+
+## Support & Contribute
+
+Made with ❤️ by [ImmobiliareLabs](https://github.com/orgs/immobiliare) & [Contributors](https://github.com/immobiliare/RealHTTP/graphs/contributors)
+
+We'd love for you to contribute to RealHTTP!  
+If you have any questions on how to use RealHTTP, bugs and enhancement please feel free to reach out by opening a [GitHub Issue](https://github.com/immobiliare/RealHTTP/issues).
