@@ -56,8 +56,28 @@ And for pro users:
 RealHTTP is provided with an extensive documentation.  
 
 - [Introduction](./Documentation/1.Introduction.md)
-- [Build a Request](Documentation/2.Build_Request.md)
-
+- [Build & Execute a Request](./Documentation/2.Build_Request.md#build--execute-a-request)
+  - [Initialize a Request](./Documentation/2.Build_Request.md#initialize-a-request)
+    - [Standard](./Documentation/2.Build_Request.md#standard)
+    - [URI Template](./Documentation/2.Build_Request.md#uri-template)
+    - [Builder Pattern](./Documentation/2.Build_Request.md#builder-pattern)
+  - [Setup Query Parameters](./Documentation/2.Build_Request.md#setup-query-parameters)
+  - [Setup Headers](./Documentation/2.Build_Request.md#setup-headers)
+  - [Setup Request Body](./Documentation/2.Build_Request.md#setup-request-body)
+    - [URL Query Parameters](./Documentation/2.Build_Request.md#url-query-parameters)
+    - [Raw Data & Stream](./Documentation/2.Build_Request.md#raw-data--stream)
+    - [Plain Strings](./Documentation/2.Build_Request.md#plain-strings)
+    - [JSON Data](./Documentation/2.Build_Request.md#json-data)
+    - [Multipart-Form-Data](./Documentation/2.Build_Request.md#multipart-form-data)
+  - [The HTTP Client](./Documentation/2.Build_Request.md#the-http-client)
+    - [Shared Client](./Documentation/2.Build_Request.md#shared-client)
+    - [Custom Client](./Documentation/2.Build_Request.md#custom-client)
+  - [Execute a Request](./Documentation/2.Build_Request.md#execute-a-request)
+  - [Modify a Request](./Documentation/2.Build_Request.md#modify-a-request)
+  - [Cancel a Request](./Documentation/2.Build_Request.md#cancel-a-request)
+  - [The HTTP Response](./Documentation/2.Build_Request.md#the-http-response)
+    - [Decode using Codable & Custom Decoding](./Documentation/2.Build_Request.md#decode-using-codable--custom-decoding)
+    - [Decode Raw JSON using JSONSerialization](./Documentation/2.Build_Request.md#decode-raw-json-using-jsonserialization)
 ## Test
 
 RealHTTP has an extensive unit test suite which covers many of the standard and edge cases including request build, parameter encoding, queuing and retry strategies.  
