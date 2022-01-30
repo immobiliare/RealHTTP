@@ -1161,9 +1161,19 @@ class RequestsTests: XCTestCase {
     public func testt() async throws {
         let credentials = UserCredentials(username: "Michael Bublé", pwd: "abc")
         let req = try HTTPRequest("https://jsonplaceholder.typicode.com/posts")
-        req.body = try .json(credentials)
+        req.body = try .multipart(boundary: nil, { form in
+            try form.add(string: "320x240", name: "size")
+            try form.add(string: "Michael Bublé", name: "author")
+            try form.add(fileURL: credentialsFileURL, name: "credentials")
+            try form.add(fileStream: localFileURL, headers: .init())
+        })
         try print(req.body.content.encodedData().asString)
 
+        req.headers = HTTPHeaders([
+            .init(name: "X-API-Key", value: "abc"),
+            .init(name: .userAgent, value: "MyCoolApp"),
+            .init(name: .cacheControl, value: HTTPCacheControl.noTransform.headerValue)
+        ])
     }
 
     
