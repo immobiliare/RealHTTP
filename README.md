@@ -12,9 +12,9 @@ let todo = try await HTTPRequest("https://jsonplaceholder.typicode.com/todos/1")
                      .fetch(Todo.self)
 ```
 One line of code, including the automatic decode from JSON to object.  
-Of course you can fully configure the request with many other parameters, that's just a silly example.
+Of course you can fully configure the request with many other parameters, we'll take a closer look below.
 
-## What's about the stubber?
+## What about the stubber?
 Integrated stubber is perfect to write your own test suite:
 
 That's a simple stubber which return the original request as response:

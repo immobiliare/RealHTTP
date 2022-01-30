@@ -207,6 +207,17 @@ extension Array where Element == String {
 
 // MARK: - URL
 
+extension URL: ExpressibleByStringLiteral {
+    
+    public init(stringLiteral value: StaticString) {
+        guard let url = URL(string: "\(value)") else {
+            fatalError("Invalid URL string literal: \(value)")
+        }
+        self = url
+    }
+    
+}
+
 extension URL {
     
     /// Return suggested mime type for file at given URL.
@@ -263,4 +274,18 @@ extension URL {
 /// - Returns: source array plus new item.
 func += <V> ( left: inout [V], right: V) {
     left.append(right)
+}
+
+// MARK: - URLComponents
+
+extension URLComponents {
+    
+    /// Get the value for a query item with givem key.
+    ///
+    /// - Parameter key: key.
+    /// - Returns: `String?`
+    public func valueForQueryItem(_ key: String) -> String? {
+        queryItems?.first(where: { $0.name == key })?.value
+    }
+    
 }
