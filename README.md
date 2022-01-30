@@ -55,8 +55,8 @@ And for pro users:
 
 RealHTTP is provided with an extensive documentation.  
 
-- [Introduction](./Documentation/1.Introduction.md)
-- [Build & Execute a Request](./Documentation/2.Build_Request.md#build--execute-a-request)
+- [1 - Introduction](./Documentation/1.Introduction.md)
+- [2 - Build & Execute a Request](./Documentation/2.Build_Request.md#build--execute-a-request)
   - [Initialize a Request](./Documentation/2.Build_Request.md#initialize-a-request)
     - [Standard](./Documentation/2.Build_Request.md#standard)
     - [URI Template](./Documentation/2.Build_Request.md#uri-template)
@@ -78,6 +78,14 @@ RealHTTP is provided with an extensive documentation.
   - [The HTTP Response](./Documentation/2.Build_Request.md#the-http-response)
     - [Decode using Codable & Custom Decoding](./Documentation/2.Build_Request.md#decode-using-codable--custom-decoding)
     - [Decode Raw JSON using JSONSerialization](./Documentation/2.Build_Request.md#decode-raw-json-using-jsonserialization)
+- [3 - Advanced HTTP Client](./Documentation/2.3.Advanced_HTTPClient.md#advanced-http-client)
+  - [Why using a custom HTTPClient](./Documentation/2.3.Advanced_HTTPClient.md#why-using-a-custom-httpclient)
+  - [Validate Responses: Validators](./Documentation/2.3.Advanced_HTTPClient.md#validate-responses-validators)
+    - [Approve the response](./Documentation/2.3.Advanced_HTTPClient.md#approve-the-response)
+    - [Fail with error](./Documentation/2.3.Advanced_HTTPClient.md#fail-with-error)
+    - [Retry with strategy](./Documentation/2.3.Advanced_HTTPClient.md#retry-with-strategy)
+  - [The Default Validator](./Documentation/2.3.Advanced_HTTPClient.md#the-default-validator)
+  - [Custom Validators](./Documentation/2.3.Advanced_HTTPClient.md#custom-validators)
 ## Test
 
 RealHTTP has an extensive unit test suite which covers many of the standard and edge cases including request build, parameter encoding, queuing and retry strategies.  
