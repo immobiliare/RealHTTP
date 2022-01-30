@@ -182,6 +182,17 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
 
         headers.remove(at: index)
     }
+    
+    /// Case-insensitively removes an `HTTPHeader`, if it exists, from the instance.
+    ///
+    /// - Parameter name: The header name.
+    public mutating func remove(name: HTTPHeaders.Element.Name) {
+        guard let index = headers.index(of: name.rawValue) else {
+            return
+        }
+
+        headers.remove(at: index)
+    }
 
     /// Case-insensitively find a header's value passing the name.
     ///

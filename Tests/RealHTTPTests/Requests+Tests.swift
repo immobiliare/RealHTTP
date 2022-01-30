@@ -1174,6 +1174,12 @@ class RequestsTests: XCTestCase {
             .init(name: .userAgent, value: "MyCoolApp"),
             .init(name: .cacheControl, value: HTTPCacheControl.noTransform.headerValue)
         ])
+        
+        req.urlRequestModifier = { request in
+            request.allowsCellularAccess = false
+            request.headers.remove(name: .cacheControl)
+            request.headers.remove(name: "X-API-Key")
+        }
     }
 
     
