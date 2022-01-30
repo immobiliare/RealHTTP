@@ -17,7 +17,7 @@ import Foundation
 
 extension HTTPBody {
     
-    internal class URLParametersData: HTTPEncodableBody {
+    public final class URLParametersData: HTTPEncodableBody {
         
         // MARK: - Public Properties
         

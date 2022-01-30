@@ -19,13 +19,16 @@ extension HTTPBody {
     
     /// Initialize a new body with stream source.
     ///
-    /// - Parameter values: stream.
-    /// - Returns: HTTPBody
-    public static func stream(_ source: HTTPStreamContent.Source) -> HTTPBody {
+    /// - Parameters:
+    ///   - source: stream source.
+    ///   - contentType: content type to set.
+    /// - Returns: `HTTPBody`
+    public static func stream(_ source: HTTPStreamContent.Source, contentType: MIMEType) -> HTTPBody {
         let stream = HTTPStreamContent(source: source)
         return HTTPBody(content: stream, headers: .init([
             .connection: "Keep-Alive",
             .contentLength: String(stream.length),
+            .contentType: contentType.rawValue
         ]))
     }
     

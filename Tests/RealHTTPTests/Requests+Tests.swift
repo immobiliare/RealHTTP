@@ -291,7 +291,7 @@ class RequestsTests: XCTestCase {
         
         let req = HTTPRequest {
             $0.path = "/image/test_image"
-            $0.body = .stream(.fileURL(rawImageURL))
+            $0.body = .stream(.fileURL(rawImageURL), contentType: .png)
             $0.transferMode = .largeData
             $0.method = .post
         }
@@ -1157,21 +1157,23 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(result.statusCode, .ok)
     }
     
-    public lazy var b2cClient: HTTPClient = {
-        var config = URLSessionConfiguration.default
-        config.httpShouldSetCookies = true
-        config.networkServiceType = .responsiveData
-        
-        let client = HTTPClient(baseURL: "https://myappb2c.ws.org/api/v2/", configuration: config)
-        client.headers = HTTPHeaders([
-            .init(name: .userAgent, value: myAgent),
-            .init(name: "X-API-Experimental", value: "true")
-        ])
-        
-        return client
-    }()
+ 
+    public func testt() async throws {
+        let credentials = UserCredentials(username: "Michael Bublé", pwd: "abc")
+        let req = try HTTPRequest("https://jsonplaceholder.typicode.com/posts")
+        req.body = try .json(credentials)
+        try print(req.body.content.encodedData().asString)
+
+    }
+
     
 }
+
+public struct UserCredentials: Codable {
+    var username: String
+    var pwd: String
+}
+
 
 // MARK: - Support Structures
 

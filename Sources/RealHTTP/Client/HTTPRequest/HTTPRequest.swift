@@ -386,10 +386,16 @@ public extension HTTPRequest {
     
     /// Add query items from a passed dictionary.
     ///
-    /// - Parameter parameters: parameters dictionary.
-    func add(parameters: [String: Any]) {
+    /// - Parameters:
+    ///   - parameters: parameters dictionary.
+    ///   - arrayEncoding: how to encode values which are array (default is `.withBrackets`)
+    ///   - boolEncoding: how to encode values which are boolean (default is `.asNumbers`)
+    func add(parameters: [String: Any],
+             arrayEncoding: HTTPBody.URLParametersData.ArrayEncodingStyle = .withBrackets,
+             boolEncoding: HTTPBody.URLParametersData.BoolEncodingStyle = .asNumbers) {
         let paramsData = HTTPBody.URLParametersData(parameters)
-        paramsData.boolEncoding = .asLiterals
+        paramsData.boolEncoding = boolEncoding
+        paramsData.arrayEncoding = arrayEncoding
         paramsData.encodedParametersToDictionary().forEach { item in
             add(queryItem: URLQueryItem(name: item.key, value: item.value))
         }
