@@ -135,6 +135,10 @@ public class HTTPRequest: CustomStringConvertible {
     /// Security settings.
     public var security: HTTPSecurity?
     
+    /// Determines whether connections should be made over a cellular network.
+    /// By default is set to `true`.
+    public var allowsCellularAccess: Bool = true
+    
     /// Request's body.
     public var body: HTTPBody = .empty
     
@@ -453,6 +457,7 @@ extension HTTPRequest {
                                         timeout: requestTimeout,
                                         headers: requestHeaders)
         urlRequest.httpShouldHandleCookies = true
+        urlRequest.allowsCellularAccess = allowsCellularAccess
         try urlRequest.setHTTPBody(body) // setup the body
         return urlRequest
     }

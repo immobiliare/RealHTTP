@@ -1157,6 +1157,20 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(result.statusCode, .ok)
     }
     
+    public lazy var b2cClient: HTTPClient = {
+        var config = URLSessionConfiguration.default
+        config.httpShouldSetCookies = true
+        config.networkServiceType = .responsiveData
+        
+        let client = HTTPClient(baseURL: "https://myappb2c.ws.org/api/v2/", configuration: config)
+        client.headers = HTTPHeaders([
+            .init(name: .userAgent, value: myAgent),
+            .init(name: "X-API-Experimental", value: "true")
+        ])
+        
+        return client
+    }()
+    
 }
 
 // MARK: - Support Structures
