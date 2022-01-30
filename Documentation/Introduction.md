@@ -28,4 +28,4 @@ Stubber main components are:
 - `HTTPStubResponse`: defines a protocol which produce an `URLResponse` based upon received `URLRequest`.
 - `HTTPStubIgnoreRules`: you can also defines one or more ignore rules which should be not handled by the stubber.
 
-![](assets/stub-flow.png)
+![](assets/stubber-flow.png)
