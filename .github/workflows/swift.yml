@@ -45,17 +45,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    
-    - name: Get XCode Path
-      run: echo "$(xcode-select --print-path)" >> $XCODE_PATH
 
-    - name: Link to 13.7 Simulators
+    - name: Create to 13.7 Simulator
       run: |
-        echo "XCode Path is: $XCODE_PATH"
+        set -ueo pipefail
         echo "Creating Runtimes folder if needed..."
         sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
-        echo "Creating symlink of the iOS 13.7 runtime..."
-        sudo ln -s $(XCODE_PATH)/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 13.7.simruntime
+        sudo ln -s /Applications/Xcode_13.2.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 13.7.simruntime
+        xcrun simctl list runtimes
+        xcrun simctl create "iPhone 11" "com.apple.CoreSimulator.SimDeviceType.iPhone-11" "com.apple.CoreSimulator.SimRuntime.iOS-13-7"
+        xcrun simctl list devices 13.7
 
     - name: List SDKs and Devices
       run: xcodebuild -showsdks;
