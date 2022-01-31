@@ -43,9 +43,6 @@ jobs:
           - sdk: macosx
             destination: arch=x86_64
 
-          - sdk: appletvsimulator
-            destination: platform=tvOS Simulator,name=Apple TV,OS=13.0
-
     steps:
     - uses: actions/checkout@v1
 
