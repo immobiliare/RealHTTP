@@ -1,6 +1,9 @@
 name: "RealHTTP CI"
 on: [push, pull_request]
 
+env:
+  DEVELOPER_DIR: /Applications/Xcode_13.2.1.app/Contents/Developer
+  
 concurrency:
   group: ci
   cancel-in-progress: true
@@ -32,7 +35,7 @@ jobs:
       matrix:
         env:
           - sdk: iphonesimulator
-            destination: platform=iOS Simulator,name=iPhone 11 Pro,OS=13.7
+            destination: platform=iOS Simulator,name=iPhone 11,OS=13.7
 
           - sdk: iphonesimulator
             destination: platform=iOS Simulator,name=iPhone 13,OS=15.2
@@ -45,6 +48,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+
+    - name: Link to 13.7 Simulators
+      run: |
+        echo "Creating Runtimes folder if needed..."
+        sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
+        echo "Creating symlink of the iOS 13.7 runtime..."
+        sudo ln -s /Applications/Xcode_13.2.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 13.7.simruntime
 
     - name: List SDKs and Devices
       run: xcodebuild -showsdks;
