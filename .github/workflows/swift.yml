@@ -8,15 +8,18 @@ concurrency:
 jobs:
   iOS:
     name: Unit Tests (iOS 15.0, Xcode 13.0)
-    runs-on: macOS-11
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_13.0.app/Contents/Developer
+    runs-on: macos-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         xcode_version: ["13.2.1"]
     steps:
+      - uses: fwal/setup-swift@2040b795e5c453c3a05fcb8316496afc8a74f192
+        with:
+          swift-version: "5.5"
       - uses: actions/checkout@v2
-      - name: Build & Run Tests
-        run: xcodebuild -scheme RealHTTP test -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro'
+      - name: Build
+        run: swift build
+      - name: Run tests
+        run: swift test
