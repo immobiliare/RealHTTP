@@ -53,7 +53,9 @@ jobs:
         sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
         sudo ln -s /Applications/Xcode_13.2.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 13.7.simruntime
         xcrun simctl list runtimes
+        echo "Creating iPhone 11 Simulator..."
         xcrun simctl create "iPhone 11" "com.apple.CoreSimulator.SimDeviceType.iPhone-11" "com.apple.CoreSimulator.SimRuntime.iOS-13-7"
+        echo "List simulators..."
         xcrun simctl list devices 13.7
 
     - name: List SDKs and Devices
