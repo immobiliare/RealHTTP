@@ -1,156 +1,170 @@
-<p align="center">
-<img src="./Documentation/realhttp_logo.png" alt="RealHTTP" width="900"/>
-</p>
-
-# RealHTTP
-
-RealHTTP is a lightweight yet powerful client-side HTTP library.  
-Our goal is make an easy to use and effortless http client for Swift.
 
 <p align="center">
-<a href="http://labs.immobiliare.it"><img src="./Documentation/immobiliarelabs_logo.png"  alt="ImmobiliareLabs" width="150"/></a>
+<img src="./Documentation/assets/logo.png" alt="RealHTTP" width="350"/>
 </p>
 
-## Feature Highlights
+RealHTTP is a lightweight yet powerful async/await based client-side HTTP library made in Swift.  
+The goal of this project is to make an easy to use, effortless http client based upon all the best new Swift features.
 
-- Sync/Async & Queued Requests
-- Elegant Request Builder with Chainable Response
-- Combine Support *(soon Async/Await!)*
-- Retry/timeout, Validators Control
-- URI Template support for parameter's build
-- URL/JSON, Multipart Form/File Upload
-- JSON decoding via Codable
-- Upload/Download progress tracker
-- URL Metrics Tracker
-- cURL Description
-- SSL Pinning, Basic/Digest Authentication
-- TSL Certificate and Public Key Pinning
-- Advanced HTTP Stub
+## What you will get?
 
-## Simple HTTP Client
-
-Making an async http request is easier than ever:
+This is a simple http call in RealHTTP
 
 ```swift
-HTTPRequest<Joke>("https://official-joke-api.appspot.com/random_joke").run().onResult { joke in
-    // decoded Joke object instance
+let todo = try await HTTPRequest("https://jsonplaceholder.typicode.com/todos/1")
+                     .fetch(Todo.self)
+```
+One line of code, including the automatic decode from JSON to object.  
+
+Of course you can fully configure the request with many other parameters, take a look here:
+
+```swift
+let req = HTTPRequest {
+    // Setup default params
+    $0.url = URL(string: "https://.../login")!
+    $0.method = .post
+    $0.timeout = 15
+
+    // Setup some additional settings
+    $0.redirectMode = redirect
+    $0.maxRetries = 4
+    $0.headers = HTTPHeaders([
+        .init(name: .userAgent, value: myAgent),
+        .init(name: "X-API-Experimental", value: "true")
+    ])
+    
+    // Setup URL query params & body
+    $0.addQueryParameter(name: "full", value: "1")
+    $0.addQueryParameter(name: "autosignout", value: "30")
+    $0.body = .json(["username": username, "pwd": pwd])
 }
+let _ = try await req.fetch()
 ```
 
-In this case you are executing a request inside the shared `HTTPClient`, a shared client which manage your requests.  
-Sometimes you may need to a more fined grained control.  
-Therefore you can create a custom `HTTPClient` to execute all your's webservice network calls sharing a common configuration (headers, cookies, authentication etc.) using the `run(in:)` method.
+This is fully type-safe too!
 
+## What about the stubber?
+Integrated stubber is perfect to write your own test suite:
 
-```swift
-let jokeAPIClient = HTTPClient(baseURL: "https://official-joke-api.appspot.com")
-let jokesReq = HTTPRequest<Joke>(.get, "/random_jokes")
-               .json(["category": category, "count": countJokes]) // json parameter encoding!
+That's a simple stubber which return the original request as response:
 
-// Instead of callbacks we can also use Combine RX publishers.
-jokesReq.resultPublisher(in: jokeAPIClient).sink { joke in
-    // decoded Joke object
-}
-
-// Get only the raw server response
-jokesReq.responsePublisher(in: ).sink { raw in
-    // raw response (with metrics, raw data...)
-}
-```
-
-You can use it with regular callbacks, combine publishers and soon with async/await's Tasks.
-
-## Simple HTTP Stubber
-
-RealHTTP also offer a built-in http stubber useful to mock your network calls for unit testing.  
-This is a simple URI matching stub:
-
-```swift
-var stubLogin = HTTPStubRequest()
-                .match(URI: "https://github.com/malcommac/{repository}")
-                .stub(for: .post, delay: 5, json: mockLoginJSON))
-
-HTTPStubber.shared.add(stub: stubLogin)
+```swift        
+let echoStub = HTTPStubRequest().match(urlRegex: "*").stubEcho()
+HTTPStubber.shared.add(stub: echoStub)
 HTTPStubber.shared.enable()
 ```
 
-HTTPStubber also support different matchers (regex matcher for url/body, URI template matcher, JSON matcher and more).  
-This is an example to match Codable entity for a stub:
+Of course you can fully configure your stub with rules (regex, URI template and more):
 
 ```swift
-var stubLogin = HTTPStubRequest()
-               .match(object: User(userID: 34, fullName: "Mark"))
-               .stub(for: .post, delay: 5, json: mockLoginJSON)
+// This is a custom stubber for any post request.
+var stub = HTTPStubRequest()
+           .stub(for: .post, { response in
+                response.responseDelay = 5
+                response.headers = HTTPHeaders([
+                    .contentType: HTTPContentType.bmp.rawValue,
+                    .contentLength: String(fileSize,
+                ])
+                response.body = fileContent
+            })
+HTTPStubber.shared.add(stub: stub)
 ```
 
-## ... and more!
+That's all!
 
-But there's lots more features you can use with RealHTTP.  
-Check out the Documentation section below to learn more!
+## Feature Highlights
+
+RealHTTP offers lots of features and customization you can found in our extensive documentation and test suite.  
+Some of them are:
+
+- **Async/Await** native support
+- **Requests queue** built in
+- Based upon **native URLSession** technology
+- Advanced **retry mechanisms**
+- Chainable & customizable **response validators** like Node's Express.js
+- Automatic **Codable object encoding/decoding**
+- **Customizable decoding** of objects
+
+And for pro users:
+
+- Powerful integrated **HTTP Stub** for your mocks
+- **Combine** publisher adapter 
+- **URI templating** system
+- **Resumable download/uploads** with progress tracking
+- Native **Multipart Form Data** support
+- Advanced URL **connection metrics** collector
+- **SSL Pinning**, Basic/Digest Auth
+- **TSL Certificate** & Public Key Pinning
+- **cURL** debugger
 
 ## Documentation
 
-- [Introduction](./Documentation/Introduction.md#introduction)
-- [Architecture Components](./Documentation/Introduction.md#architecture-components)
-- [HTTP Client](./Documentation/HTTPClient.md)
-    - [Introduction](./Documentation/HTTPClient.md#introduction)
-    - [Create a new client](./Documentation/HTTPClient.md#create-a-new-client)
-    - [Create a queue client](./Documentation/HTTPClient.md#create-a-queue-client)
-    - [Client Delegate](./Documentation/HTTPClient.md#client-delegate)
-    - [Response Validators](./Documentation/HTTPClient.md#response-validators)
-        - [Default Response Validator](./Documentation/HTTPClient.md#default-response-validator)
-        - [Alt Request Validator](./Documentation/HTTPClient.md#alt-request-validator)
-    - [Client Configuration](./Documentation/HTTPClient.md#client-configuration)
-    - [Security](./Documentation/HTTPClient.md#security)
-        - [Configure security via SSL/TSL](./Documentation/HTTPClient.md#configure-security-ssltsl)
-        - [Allows all certificates](./Documentation/HTTPClient.md#allows-all-certificates)
-- [HTTP Request](./Documentation/HTTPRequest.md)
-    - [Configure a Request](./Documentation/HTTPRequest.md#configure-a-request)
-    - [Decodable Request](./Documentation/HTTPRequest.md#decodable-request)
-    - [Chainable Configuration](./Documentation/HTTPRequest.md#chainable-configuration)
-    - [Set Content](./Documentation/HTTPRequest.md#set-content)
-        - [Set Headers](./Documentation/HTTPRequest.md#set-headers)
-        - [Set Query Parameters](./Documentation/HTTPRequest.md#set-query-parameters)
-        - [Set JSON Body](./Documentation/HTTPRequest.md#set-json-body)
-        - [Set Form URL Encoded](./Documentation/HTTPRequest.md#set-form-url-encoded)
-        - [Set Multipart Form](./Documentation/HTTPRequest.md#set-multipart-form)
-    - [Modify an URLRequest](./Documentation/HTTPRequest.md#modify-an-urlrequest)
-    - [Execute Request](./Documentation/HTTPRequest.md#execute-request)
-    - [Cancel Request](./Documentation/HTTPRequest.md#cancel-request)
-    - [Handle Request Redirects](./Documentation/HTTPRequest.md#handle-request-redirects)
-    - [Response Handling](./Documentation/HTTPRequest.md#response-handling)
-    - [Response Validation](./Documentation/HTTPRequest.md#response-validation)
-    - [Upload Large Data](./Documentation/HTTPRequest.md#upload-large-data)
-        - [Upload Multi-part form with stream of file](./Documentation/HTTPRequest.md#upload-multi-part-form-with-stream-of-file)
-        - [Upload File Stream](./Documentation/HTTPRequest.md#upload-file-stream)
-    - [Download Large Data](./Documentation/HTTPRequest.md#download-large-data)
-    - [Track Upload/Download Progress](./Documentation/HTTPRequest.md#track-uploaddownload-progress)
-- [Tools](./Documentation/Tools.md)
-    - [Gathering/Showing Statistical Metrics](./Documentation/Tools.md#gatheringshowing-statistical-metrics)
-    - [cURL Command Output](./Documentation/Tools.md#curl-command-output)
-- [Network Stubber](./Documentation/Stub.md)
-    - [Introduction](./Documentation/Stub.md#introduction)
-    - [Stub a Request](./Documentation/Stub.md#stub-a-request)
-    - [Stub Matchers](./Documentation/Stub.md#stub-matchers)
-        - [Custom Matcher](./Documentation/Stub.md#customer-matcher)
-        - [URI Matcher](./Documentation/Stub.md#uri-matcher)
-        - [JSON Matcher](./Documentation/Stub.md#json-matcher)
-        - [Body Matcher](./Documentation/Stub.md#body-matcher)
-        - [URL Matcher](./Documentation/Stub.md#url-matcher)
-    - [Add Ignore Rule](./Documentation/Stub.md#add-ignore-rule)
-    - [Unhandled Rules](./Documentation/Stub.md#unhandled-rules)
+RealHTTP is provided with an extensive documentation.  
+
+- [**1 - Introduction**](./Documentation/1.Introduction.md)
+- [**2 - Build & Execute a Request**](./Documentation/2.Build_Request.md#build--execute-a-request)
+  - [Initialize a Request](./Documentation/2.Build_Request.md#initialize-a-request)
+    - [Standard](./Documentation/2.Build_Request.md#standard)
+    - [URI Template](./Documentation/2.Build_Request.md#uri-template)
+    - [Builder Pattern](./Documentation/2.Build_Request.md#builder-pattern)
+  - [Setup Query Parameters](./Documentation/2.Build_Request.md#setup-query-parameters)
+  - [Setup Headers](./Documentation/2.Build_Request.md#setup-headers)
+  - [Setup Request Body](./Documentation/2.Build_Request.md#setup-request-body)
+    - [URL Query Parameters](./Documentation/2.Build_Request.md#url-query-parameters)
+    - [Raw Data & Stream](./Documentation/2.Build_Request.md#raw-data--stream)
+    - [Plain Strings](./Documentation/2.Build_Request.md#plain-strings)
+    - [JSON Data](./Documentation/2.Build_Request.md#json-data)
+    - [Multipart-Form-Data](./Documentation/2.Build_Request.md#multipart-form-data)
+  - [The HTTP Client](./Documentation/2.Build_Request.md#the-http-client)
+    - [Shared Client](./Documentation/2.Build_Request.md#shared-client)
+    - [Custom Client](./Documentation/2.Build_Request.md#custom-client)
+  - [Execute a Request](./Documentation/2.Build_Request.md#execute-a-request)
+  - [Modify a Request](./Documentation/2.Build_Request.md#modify-a-request)
+  - [Cancel a Request](./Documentation/2.Build_Request.md#cancel-a-request)
+  - [The HTTP Response](./Documentation/2.Build_Request.md#the-http-response)
+    - [Decode using Codable & Custom Decoding](./Documentation/2.Build_Request.md#decode-using-codable--custom-decoding)
+    - [Decode Raw JSON using JSONSerialization](./Documentation/2.Build_Request.md#decode-raw-json-using-jsonserialization)
+- [**3 - Advanced HTTP Client**](./Documentation/3.Advanced_HTTPClient.md#advanced-http-client)
+  - [Why using a custom HTTPClient](./Documentation/3.Advanced_HTTPClient.md#why-using-a-custom-httpclient)
+  - [Validate Responses: Validators](./Documentation/3.Advanced_HTTPClient.md#validate-responses-validators)
+    - [Approve the response](./Documentation/3.Advanced_HTTPClient.md#approve-the-response)
+    - [Fail with error](./Documentation/3.Advanced_HTTPClient.md#fail-with-error)
+    - [Retry with strategy](./Documentation/3.Advanced_HTTPClient.md#retry-with-strategy)
+  - [The Default Validator](./Documentation/3.Advanced_HTTPClient.md#the-default-validator)
+  - [Custom Validators](./Documentation/3.Advanced_HTTPClient.md#custom-validators)
+  - [Retry After [Another] Call](./Documentation/3.Advanced_HTTPClient.md#retry-after-another-call)
+- [**4 - Handle Large Data Request**](./Documentation/4.Handle_LargeData_Requests.md#handle-large-data-request)
+  - [Track Progress](./Documentation/4.Handle_LargeData_Requests.m#track-progress)
+  - [Cancel Downloads with resumable data](./Documentation/4.Handle_LargeData_Requests.md#cancel-downloads-with-resumable-data)
+  - [Resume Downloads](./Documentation/4.Handle_LargeData_Requests.md#resume-downloads)
+- [**5 - Other Debugging Tools**](./Documentation/5.Other_Debugging_Tools.md#other-debugging-tools)
+  - [cURL Command Output](./Documentation/5.Other_Debugging_Tools.md#curl-command-output)
+  - [Monitor Connection Metrics](./Documentation/5.Other_Debugging_Tools.md#monitor-connection-metrics)
+- [**6 - HTTP Stubber**](./Documentation/6.Stubber.md#http-stubber)
+  - [Stub a Request](./Documentation/6.Stubber.md#stub-a-request)
+  - [Stub Matchers](./Documentation/6.Stubber.md#stub-matchers)
+    - [Echo Stub](./Documentation/6.Stubber.md#echo-stub)
+    - [URI Matcher](./Documentation/6.Stubber.md#uri-matcher)
+    - [JSON Matcher](./Documentation/6.Stubber.md#json-matcher)
+    - [Body Matcher](./Documentation/6.Stubber.md#body-matcher)
+    - [URL Matcher](./Documentation/6.Stubber.md#url-matcher)
+    - [Custom Matcher](./Documentation/6.Stubber.md#custom-matcher)
+  - [Add Ignore Rule](./Documentation/6.Stubber.md#add-ignore-rule)
+  - [Unhandled Rules](./Documentation/6.Stubber.md#unhandled-rules)
+## Test
+
+RealHTTP has an extensive unit test suite which covers many of the standard and edge cases including request build, parameter encoding, queuing and retry strategies.  
+See the XCTest suite inside `Tests/RealHTTPTests` folder.
 
 ## Requirements
 
-RealHTTP can be installed in any platform which supports Swift 5.4+ ON:
+RealHTTP can be installed in any platform which supports:
 
-- iOS 13+  
-- Xcode 12.5+  
-- Swift 5.4+  
+- iOS 13+, macOS Catalin+, watchOS 6+, tvOS 13+
+- Xcode 13.2+ 
+- Swift 5.5+  
 
 ## Installation
-
-To use RealHTTP in your project you can use Swift Package Manager (our primary choice) or CocoaPods.
 
 ### Swift Package Manager
 
@@ -181,7 +195,6 @@ RealHTTP can be installed with CocoaPods by adding pod 'RealHTTP' to your Podfil
 ```ruby
 pod 'RealHTTP'
 ```
-<a name="#powered"/>
 
 ## Powered Apps
 
@@ -190,7 +203,7 @@ We are currently using RealHTTP in all of our products.
 
 **If you are using RealHTTP in your app [drop us a message](mailto:mobile@immobiliare.it), we'll add below**.
 
-<a href="https://apps.apple.com/us/app/immobiiiare-it-indomio/id335948517"><img src="./Documentation/immobiliare-app.png" alt="Indomio" width="270"/></a>
+<a href="https://apps.apple.com/us/app/immobiiiare-it-indomio/id335948517"><img src="./Documentation/assets/immobiliare-app.png" alt="Indomio" width="270"/></a>
 
 ## Support & Contribute
 
@@ -198,18 +211,3 @@ Made with ❤️ by [ImmobiliareLabs](https://github.com/orgs/immobiliare) & [Co
 
 We'd love for you to contribute to RealHTTP!  
 If you have any questions on how to use RealHTTP, bugs and enhancement please feel free to reach out by opening a [GitHub Issue](https://github.com/immobiliare/RealHTTP/issues).
-
-### Todo List
-
-If you want to contribuite to the project you can also work on these main topics.
-
-- [ ] Async/Await support for observers
-- [ ] Extended the Combine support
-- [ ] Complete the test suite
-
-<a name="#license"/>
-
-## License
-
-RealHTTP is licensed under the MIT license.  
-See the [LICENSE](./LICENSE) file for more information.

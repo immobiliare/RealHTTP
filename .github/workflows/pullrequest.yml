@@ -1,0 +1,87 @@
+name: "RealHTTP PR CI"
+on: [push, pull_request]
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_13.2.1.app/Contents/Developer
+  
+concurrency:
+  group: ci
+  cancel-in-progress: true
+  
+jobs:
+  SPM:
+    name: SPM Unit Tests
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        swift: ["5.5"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: fwal/setup-swift@2040b795e5c453c3a05fcb8316496afc8a74f192
+        with:
+          swift-version: ${{ matrix.swift }}
+      - uses: actions/checkout@v2
+      - name: Build
+        run: swift build
+      - name: Run tests
+        run: swift test
+  test:
+    runs-on: macOS-latest
+    env:
+      SCHEME: RealHTTP
+    strategy:
+      matrix:
+        env:
+          - sdk: iphonesimulator
+            destination: platform=iOS Simulator,name=iPhone 8,OS=14.4
+
+          - sdk: iphonesimulator
+            destination: platform=iOS Simulator,name=iPhone 13,OS=latest
+
+          - sdk: iphonesimulator
+            destination: platform=iOS Simulator,name=iPhone X,OS=13.7
+
+    steps:
+    - uses: actions/checkout@v1
+    
+    - name: install simulator
+      run: sudo xcversion simulators --install='iOS 14.4'
+
+    - name: install simulator
+      run: sudo xcversion simulators --install='iOS 13.7'
+
+    - name: Prepare iOS 13.7 simulator
+      run: |
+        set -ueo pipefail
+        sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
+        sudo ln -s /Applications/Xcode_13.2.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 13.7.simruntime
+        xcrun simctl list runtimes
+        xcrun simctl create iPhone_X "iPhone X" "com.apple.CoreSimulator.SimRuntime.iOS-13-7"
+        xcrun simctl list devices 13.7
+        
+    - name: Prepare iOS 14.4 simulator
+      run: |
+        set -ueo pipefail
+        sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
+        sudo ln -s /Applications/Xcode_13.2.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 14.4.simruntime
+        xcrun simctl list runtimes
+        xcrun simctl create iPhone_8 "iPhone 8" "com.apple.CoreSimulator.SimRuntime.iOS-14-4"
+        xcrun simctl list devices 14.4
+    
+    - name: List SDKs and Devices
+      run: xcodebuild -showsdks;
+
+    - name: Build and Test
+      run: |
+        set -o pipefail && xcodebuild clean build test \
+          -scheme "$SCHEME" \
+          -sdk "$SDK" \
+          -destination "$DESTINATION" \
+          -configuration Debug \
+          -enableCodeCoverage NO \
+          CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty -c;
+      env:
+        SDK: ${{ matrix.env.sdk }}
+        DESTINATION: ${{ matrix.env.destination }}
