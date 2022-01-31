@@ -15,6 +15,10 @@
 
 import Foundation
 
+#if os(Linux)
+import FoundationNetworking
+#endif
+
 #if os(macOS)
 import CoreServices
 #endif
