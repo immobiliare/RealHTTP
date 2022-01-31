@@ -14,7 +14,9 @@
 //
 
 import Foundation
-#if !os(macOS)
+#if os(macOS) || os(Linux)
+import CoreServices
+#else
 import MobileCoreServices
 #endif
 
