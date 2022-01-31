@@ -529,7 +529,7 @@ extension URLComponents {
         newComp.scheme = baseURL.scheme
         newComp.host = baseURL.host
         newComp.port = baseURL.port
-        newComp.path = baseURL.path + newComp.path
+        newComp.path = baseURL.path + (newComp.path.first == "/" ? "" : "/") + newComp.path
         return newComp.url
     }
     

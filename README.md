@@ -15,7 +15,33 @@ let todo = try await HTTPRequest("https://jsonplaceholder.typicode.com/todos/1")
                      .fetch(Todo.self)
 ```
 One line of code, including the automatic decode from JSON to object.  
-Of course you can fully configure the request with many other parameters, we'll take a closer look below.
+
+Of course you can fully configure the request with many other parameters, take a look here:
+
+```swift
+let req = HTTPRequest {
+    // Setup default params
+    $0.url = URL(string: "https://.../login")!
+    $0.method = .post
+    $0.timeout = 15
+
+    // Setup some additional settings
+    $0.redirectMode = redirect
+    $0.maxRetries = 4
+    $0.headers = HTTPHeaders([
+        .init(name: .userAgent, value: myAgent),
+        .init(name: "X-API-Experimental", value: "true")
+    ])
+    
+    // Setup URL query params & body
+    $0.addQueryParameter(name: "full", value: "1")
+    $0.addQueryParameter(name: "autosignout", value: "30")
+    $0.body = .json(["username": username, "pwd": pwd])
+}
+let _ = try await req.fetch()
+```
+
+This is fully type-safe too!
 
 ## What about the stubber?
 Integrated stubber is perfect to write your own test suite:

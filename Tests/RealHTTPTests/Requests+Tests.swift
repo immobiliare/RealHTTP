@@ -99,7 +99,7 @@ class RequestsTests: XCTestCase {
         }
         
         let urlRequest = try req.urlRequest(inClient: client)
-        let expectedURL = URL(string: "\(client.baseURL!.absoluteString)\(req.path)")
+        let expectedURL = URL(string: "\(client.baseURL!.absoluteString)/\(req.path)")
         XCTAssert(urlRequest.url == expectedURL, "We expect composed URL, we got: '\(urlRequest.url?.absoluteString ?? "")'")
     }
     
@@ -1144,8 +1144,9 @@ class RequestsTests: XCTestCase {
         
         let req = try HTTPRequest(method: .post, "https://jsonplaceholder.typicode.com/posts",
                                   body: try .json(["title": "foo", "body": "bar", "userId": 1]))
+        req.timeout = 10
         let result = try await req.fetch(newClient)
-        XCTAssertEqual(result.statusCode, .ok)
+        XCTAssertEqual(result.statusCode, .created)
     }
     
     func test_uriTemplateInitialization() async throws {
