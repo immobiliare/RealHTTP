@@ -31,6 +31,7 @@ jobs:
     runs-on: macOS-latest
     env:
       SCHEME: RealHTTP
+      XCODE_PATH: $(xcode-select --print-path)
     strategy:
       matrix:
         env:
@@ -38,7 +39,7 @@ jobs:
             destination: platform=iOS Simulator,name=iPhone 11,OS=13.7
 
           - sdk: iphonesimulator
-            destination: platform=iOS Simulator,name=iPhone 13,OS=15.2
+            destination: platform=iOS Simulator,name=iPhone 13,OS=latest
 
           - sdk: macosx
             destination: arch=x86_64
@@ -48,10 +49,11 @@ jobs:
 
     - name: Link to 13.7 Simulators
       run: |
+        echo "XCode Path is: $XCODE_PATH"
         echo "Creating Runtimes folder if needed..."
         sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
         echo "Creating symlink of the iOS 13.7 runtime..."
-        sudo ln -s /Applications/Xcode_13.2.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 13.7.simruntime
+        sudo ln -s $XCODE_PATH/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 13.7.simruntime
 
     - name: List SDKs and Devices
       run: xcodebuild -showsdks;
