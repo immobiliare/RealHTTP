@@ -218,7 +218,7 @@ internal class HTTPDataLoader: NSObject,
         
         if let delegate = client?.delegate, let client = client,
             let request = dataLoadersMap[task],
-           let metrics = HTTPMetrics(metrics: metrics) {
+           let metrics = HTTPMetrics(metrics: metrics, task: task) {
             delegate.client(client, didCollectedMetricsFor: (request.request, task), metrics: metrics)
         }
     }

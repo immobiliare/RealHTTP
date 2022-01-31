@@ -318,6 +318,9 @@ class RequestsTests: XCTestCase {
         }.store(in: &observerBag)
         
         let response = try await req.fetch(client)
+        
+        print(response.metrics?.render())
+        
         XCTAssert(progressionReports > 0, "Failed to receive updates from 5MB file download")
         XCTAssert(response.data?.count ?? 0 > 0, "Failed to receive data")
     }

@@ -24,11 +24,17 @@ public struct HTTPMetrics {
     /// request-and-response transaction made during the execution of the task.
     public let requests: [RequestMetrics]
     
+    /// First request stafes
+    internal var stages: [HTTPMetrics.RequestMetrics.Stage] {
+        requests.first?.stages ?? []
+    }
+    
     /// Elapsed time interval since the start of the first request down the last response.
-    public var elapsedInterval: TimeInterval? {
+    /// Zero is returned if cannot be estimated.
+    public var elapsedInterval: TimeInterval {
         guard let start = requests.first?[.request]?.interval.start,
               let end = requests.first?[.response]?.interval.end else {
-                  return nil
+                  return 0
               }
 
         return end.timeIntervalSince(start)
@@ -36,6 +42,9 @@ public struct HTTPMetrics {
     
     /// Task metrics.
     public let taskMetrics: URLSessionTaskMetrics?
+    
+    /// Associated task.
+    public private(set) weak var task: URLSessionTask?
     
     /// Number of redirects made.
     public var countRedirects: Int {
@@ -45,8 +54,9 @@ public struct HTTPMetrics {
     // MARK: - Initialization
     
     /// Initialize the object with the metrics gathered for a task.
-    internal init?(metrics: URLSessionTaskMetrics?) {
+    internal init?(metrics: URLSessionTaskMetrics?, task: URLSessionTask?) {
         self.taskMetrics = metrics
+        self.task = task
         
         let list = metrics?.transactionMetrics.compactMap({
             RequestMetrics(metrics: $0)
@@ -58,6 +68,16 @@ public struct HTTPMetrics {
         
         self.requests = list
     }
+    
+    // MARK: - Public Functions
+    
+    /// Render with custom renderer.
+    ///
+    /// - Parameter renderer: renderer, if not set the default HTTPMetricsConsoleRenderer is used.
+    public func render(with renderer: HTTPMetricsRenderer = HTTPMetricsConsoleRenderer()) {
+        renderer.render(with: self)
+    }
+    
     
 }
 
@@ -75,11 +95,11 @@ public extension HTTPMetrics {
         public let stages: [Stage]
         
         /// Underlying transaction metrics.
-        public let metrics: URLSessionTaskTransactionMetrics
+        public let transactionMetrics: URLSessionTaskTransactionMetrics
         
         /// The transaction request.
         public var request: URLRequest {
-            metrics.request
+            transactionMetrics.request
         }
         
         // MARK: - Initialization
@@ -92,14 +112,15 @@ public extension HTTPMetrics {
                 return nil
             }
             
-            self.metrics = metrics
+            self.transactionMetrics = metrics
             self.stages = [
                 Stage.stage(.domainLookup, metrics.domainLookupStartDate, metrics.domainLookupEndDate),
                 Stage.stage(.connect, metrics.connectStartDate, metrics.connectEndDate),
                 Stage.stage(.secureConnect, metrics.secureConnectionStartDate, metrics.secureConnectionEndDate),
                 Stage.stage(.request, metrics.requestStartDate, metrics.requestEndDate),
                 Stage.stage(.response, metrics.responseStartDate, metrics.responseEndDate),
-                Stage.stage(.fetchStart, metrics.domainLookupStartDate, metrics.responseEndDate)
+                Stage.stage(.fetchStart, metrics.domainLookupStartDate, metrics.responseEndDate),
+                Stage.stage(.total, metrics.domainLookupStartDate, metrics.responseEndDate)
             ].compactMap { $0 }
             
         }
@@ -126,8 +147,6 @@ public extension HTTPMetrics.RequestMetrics {
     /// See the graph here for more infos:
     /// <https://developer.apple.com/documentation/foundation/urlsessiontasktransactionmetrics#>
     struct Stage: Comparable {
-        public typealias Interval = (start: Date?, end: Date?)
-        
         /// Kind of operation.
         public let kind: Kind
         
@@ -138,28 +157,23 @@ public extension HTTPMetrics.RequestMetrics {
         /// then its corresponding end date metric is nil.
         /// This can happen if name lookup begins, but the operation either times out, fails,
         /// or the client cancels the task before the name can be resolved.
-        public let interval: Interval
+        public let interval: DateInterval
         
         /// Total time elapsed since the start and end of the request.
         /// It return `nil` if interval cannot be evaluated because request did finished early
         /// due to an error occurred in that phase.
-        public var totalInterval: TimeInterval? {
-            guard let start = interval.start,
-                  let end = interval.end else {
-                      return nil
-                  }
-            
-            return end.timeIntervalSince(start)
+        public var totalInterval: TimeInterval {
+            return interval.end.timeIntervalSince(interval.end)
         }
         
         // MARK: - Initialization
         
         fileprivate static func stage(_ kind: Stage.Kind, _ start: Date?, _ end: Date?) -> Stage? {
-            guard let start = start else {
+            guard let start = start, let end = end else {
                 return nil
             }
             
-            return Stage(kind: kind, interval: (start, end))
+            return Stage(kind: kind, interval: .init(start: start, end: end))
         }
         
         public static func < (lhs: HTTPMetrics.RequestMetrics.Stage,
@@ -185,6 +199,7 @@ public extension HTTPMetrics.RequestMetrics.Stage {
     /// - `secureConnect`: secure connection handshake starts.
     /// - `request`: request start.
     /// - `response`: response received.
+    /// - `total`: total interval.
     enum Kind: Int, Comparable {
         case fetchStart
         case domainLookup
@@ -192,7 +207,20 @@ public extension HTTPMetrics.RequestMetrics.Stage {
         case secureConnect
         case request
         case response
+        case total
         
+        public var name: String {
+            switch self {
+            case .fetchStart:       return "fetch start"
+            case .domainLookup:     return "domain lookup"
+            case .connect:          return "connect"
+            case .secureConnect:    return "secure connection"
+            case .request:          return "request"
+            case .response:         return "response"
+            case .total:            return "total"
+            }
+        }
+
         public static func < (lhs: HTTPMetrics.RequestMetrics.Stage.Kind,
                               rhs: HTTPMetrics.RequestMetrics.Stage.Kind) -> Bool {
             lhs.rawValue < rhs.rawValue
