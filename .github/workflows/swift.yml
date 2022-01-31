@@ -19,4 +19,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build & Run Tests
-        run: xcodebuild -scheme RealHTTP-Package test -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12 Pro'
+        run: xcodebuild -scheme RealHTTP test -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12 Pro'
