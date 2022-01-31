@@ -1,0 +1,22 @@
+name: "RealHTTP CI"
+on: [push, pull_request]
+
+concurrency:
+  group: ci
+  cancel-in-progress: true
+  
+jobs:
+  iOS:
+    name: Unit Tests (iOS 15.0, Xcode 13.0)
+    runs-on: macOS-11
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_13.0.app/Contents/Developer
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode_version: ["13.2.1"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build & Run Tests
+        run: xcodebuild -scheme RealHTTP-Package test -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12 Pro'
