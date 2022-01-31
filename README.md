@@ -160,7 +160,7 @@ We are currently using RealHTTP in all of our products.
 
 **If you are using RealHTTP in your app [drop us a message](mailto:mobile@immobiliare.it), we'll add below**.
 
-<a href="https://apps.apple.com/us/app/immobiiiare-it-indomio/id335948517"><img src="./Documentation/immobiliare-app.png" alt="Indomio" width="270"/></a>
+<a href="https://apps.apple.com/us/app/immobiiiare-it-indomio/id335948517"><img src="./Documentation/assets/immobiliare-app.png" alt="Indomio" width="270"/></a>
 
 ## Support & Contribute
 
