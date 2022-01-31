@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [macos-latest]
         swift: ["5.5"]
     runs-on: ${{ matrix.os }}
     steps:
@@ -24,3 +24,40 @@ jobs:
         run: swift build
       - name: Run tests
         run: swift test
+  test:
+    runs-on: macOS-latest
+    env:
+      SCHEME: RealHTTP
+    strategy:
+      matrix:
+        env:
+          - sdk: iphonesimulator
+            destination: platform=iOS Simulator,name=iPhone 11 Pro,OS=13.7
+
+          - sdk: iphonesimulator
+            destination: platform=iOS Simulator,name=iPhone 13,OS=latest
+
+          - sdk: macosx
+            destination: arch=x86_64
+
+          - sdk: appletvsimulator
+            destination: platform=tvOS Simulator,name=Apple TV,OS=latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: List SDKs and Devices
+      run: xcodebuild -showsdks; instruments -s
+
+    - name: Build and Test
+      run: |
+        set -o pipefail && xcodebuild clean build test \
+          -scheme "$SCHEME" \
+          -sdk "$SDK" \
+          -destination "$DESTINATION" \
+          -configuration Debug \
+          -enableCodeCoverage NO \
+          CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty -c;
+      env:
+        SDK: ${{ matrix.env.sdk }}
+        DESTINATION: ${{ matrix.env.destination }}
