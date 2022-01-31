@@ -14,9 +14,12 @@
 //
 
 import Foundation
+
 #if os(macOS) || os(Linux)
 import CoreServices
-#else
+#endif
+
+#if os(iOS) || os(tvOS) || os(watchOS)
 import MobileCoreServices
 #endif
 
@@ -112,12 +115,16 @@ extension String {
     ///
     /// - Returns: String
     internal func suggestedMimeType() -> String {
+        #if os(Linux)
+            return HTTPContentType.octetStream.rawValue
+        #else
         if let id = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, self as CFString, nil)?.takeRetainedValue(),
             let contentType = UTTypeCopyPreferredTagWithClass(id, kUTTagClassMIMEType)?.takeRetainedValue() {
             return contentType as String
         }
 
         return HTTPContentType.octetStream.rawValue
+        #endif
     }
     
 }
