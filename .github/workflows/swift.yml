@@ -11,7 +11,7 @@ concurrency:
 jobs:
   SPM:
     name: SPM Unit Tests
-    timeout-minutes: 15
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
