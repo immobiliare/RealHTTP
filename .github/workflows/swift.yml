@@ -13,10 +13,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        swift: ["5.5"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: fwal/setup-swift@2040b795e5c453c3a05fcb8316496afc8a74f192
         with:
-          swift-version: "5.5"
+          swift-version: ${{ matrix.swift }}
       - uses: actions/checkout@v2
       - name: Build
         run: swift build
