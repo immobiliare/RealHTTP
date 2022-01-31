@@ -31,7 +31,6 @@ jobs:
     runs-on: macOS-latest
     env:
       SCHEME: RealHTTP
-      XCODE_PATH: $(xcode-select --print-path)
     strategy:
       matrix:
         env:
@@ -46,6 +45,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    
+    - name: Get XCode Path
+      id: XCODE_PATH
+      run: echo "$(xcode-select --print-path)"
 
     - name: Link to 13.7 Simulators
       run: |
