@@ -55,8 +55,8 @@ And for pro users:
 
 RealHTTP is provided with an extensive documentation.  
 
-- [1 - Introduction](./Documentation/1.Introduction.md)
-- [2 - Build & Execute a Request](./Documentation/2.Build_Request.md#build--execute-a-request)
+- [**1 - Introduction**](./Documentation/1.Introduction.md)
+- [**2 - Build & Execute a Request**](./Documentation/2.Build_Request.md#build--execute-a-request)
   - [Initialize a Request](./Documentation/2.Build_Request.md#initialize-a-request)
     - [Standard](./Documentation/2.Build_Request.md#standard)
     - [URI Template](./Documentation/2.Build_Request.md#uri-template)
@@ -78,7 +78,7 @@ RealHTTP is provided with an extensive documentation.
   - [The HTTP Response](./Documentation/2.Build_Request.md#the-http-response)
     - [Decode using Codable & Custom Decoding](./Documentation/2.Build_Request.md#decode-using-codable--custom-decoding)
     - [Decode Raw JSON using JSONSerialization](./Documentation/2.Build_Request.md#decode-raw-json-using-jsonserialization)
-- [3 - Advanced HTTP Client](./Documentation/3.Advanced_HTTPClient.md#advanced-http-client)
+- [**3 - Advanced HTTP Client**](./Documentation/3.Advanced_HTTPClient.md#advanced-http-client)
   - [Why using a custom HTTPClient](./Documentation/3.Advanced_HTTPClient.md#why-using-a-custom-httpclient)
   - [Validate Responses: Validators](./Documentation/3.Advanced_HTTPClient.md#validate-responses-validators)
     - [Approve the response](./Documentation/3.Advanced_HTTPClient.md#approve-the-response)
@@ -87,13 +87,24 @@ RealHTTP is provided with an extensive documentation.
   - [The Default Validator](./Documentation/3.Advanced_HTTPClient.md#the-default-validator)
   - [Custom Validators](./Documentation/3.Advanced_HTTPClient.md#custom-validators)
   - [Retry After [Another] Call](./Documentation/3.Advanced_HTTPClient.md#retry-after-another-call)
-- [4 - Handle Large Data Request](./Documentation/4.Handle_LargeData_Requests.md#handle-large-data-request)
+- [**4 - Handle Large Data Request**](./Documentation/4.Handle_LargeData_Requests.md#handle-large-data-request)
   - [Track Progress](./Documentation/4.Handle_LargeData_Requests.m#track-progress)
   - [Cancel Downloads with resumable data](./Documentation/4.Handle_LargeData_Requests.md#cancel-downloads-with-resumable-data)
   - [Resume Downloads](./Documentation/4.Handle_LargeData_Requests.md#resume-downloads)
-- [Other Debugging Tools](5.Other_Debugging_Tools.md#other-debugging-tools)
+- [**5 - Other Debugging Tools**](5.Other_Debugging_Tools.md#other-debugging-tools)
   - [cURL Command Output](5.Other_Debugging_Tools.md#curl-command-output)
   - [Monitor Connection Metrics](5.Other_Debugging_Tools.md#monitor-connection-metrics)
+- [**6 - HTTP Stubber**](6.Stubber.md#http-stubber)
+  - [Stub a Request](6.Stubber.md#stub-a-request)
+  - [Stub Matchers](6.Stubber.md#stub-matchers)
+    - [Echo Stub](6.Stubber.md#echo-stub)
+    - [URI Matcher](6.Stubber.md#uri-matcher)
+    - [JSON Matcher](6.Stubber.md#json-matcher)
+    - [Body Matcher](6.Stubber.md#body-matcher)
+    - [URL Matcher](6.Stubber.md#url-matcher)
+    - [Custom Matcher](6.Stubber.md#custom-matcher)
+  - [Add Ignore Rule](6.Stubber.md#add-ignore-rule)
+  - [Unhandled Rules](6.Stubber.md#unhandled-rules)
 ## Test
 
 RealHTTP has an extensive unit test suite which covers many of the standard and edge cases including request build, parameter encoding, queuing and retry strategies.  
