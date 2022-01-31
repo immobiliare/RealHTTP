@@ -47,7 +47,7 @@ jobs:
     - uses: actions/checkout@v1
     
     - name: install simulator
-      run: sudo xcversion simulators --install='iOS 14.3'
+      run: sudo xcversion simulators --install='iOS 14.4'
   
     - name: Prepare iOS 14.4 simulator
       run: |
