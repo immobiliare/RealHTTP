@@ -53,6 +53,23 @@ let echoStub = HTTPStubRequest().match(urlRegex: "*").stubEcho()
 HTTPStubber.shared.add(stub: echoStub)
 HTTPStubber.shared.enable()
 ```
+
+Of course you can fully configure your stub with rules (regex, URI template and more):
+
+```swift
+// This is a custom stubber for any post request.
+var stub = HTTPStubRequest()
+           .stub(for: .post, { response in
+                response.responseDelay = 5
+                response.headers = HTTPHeaders([
+                    .contentType: HTTPContentType.bmp.rawValue,
+                    .contentLength: String(fileSize,
+                ])
+                response.body = fileContent
+            })
+HTTPStubber.shared.add(stub: stub)
+```
+
 That's all!
 
 ## Feature Highlights
