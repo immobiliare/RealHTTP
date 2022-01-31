@@ -35,7 +35,7 @@ jobs:
       matrix:
         env:
           - sdk: iphonesimulator
-            destination: platform=iOS Simulator,name=iPhone 11,OS=13.7
+            destination: platform=iOS Simulator,name=iPhone 8,OS=14.4
 
           - sdk: iphonesimulator
             destination: platform=iOS Simulator,name=iPhone 13,OS=latest
@@ -45,19 +45,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-
-    - name: Create to 13.7 Simulator
+    
+    - name: install simulator
+      run: xcversion simulators --install='iOS 14.3'
+  
+    - name: Prepare iOS 14.4 simulator
       run: |
         set -ueo pipefail
-        echo "Creating Runtimes folder if needed..."
         sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
-        sudo ln -s /Applications/Xcode_13.2.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 13.7.simruntime
+        sudo ln -s /Applications/Xcode_13.2.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ 14.4.simruntime
         xcrun simctl list runtimes
-        echo "Creating iPhone 11 Simulator..."
-        xcrun simctl create iPhone_8 "iPhone 8" "com.apple.CoreSimulator.SimRuntime.iOS-13-7"
-        echo "List simulators..."
-        xcrun simctl list devices 13.7
-
+        xcrun simctl create iPhone_8 "iPhone 8" "com.apple.CoreSimulator.SimRuntime.iOS-14-4"
+        xcrun simctl list devices 14.4
+    
     - name: List SDKs and Devices
       run: xcodebuild -showsdks;
 
