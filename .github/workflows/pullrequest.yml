@@ -1,4 +1,4 @@
-name: "RealHTTP CI"
+name: "RealHTTP PR CI"
 on: [push, pull_request]
 
 env:

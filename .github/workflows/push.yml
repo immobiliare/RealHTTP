@@ -1,0 +1,29 @@
+name: "RealHTTP Push CI"
+on: [push]
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_13.2.1.app/Contents/Developer
+  
+concurrency:
+  group: ci
+  cancel-in-progress: true
+  
+jobs:
+  SPM:
+    name: SPM Unit Tests
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        swift: ["5.5"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: fwal/setup-swift@2040b795e5c453c3a05fcb8316496afc8a74f192
+        with:
+          swift-version: ${{ matrix.swift }}
+      - uses: actions/checkout@v2
+      - name: Build
+        run: swift build
+      - name: Run tests
+        run: swift test
