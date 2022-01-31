@@ -47,12 +47,11 @@ jobs:
     - uses: actions/checkout@v1
     
     - name: Get XCode Path
-      id: XCODE_PATH
-      run: echo "$(xcode-select --print-path)"
+      run: echo "$(xcode-select --print-path)" >> $XCODE_PATH
 
     - name: Link to 13.7 Simulators
       run: |
-        echo "XCode Path is: ${XCODE_PATH}"
+        echo "XCode Path is: $XCODE_PATH"
         echo "Creating Runtimes folder if needed..."
         sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
         echo "Creating symlink of the iOS 13.7 runtime..."
