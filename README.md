@@ -1,9 +1,7 @@
 
 <p align="center">
-<img src="./assets/logo.png" alt="RealHTTP" width="350"/>
+<img src="./Documentation/assets/logo.png" alt="RealHTTP" width="350"/>
 </p>
-
-# RealHTTP
 
 RealHTTP is a lightweight yet powerful async/await based client-side HTTP library made in Swift.  
 The goal of this project is to make an easy to use, effortless http client based upon all the best new Swift features.
