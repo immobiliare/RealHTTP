@@ -1084,7 +1084,7 @@ class RequestsTests: XCTestCase {
 
         let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8081/initial")!
-            $0.add(parameters: ["bool": true])
+            $0.add(parameters: ["bool": true], boolEncoding: .asLiterals)
         }
 
         let request = try req.urlRequest(inClient: newClient)
