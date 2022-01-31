@@ -15,7 +15,7 @@
 
 import Foundation
 
-#if os(macOS) || os(Linux)
+#if os(macOS)
 import CoreServices
 #endif
 
