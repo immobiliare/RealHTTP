@@ -35,13 +35,13 @@ jobs:
             destination: platform=iOS Simulator,name=iPhone 11 Pro,OS=13.7
 
           - sdk: iphonesimulator
-            destination: platform=iOS Simulator,name=iPhone 13,OS=latest
+            destination: platform=iOS Simulator,name=iPhone 13,OS=15.2
 
           - sdk: macosx
             destination: arch=x86_64
 
           - sdk: appletvsimulator
-            destination: platform=tvOS Simulator,name=Apple TV,OS=latest
+            destination: platform=tvOS Simulator,name=Apple TV,OS=13.0
 
     steps:
     - uses: actions/checkout@v1
