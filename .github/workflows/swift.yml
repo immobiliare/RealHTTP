@@ -47,7 +47,7 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: List SDKs and Devices
-      run: xcodebuild -showsdks; instruments -s
+      run: xcodebuild -showsdks;
 
     - name: Build and Test
       run: |
