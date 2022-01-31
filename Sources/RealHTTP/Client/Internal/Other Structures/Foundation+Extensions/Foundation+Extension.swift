@@ -249,15 +249,43 @@ extension URL {
     /// - Returns: URL?
     internal func copyFileToDefaultLocation(task: URLSessionDownloadTask,
                                             forRequest request: HTTPRequest) -> URL? {
-        let fManager = FileManager.default
-        
+
+        let destinationURL = FileManager.default.temporaryFileLocation()
+        do {
+            try FileManager.default.copyItem(at: self, to: destinationURL)
+            return destinationURL
+        } catch {
+            return nil
+        }
+    }
+    
+}
+
+// MARK: - FileManager
+
+extension FileManager {
+    
+    internal func temporaryFileLocation() -> URL {
         let fileName = UUID().uuidString
         let documentsDir = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true).first! as NSString
         let destinationURL = URL(fileURLWithPath: documentsDir.appendingPathComponent(fileName))
-        
+        return destinationURL
+    }
+    
+}
+
+// MARK: - Data
+
+extension Data {
+    
+    /// Write to temporary file location.
+    ///
+    /// - Returns: URL
+    internal func writeToTemporaryFile() -> URL? {
         do {
-            try fManager.copyItem(at: self, to: destinationURL)
-            return destinationURL
+            let fileURL = FileManager.default.temporaryFileLocation()
+            try write(to: fileURL)
+            return fileURL
         } catch {
             return nil
         }

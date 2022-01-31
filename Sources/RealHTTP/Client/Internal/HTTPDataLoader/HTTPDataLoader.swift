@@ -343,6 +343,8 @@ private extension HTTPDataLoader {
             handler.request.progress = HTTPProgress(event: .failed,
                                                     currentLength: 0,
                                                     expectedLength: 0, partialData: resumableData)
+            // Also store the resumable data on response
+            handler.dataFileURL = resumableData.writeToTemporaryFile()
         }
         
         // Reset the link to the client

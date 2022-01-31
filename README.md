@@ -88,9 +88,12 @@ RealHTTP is provided with an extensive documentation.
   - [Custom Validators](./Documentation/3.Advanced_HTTPClient.md#custom-validators)
   - [Retry After [Another] Call](./Documentation/3.Advanced_HTTPClient.md#retry-after-another-call)
 - [4 - Handle Large Data Request](./Documentation/4.Handle_LargeData_Requests.md#handle-large-data-request)
-  - [Create a Trackable Request](./Documentation/4.Handle_LargeData_Requests.md#create-a-trackable-request)
+  - [Track Progress](./Documentation/4.Handle_LargeData_Requests.m#track-progress)
   - [Cancel Downloads with resumable data](./Documentation/4.Handle_LargeData_Requests.md#cancel-downloads-with-resumable-data)
   - [Resume Downloads](./Documentation/4.Handle_LargeData_Requests.md#resume-downloads)
+- [Other Debugging Tools](5.Other_Debugging_Tools.md#other-debugging-tools)
+  - [cURL Command Output](5.Other_Debugging_Tools.md#curl-command-output)
+  - [Monitor Connection Metrics](5.Other_Debugging_Tools.md#monitor-connection-metrics)
 ## Test
 
 RealHTTP has an extensive unit test suite which covers many of the standard and edge cases including request build, parameter encoding, queuing and retry strategies.  
