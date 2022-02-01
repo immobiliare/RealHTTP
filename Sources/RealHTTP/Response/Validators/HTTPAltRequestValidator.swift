@@ -58,7 +58,7 @@ open class HTTPAltRequestValidator: HTTPResponseValidatorProtocol {
     // MARK: - Protocol Conformance
     
     open func validate(response: HTTPRawResponse, forRequest request: HTTPRequestProtocol) -> HTTPResponseValidatorResult {
-        guard let statusCode = response.error?.statusCode, triggerHTTPCodes.contains(statusCode) else {
+        if let statusCode = response.error?.statusCode, triggerHTTPCodes.contains(statusCode) {
             return .passed
         }
         
