@@ -19,7 +19,7 @@ import Foundation
 /// retry the initial request. It may be used to provide silent login operation when you receive
 /// and authorized/forbidden errors.
 ///
-/// It's triggered by the `triggerHTTPCodes` which by default is set `.unathorized, .forbidden`.
+/// It's triggered by the `statusCodes` which by default is set `.unathorized, .forbidden`.
 open class HTTPAltRequestValidator: HTTPValidator {
     public typealias RetryRequestProvider = ((_ request: HTTPRequest, _ response: HTTPResponse) -> HTTPRequest?)
     
@@ -91,7 +91,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
     // MARK: - Protocol Conformance
     
     public func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
-        guard triggerHTTPCodes.contains(response.statusCode) else {
+        guard statusCodes.contains(response.statusCode) else {
             // if received status code for this request is not inside the triggerable status codes we'll skip the validator.
             return .nextValidator
         }
