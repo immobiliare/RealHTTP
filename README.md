@@ -131,6 +131,7 @@ RealHTTP is provided with an extensive documentation.
     - [Fail with error](./Documentation/3.Advanced_HTTPClient.md#fail-with-error)
     - [Retry with strategy](./Documentation/3.Advanced_HTTPClient.md#retry-with-strategy)
   - [The Default Validator](./Documentation/3.Advanced_HTTPClient.md#the-default-validator)
+  - [Alt Request Validator](./Documentation/3.Advanced_HTTPClient.md#alt-request-validator)
   - [Custom Validators](./Documentation/3.Advanced_HTTPClient.md#custom-validators)
   - [Retry After [Another] Call](./Documentation/3.Advanced_HTTPClient.md#retry-after-another-call)
 - [**4 - Handle Large Data Request**](./Documentation/4.Handle_LargeData_Requests.md#handle-large-data-request)
