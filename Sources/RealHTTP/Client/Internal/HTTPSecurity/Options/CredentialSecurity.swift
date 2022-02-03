@@ -17,7 +17,7 @@ import Foundation
 
 /// This a concrete class of the `CredentialSecurity` which allows you to perform
 /// authenticated session using the `URLSession`'s `URLAuthenticationChallenge`.
-public struct CredentialSecurity: HTTPSecurity {
+public struct CredentialSecurity: HTTPSecurityService {
     public typealias AuthenticationCallback = ((URLAuthenticationChallenge) -> URLCredential?)
     
     // MARK: - Public Properties

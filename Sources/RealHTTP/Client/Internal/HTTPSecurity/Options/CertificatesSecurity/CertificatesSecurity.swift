@@ -16,7 +16,7 @@
 import Foundation
 
 /// `CertificatesSecurity` is used to make SSL pinning.
-open class CertificatesSecurity: HTTPSecurity {
+open class CertificatesSecurity: HTTPSecurityService {
     
     // MARK: - Public Properties
 

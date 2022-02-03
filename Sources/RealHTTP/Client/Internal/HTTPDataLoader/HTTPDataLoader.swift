@@ -427,7 +427,7 @@ private extension HTTPDataLoader {
         }
         
         // use request's security or client security
-        security.receiveChallenge(challenge, forRequest: request, task: task, completionHandler: completionHandler)
+        security.service().receiveChallenge(challenge, forRequest: request, task: task, completionHandler: completionHandler)
     }
     
 }
