@@ -76,7 +76,7 @@ class HeadersTests: XCTestCase {
                 .init(name: "X-API-Key", value: "abcdefgh123456789")
             ])
         }
-        
+                
         let result = try await req.fetch()
         XCTAssert(req.headers == result.httpResponse?.headers, "Headers received are different")
     }

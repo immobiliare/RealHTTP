@@ -15,8 +15,10 @@
 
 import Foundation
 
+// MARK: - HTTPSecurity Protocol
+
 /// This protocol allows you to customize the logic to handle custon authentication styles.
-public protocol HTTPSecurity {
+public protocol HTTPSecurityService {
         
     /// Receive challange for authentication.
     ///
