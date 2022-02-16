@@ -95,9 +95,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
             // if received status code for this request is not inside the triggerable status codes we'll skip the validator.
             return .nextValidator
         }
-                
-        numberOfAltRequestExecuted += 1
-        
+                        
         if numberOfAltRequestExecuted > maxAltRequests {
             // If we reached the maximum number of alternate calls to execute we want to cancel any other attempt.
             return .failChain(HTTPError(.maxRetryAttemptsReached))
@@ -109,6 +107,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
         }
         
         // Perform the alt request strategy.
+        numberOfAltRequestExecuted += 1
         return .retry(.after(altOperation, retryDelay, onReceiveAltResponse))
     }
     
