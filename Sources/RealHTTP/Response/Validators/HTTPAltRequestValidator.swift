@@ -65,7 +65,6 @@ open class HTTPAltRequestValidator: HTTPResponseValidatorProtocol {
         // If error is one of the errors in `triggerHTTPCodes`
         
         // If we reached the maximum number of alternate calls to execute we want to cancel any other attempt.
-        numberOfAltRequestExecuted += 1
         if let maxAltRequestsToExecute = maxAltRequestsToExecute,
               numberOfAltRequestExecuted > maxAltRequestsToExecute {
             let error = HTTPError(.maxRetryAttemptsReached)
@@ -75,7 +74,8 @@ open class HTTPAltRequestValidator: HTTPResponseValidatorProtocol {
         guard let altOperation = requestProvider(request, response) else {
             return .passed // if no retry operation is provided we'll skip and mark the validation as passed
         }
-        
+
+        numberOfAltRequestExecuted += 1
         return .retryAfter(altOperation)
     }
     
