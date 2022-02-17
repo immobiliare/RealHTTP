@@ -58,12 +58,11 @@ open class HTTPAltRequestValidator: HTTPResponseValidatorProtocol {
     // MARK: - Protocol Conformance
     
     open func validate(response: HTTPRawResponse, forRequest request: HTTPRequestProtocol) -> HTTPResponseValidatorResult {
-        if let statusCode = response.error?.statusCode, triggerHTTPCodes.contains(statusCode) {
+        guard triggerHTTPCodes.contains(response.statusCode ?? .none) else {
             return .passed
         }
         
         // If error is one of the errors in `triggerHTTPCodes`
-        
         // If we reached the maximum number of alternate calls to execute we want to cancel any other attempt.
         if let maxAltRequestsToExecute = maxAltRequestsToExecute,
               numberOfAltRequestExecuted > maxAltRequestsToExecute {
