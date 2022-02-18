@@ -35,7 +35,7 @@ public class HTTPStubRequest: Equatable {
     public init() {}
         
     public static func == (lhs: HTTPStubRequest, rhs: HTTPStubRequest) -> Bool {
-        false
+        lhs === rhs
     }
     
     // MARK: - Private Functions
