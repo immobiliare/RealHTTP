@@ -30,5 +30,11 @@ extension HTTPBody {
         return HTTPBody(content: formData)
     }
     
+    /// Create a multipart form with given object.
+    ///
+    /// - Parameter form: form object
+    public static func multipart(_ form: MultipartForm) -> HTTPBody {
+        HTTPBody(content: form)
+    }
     
 }

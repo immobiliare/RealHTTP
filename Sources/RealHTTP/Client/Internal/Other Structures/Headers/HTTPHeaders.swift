@@ -47,6 +47,17 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
         ])
     }
     
+    /// Create an additional HTTPHeaders set with content length if data is not empty.
+    public static func forData(_ data: Data?) -> HTTPHeaders? {
+        guard let data = data, data.isEmpty == false else {
+            return nil
+        }
+        
+        return [
+            .contentLength(String(data.count))
+        ]
+    }
+    
     /// Initialize a new HTTPHeaders storage with given data.
     ///
     /// NOTE: It's case insentive so duplicate names are collapsed into the last name
@@ -167,6 +178,19 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
     public mutating func set(_ headers: [HTTPHeaders.Element.Name: String]) {
         headers.enumerated().forEach {
             set(HTTPHeaders.Element(name: $0.element.key.rawValue, value: $0.element.value))
+        }
+    }
+    
+    /// Merge the contents of self with other headers which has priority over existing items.
+    ///
+    /// - Parameter otherHeaders: other headers
+    public mutating func mergeWith(_ otherHeaders: HTTPHeaders?) {
+        guard let otherHeaders = otherHeaders else {
+            return
+        }
+
+        for header in otherHeaders {
+            set(header)
         }
     }
     

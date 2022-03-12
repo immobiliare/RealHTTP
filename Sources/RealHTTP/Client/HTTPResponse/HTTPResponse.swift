@@ -28,7 +28,7 @@ public struct HTTPResponse: CustomStringConvertible {
     public let metrics: HTTPMetrics?
     
     /// `URLResponse` object received from server.
-    public let urlResponse: URLResponse?
+    public internal(set) var urlResponse: URLResponse?
     
     /// Casted `HTTPURLResponse` object received from server.
     public var httpResponse: HTTPURLResponse? {
@@ -47,17 +47,23 @@ public struct HTTPResponse: CustomStringConvertible {
     /// If the file is saved on disk (`dataFileURL != nil`) calling this method
     /// will cause the system to read file and get it as output.
     public var data: Data? {
-        if let dataFileURL = dataFileURL {
-            return try? Data(contentsOf: dataFileURL)
-        } else {
-            return innerData
+        get {
+            if let dataFileURL = dataFileURL {
+                return try? Data(contentsOf: dataFileURL)
+            } else {
+                return innerData
+            }
+        }
+        set {
+            innerData = newValue
+            dataFileURL = nil
         }
     }
     
     /// If it's a large data transfer (`transferMode = .largeData`) the output
     /// of the call is automatically saved on disk at this link.
     /// The file is your responsibility, you should delete if once you've done.
-    public let dataFileURL: URL?
+    public private(set) var dataFileURL: URL?
     
     /// Error parsed.
     public let error: HTTPError?
@@ -122,6 +128,7 @@ public struct HTTPResponse: CustomStringConvertible {
         self.urlRequests = response.urlRequests
     }
     
+    
     // MARK: - Decoding
     
     /// Decode a raw response using `Decodable` object type.
@@ -168,5 +175,16 @@ public protocol HTTPDecodableResponse {
     ///
     /// - Returns: a valid instance of `Self` or `nil`.
     static func decode(_ response: HTTPResponse) throws -> Self?
+    
+}
+
+// MARK: - ResponseTransformer
+
+public extension HTTPResponse {
+    
+    struct ResponseTransformer {
+        /// Set a valid value to apply body transform to the request.
+        var body: HTTPBody?
+    }
     
 }

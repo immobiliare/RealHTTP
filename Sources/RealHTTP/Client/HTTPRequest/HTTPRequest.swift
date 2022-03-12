@@ -388,14 +388,14 @@ public extension HTTPRequest {
     ///
     /// - Parameters:
     ///   - parameters: parameters dictionary.
-    ///   - arrayEncoding: how to encode values which are array (default is `.withBrackets`)
     ///   - boolEncoding: how to encode values which are boolean (default is `.asNumbers`)
+    ///   - arrayEncoding: how to encode values which are array (default is `.withBrackets`)
     func add(parameters: [String: Any],
-             arrayEncoding: HTTPBody.URLParametersData.ArrayEncodingStyle = .withBrackets,
-             boolEncoding: HTTPBody.URLParametersData.BoolEncodingStyle = .asNumbers) {
-        let paramsData = HTTPBody.URLParametersData(parameters)
-        paramsData.boolEncoding = boolEncoding
-        paramsData.arrayEncoding = arrayEncoding
+             boolEncoding: HTTPBody.URLParametersData.BoolEncodingStyle = .asNumbers,
+             arrayEncoding: HTTPBody.URLParametersData.ArrayEncodingStyle = .withBrackets) {
+        let paramsData = HTTPBody.URLParametersData(parameters,
+                                                    boolEncoding: boolEncoding,
+                                                    arrayEncoding: arrayEncoding)
         paramsData.encodedParametersToDictionary().forEach { item in
             add(queryItem: URLQueryItem(name: item.key, value: item.value))
         }
@@ -413,9 +413,9 @@ extension HTTPRequest {
     ///
     /// - Parameter client: client where the query should be executed.
     /// - Returns: `URLSessionTask`
-    internal func urlSessionTask(inClient client: HTTPClient) throws -> URLSessionTask {
+    internal func urlSessionTask(inClient client: HTTPClient) async throws -> URLSessionTask {
         // Generate the `URLRequest` instance.
-        var urlRequest = try urlRequest(inClient: client)
+        var urlRequest = try await urlRequest(inClient: client)
         
         // Ask to the user to alter produced request.
         try urlRequestModifier?(&urlRequest)
@@ -447,8 +447,9 @@ extension HTTPRequest {
     ///
     /// - Parameter client: client instance.
     /// - Returns: `URLRequest`
-    internal func urlRequest(inClient client: HTTPClient) throws -> URLRequest {
-        guard let fullURL = urlComponents.fullURLInClient(client) else {
+    internal func urlRequest(inClient client: HTTPClient?) async throws -> URLRequest {
+        guard let client = client,
+              let fullURL = urlComponents.fullURLInClient(client) else {
             throw HTTPError(.invalidURL)
         }
         
@@ -464,7 +465,7 @@ extension HTTPRequest {
                                         headers: requestHeaders)
         urlRequest.httpShouldHandleCookies = true
         urlRequest.allowsCellularAccess = allowsCellularAccess
-        try urlRequest.setHTTPBody(body) // setup the body
+        try await urlRequest.setHTTPBody(body) // setup the body
         return urlRequest
     }
     

@@ -26,7 +26,7 @@ public class HTTPClient {
     
     /// Delegate of the client.
     public var delegate: HTTPClientDelegate?
-    
+        
     /// Base URL used to compose each request.
     ///
     /// NOTE:
@@ -73,6 +73,9 @@ public class HTTPClient {
     public var validators: [HTTPValidator] = [
         HTTPDefaultValidator() // standard validator for http responses
     ]
+    
+    /// Allows to set the transformer applied to each response executed into the client.
+    public var responseTransformers = [HTTPResponseTransform]()
     
     // MARK: - Private Properties
     

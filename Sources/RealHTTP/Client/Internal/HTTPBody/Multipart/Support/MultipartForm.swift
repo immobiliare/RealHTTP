@@ -18,12 +18,14 @@ import Foundation
 extension HTTPBody {
     
     /// Allows to create a multipart/form-data for uploads fo forms.
-    public class MultipartForm: HTTPEncodableBody {
+    public class MultipartForm: HTTPSerializableBody {
         
         // MARK: - Public Properties
         
         /// The `Content-Type` header value containing the boundary used to generate the `multipart/form-data`.
-        open lazy var contentType = "multipart/form-data; boundary=\(boundary.id)"
+        public var contentType: String {
+            "multipart/form-data; boundary=\(boundary.id)"
+        }
         
         /// The length of multipart form.
         public var contentLength: UInt64 {
@@ -139,14 +141,14 @@ extension HTTPBody {
         ///
         /// - Throws: throw an exception if encoding fails.
         /// - Returns: Data
-        public func encodedData() throws -> Data {
+        public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
             var data = Data()
-            
+
             if let preamble = self.preamble?.data(using: .utf8) {
                 data.append(preamble + Boundary.crlfData)
                 data.append(Boundary.crlfData)
             }
-            
+                        
             if formItems.isEmpty {
                 data.append(boundary.delimiterData)
                 data.append(Boundary.crlfData)
@@ -163,9 +165,15 @@ extension HTTPBody {
                     let streamSection = try formItem.encodedData()
                     data.append(streamSection + Boundary.crlfData)
                 }
+                
+                // Appending closing form boundary string
+                data.append( boundary.distinguishedDelimiterData + Boundary.crlfData)
             }
             
-            return data
+            return (data, .init([
+                .contentType : contentType,
+                .contentLength: String(contentLength)
+            ]))
         }
         
         /// Add body part from the stream and appends it to the form.
