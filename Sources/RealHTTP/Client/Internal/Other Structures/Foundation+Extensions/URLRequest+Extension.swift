@@ -85,11 +85,19 @@ extension URLRequest {
     
     // MARK: - Public Functions
     
-    mutating internal func setHTTPBody(_ body: HTTPBody) throws {
-        if let stream = body.content as? HTTPStreamContent {
-            httpBodyStream = stream.inputStream(recreate: false)
+    mutating internal func setHTTPBody(_ body: HTTPBody) async throws {
+        if let stream = body.content as? HTTPBody.StreamContent {
+            // Prepare the stream
+            let result = stream.inputStream(recreate: false)
+            httpBodyStream = result.stream
+            // Add any additional header received after the serialization.
+            headers.mergeWith(result.additionalHeaders)
         } else {
-            httpBody = try body.content.encodedData()
+            // Serialize the body and set it.
+            let result = try await body.content.serializeData()
+            httpBody = result.data
+            // Add any additional header received after the serialization.
+            headers.mergeWith(result.additionalHeaders)
         }
     }
     
