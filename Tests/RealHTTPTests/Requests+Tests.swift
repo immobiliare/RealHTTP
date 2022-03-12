@@ -1183,12 +1183,224 @@ class RequestsTests: XCTestCase {
     }
     
     // MARK: - Multipart Form Data Tests
-    
-    func test_multipartGoodMimeType() async throws {
+
+    func test_multipartContainsContentTypeBoundary() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+
         let form = HTTPBody.MultipartForm()
-        try form.add(fileURL: url(forResource: "mac_icon", withExtension: "jpg"), name: "file")
+        let req = HTTPRequest {
+            $0.url = URL(string: "https://somedomain.com")
+            $0.method = .post
+            $0.body = .multipart(form)
+        }
         
+        let request = try await req.urlRequest(inClient: newClient)
+
+        let expContentType = "multipart/form-data; boundary=\(form.boundary.id)"
+        XCTAssertEqual(request.headers["Content-Type"], expContentType)
+    }
+    
+    func test_multipartContentLengthMatchesTotalBodyPartSize() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+
+        let data1 = Data("Lorem ipsum dolor sit amet.".utf8)
+        let data2 = Data("Vim at integre alterum.".utf8)
+
+        let form = HTTPBody.MultipartForm()
         
+        form.add(data: data1, name: "data_1")
+        form.add(data: data2, name: "data_2")
+
+        let req = HTTPRequest {
+            $0.url = URL(string: "https://somedomain.com")
+            $0.method = .post
+            $0.body = .multipart(form)
+        }
+        
+        let request = try await req.urlRequest(inClient: newClient)
+
+        let expectedContentLength = UInt64(data1.count + data2.count)
+        XCTAssertTrue(request.headers[.contentLength] == String(expectedContentLength), "Content-length should match expected value")
+    }
+    
+    func test_multipartEncodingTestForFormItems() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+
+        let form = HTTPBody.MultipartForm()
+        
+        // String
+        try form.add(string: "some value", name: "parameter_1")
+
+        // Raw Data
+        form.add(data: "{ \"key\": \"val\" }".data(using: .utf8)!,
+                 name: "raw", fileName: "file_text", mimeType: HTTPContentType.json.rawValue)
+        
+        // File
+        let fileURL = url(forResource: "mac_icon", withExtension: "jpg")
+        try form.add(fileURL: fileURL, name: "file")
+                
+        let req = HTTPRequest {
+            $0.url = URL(string: "https://somedomain.com")
+            $0.method = .post
+            $0.body = .multipart(form)
+        }
+        
+        let request = try await req.urlRequest(inClient: newClient)
+        
+        // Check the boundary string
+        let expContentType = "multipart/form-data; boundary=\(form.boundary.id)"
+        XCTAssertEqual(request.headers["Content-Type"], expContentType)
+        
+        // Check form data
+        let data = request.body?.asString(encoding: .ascii)
+                
+        let expectedFileHeader = """
+        --\(form.boundaryID)\r
+        Content-Disposition: form-data; name="file"; filename="mac_icon.jpg"\r
+        Content-Type: image/jpeg\r
+        """
+        
+        let expectedJSONData = "--\(form.boundaryID)\r\nContent-Disposition: form-data; name=\"raw\"; filename=\"file_text\"\r\nContent-Type: application/json\r\n\r\n{ \"key\": \"val\" }"
+        
+        let expectedStringData = "--\(form.boundaryID)\r\nContent-Disposition: form-data; name=\"parameter_1\"\r\n\r\nsome value"
+        
+        XCTAssertTrue(data!.contains(expectedFileHeader), "Missing file header")
+        XCTAssertTrue(data!.contains(expectedJSONData), "Missing JSON Raw Data+Header")
+        XCTAssertTrue(data!.contains(expectedStringData), "Missing String+Header")
+    }
+    
+    func test_multipartEncodingDataBodyPart() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+
+        let form = HTTPBody.MultipartForm()
+     
+        let data = Data("Lorem ipsum dolor sit amet.".utf8)
+        form.add(data: data, name: "data")
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "https://somedomain.com")
+            $0.method = .post
+            $0.body = .multipart(form)
+        }
+        
+        let request = try await req.urlRequest(inClient: newClient)
+                
+        XCTAssertNotNil(request.body, "Encoded data should not be nil")
+        let expectedString = (
+            "--\(form.boundaryID)\r\n" +
+            "Content-Disposition: form-data; name=\"data\"\r\n\r\n" +
+            "Lorem ipsum dolor sit amet." + "\r\n" +
+            "--\(form.boundaryID)--\r\n"
+        )
+        let expectedData = Data(expectedString.utf8)
+        XCTAssertEqual(request.body, expectedData, "Encoded data should match expected data")
+    }
+    
+    func test_multipartEncodingMultipleDataBodyParts() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+
+        let frenchData = Data("français".utf8)
+        let japaneseData = Data("日本語".utf8)
+        let emojiData = Data("😃👍🏻🍻🎉".utf8)
+        
+        let form = HTTPBody.MultipartForm()
+        
+        form.add(data: frenchData, name: "french")
+        form.add(data: japaneseData, name: "japanese", mimeType: "text/plain")
+        form.add(data: emojiData, name: "emoji", mimeType: "text/plain")
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "https://somedomain.com")
+            $0.method = .post
+            $0.body = .multipart(form)
+        }
+        
+        let request = try await req.urlRequest(inClient: newClient)
+            
+        let expectedString = (
+            "--\(form.boundaryID)\r\n" +
+            "Content-Disposition: form-data; name=\"french\"" + "\r\n\r\n" +
+            "français" +
+            "\r\n"+"--\(form.boundaryID)\r\n" +
+            "Content-Disposition: form-data; name=\"japanese\"" + "\r\n" +
+            "Content-Type: text/plain" + "\r\n" + "\r\n"  +
+            "日本語" +
+            "\r\n"+"--\(form.boundaryID)\r\n" +
+            "Content-Disposition: form-data; name=\"emoji\"" + "\r\n" +
+            "Content-Type: text/plain" + "\r\n" + "\r\n" +
+            "😃👍🏻🍻🎉" + "\r\n" +
+            "--\(form.boundaryID)--\r\n"
+        )
+        let expectedData = Data(expectedString.utf8)
+        XCTAssertEqual(request.body, expectedData, "Encoded data should match expected data")
+    }
+    
+    func test_multipartEncodingFileBodyPart() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+
+        let form = HTTPBody.MultipartForm()
+
+        let unicornImageURL = url(forResource: "test_rawdata", withExtension: "png")
+        try form.add(fileURL: unicornImageURL, name: "unicorn")
+        
+        let req = HTTPRequest {
+            $0.url = URL(string: "https://somedomain.com")
+            $0.method = .post
+            $0.body = .multipart(form)
+        }
+        
+        let request = try await req.urlRequest(inClient: newClient)
+                
+        let clrf = "\r\n".data(using: .utf8)!
+        let imageData = try! Data(contentsOf: unicornImageURL)
+
+        let expectedData = (
+            "--\(form.boundaryID)".data(using: .utf8)! + clrf +
+            "Content-Disposition: form-data; name=\"unicorn\"; filename=\"test_rawdata.png\"".data(using: .utf8)! + clrf +
+            "Content-Type: image/png".data(using: .utf8)! + clrf + clrf +
+            imageData + clrf +
+            "--\(form.boundaryID)--".data(using: .utf8)! + clrf
+        )
+        
+        XCTAssertEqual(request.body, expectedData, "Data should match expected data")
+    }
+    
+    func test_multipartEncodingStreamBodyPart() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+
+        let form = HTTPBody.MultipartForm()
+
+        let unicornImageURL = url(forResource: "test_rawdata", withExtension: "png")
+        let unicornDataLength = UInt64((try! Data(contentsOf: unicornImageURL)).count)
+        let unicornStream = InputStream(url: unicornImageURL)!
+        
+        form.add(stream: unicornStream,
+                 withLength: unicornDataLength,
+                 name: "unicorn",
+                 fileName: "unicorn.png",
+                 mimeType: "image/png")
+
+        let req = HTTPRequest {
+            $0.url = URL(string: "https://somedomain.com")
+            $0.method = .post
+            $0.body = .multipart(form)
+        }
+        
+        let request = try await req.urlRequest(inClient: newClient)
+
+        XCTAssertNotNil(request.body, "Encoded data should not be nil")
+
+        var expectedData = Data()
+        let crlf = "\r\n".data(using: .utf8)!
+
+        expectedData.append("--\(form.boundaryID)".data(using: .utf8)! + crlf)
+        expectedData.append("Content-Disposition: form-data; name=\"unicorn\"; filename=\"unicorn.png\"".data(using: .utf8)! + crlf)
+        expectedData.append("Content-Type: image/png".data(using: .utf8)! + crlf + crlf)
+
+        expectedData.append(try! Data(contentsOf: unicornImageURL) + crlf)
+        expectedData.append("--\(form.boundaryID)--".data(using: .utf8)! + crlf)
+        
+        XCTAssertEqual(request.body, expectedData, "Data should match expected data")
     }
     
 }
