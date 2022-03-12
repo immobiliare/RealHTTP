@@ -165,7 +165,9 @@ extension HTTPBody {
                 }
             }
             
-            return (data, nil)
+            return (data, .init([
+                .contentType :"\(HTTPContentType.formDataMultipart.rawValue); boundary=\(boundaryID)"
+            ]))
         }
         
         /// Add body part from the stream and appends it to the form.
