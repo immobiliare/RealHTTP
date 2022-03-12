@@ -28,7 +28,7 @@ public struct HTTPBody {
     // MARK: - Public Properties
     
     /// Content of the body.
-    public var content: HTTPEncodableBody
+    public var content: HTTPSerializableBody
     
     // MARK: - Internal Properties
     
@@ -37,13 +37,22 @@ public struct HTTPBody {
     
     // MARK: - Initialization
     
-    public init(content: HTTPEncodableBody, headers: HTTPHeaders = .init()) {
+    /// Initialize a new body.
+    ///
+    /// - Parameters:
+    ///   - content: content of the body.
+    ///   - headers: additional headers to set.
+    internal init(content: HTTPSerializableBody, headers: HTTPHeaders = .init()) {
         self.content = content
         self.headers = headers
     }
     
-    // MARK: - Raw Data
-    
+}
+
+// MARK: - HTTPBody for Raw Data
+
+extension HTTPBody {
+        
     /// Initialize a new body with raw data.
     ///
     /// - Parameters:
@@ -62,37 +71,6 @@ public struct HTTPBody {
     /// - Returns: HTTPBody
     public static func string(_ content: String, contentType: MIMEType = .textPlain) -> HTTPBody {
         .data(content.data(using: .utf8) ?? Data(), contentType: contentType)
-    }
-    
-}
-
-// MARK: - HTTPBody for JSON
-
-extension HTTPBody {
-    
-    /// Initialize a new body with an `Encodable` conform object which can be encoded using
-    /// the system's `JSONEncoder` instance passed.
-    ///
-    /// - Returns: HTTPBody
-    public static func json<T: Encodable>(_ object: T, encoder: JSONEncoder = JSONEncoder()) throws -> HTTPBody {
-        let content = try encoder.encode(object)
-        var body = HTTPBody.data(content, contentType: MIMEType.json)
-        body.headers[.contentType] = MIMEType.json.rawValue
-        return body
-    }
-    
-    /// Initialize a new body with an object which can be converted to JSON by using
-    /// the system's `JSONSerialization`'s class.
-    ///
-    /// - Parameters:
-    ///   - object: object to serialize.
-    ///   - options: options for serialization.
-    /// - Returns: HTTPBody
-    public static func json(_ object: Any, options: JSONSerialization.WritingOptions = []) throws -> HTTPBody {
-        let content = try JSONSerialization.data(withJSONObject: object, options: options)
-        var body = HTTPBody.data(content, contentType: MIMEType.json)
-        body.headers[.contentType] = MIMEType.json.rawValue
-        return body
     }
     
 }

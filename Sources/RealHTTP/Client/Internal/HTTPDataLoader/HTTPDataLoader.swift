@@ -68,7 +68,7 @@ internal class HTTPDataLoader: NSObject,
             throw HTTPError(.internal)
         }
         
-        let sessionTask = try request.urlSessionTask(inClient: client)
+        let sessionTask = try await request.urlSessionTask(inClient: client)
         request.sessionTask = sessionTask
         request.client = nil
         
@@ -78,10 +78,15 @@ internal class HTTPDataLoader: NSObject,
             box.task?.cancel()
         }, operation: {
             // Conversion of the callback system to the async/await version.
-            let response = try await withUnsafeThrowingContinuation({ continuation in
-                box.task = self.fetch(request, task: sessionTask, completion: { response in
-                    // continue the async/await operation
-                    continuation.resume(returning: response)
+            let response: HTTPResponse = try await withUnsafeThrowingContinuation({ continuation in
+                box.task = self.fetch(request, task: sessionTask, completion: { [weak self] response in
+                    do { // Apply optional transformers.
+                        let tResponse = try self?.applyResponseTransformers(to: response, request: request) ?? response
+                        // continue the async/await operation
+                        continuation.resume(returning: tResponse)
+                    } catch {
+                        continuation.resume(with: .failure(error))
+                    }
                 })
             })
 
@@ -181,6 +186,25 @@ internal class HTTPDataLoader: NSObject,
         return task
     }
     
+    /// Apply transformers of client to a received response.
+    ///
+    /// - Parameters:
+    ///   - response: response.
+    ///   - request: origin request.
+    /// - Returns: `HTTPResponse`
+    func applyResponseTransformers(to response: HTTPResponse, request: HTTPRequest) throws -> HTTPResponse {
+        guard let transformers =  client?.responseTransformers, transformers.isEmpty == false else {
+            return response
+        }
+        
+        var tResponse = response
+        try transformers.forEach {
+            tResponse = try $0.transform(response: tResponse, ofRequest: request)
+        }
+        
+        return tResponse
+    }
+    
 
     // MARK: - Security Support
     
@@ -278,8 +302,8 @@ internal class HTTPDataLoader: NSObject,
             return
         }
 
-        if let streamContent = request.body.content as? HTTPStreamContent,
-           let inputStream = streamContent.inputStream(recreate: true) {
+        if let streamContent = request.body.content as? HTTPBody.StreamContent,
+           let inputStream = streamContent.inputStream(recreate: true).stream {
             inputStream.open() // open the stream
             completionHandler(inputStream)
         }

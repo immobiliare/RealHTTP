@@ -23,11 +23,10 @@ extension HTTPBody {
     ///   - source: stream source.
     ///   - contentType: content type to set.
     /// - Returns: `HTTPBody`
-    public static func stream(_ source: HTTPStreamContent.Source, contentType: MIMEType) -> HTTPBody {
-        let stream = HTTPStreamContent(source: source)
+    public static func stream(_ source: StreamContent.Source, contentType: MIMEType) -> HTTPBody {
+        let stream = StreamContent(source: source)
         return HTTPBody(content: stream, headers: .init([
             .connection: "Keep-Alive",
-            .contentLength: String(stream.length),
             .contentType: contentType.rawValue
         ]))
     }

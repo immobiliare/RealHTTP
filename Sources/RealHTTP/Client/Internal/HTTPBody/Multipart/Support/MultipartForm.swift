@@ -18,12 +18,12 @@ import Foundation
 extension HTTPBody {
     
     /// Allows to create a multipart/form-data for uploads fo forms.
-    public class MultipartForm: HTTPEncodableBody {
+    public actor MultipartForm: HTTPSerializableBody {
         
         // MARK: - Public Properties
         
         /// The `Content-Type` header value containing the boundary used to generate the `multipart/form-data`.
-        open lazy var contentType = "multipart/form-data; boundary=\(boundary.id)"
+        public lazy var contentType = "multipart/form-data; boundary=\(boundary.id)"
         
         /// The length of multipart form.
         public var contentLength: UInt64 {
@@ -139,7 +139,7 @@ extension HTTPBody {
         ///
         /// - Throws: throw an exception if encoding fails.
         /// - Returns: Data
-        public func encodedData() throws -> Data {
+        public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
             var data = Data()
             
             if let preamble = self.preamble?.data(using: .utf8) {
@@ -165,7 +165,7 @@ extension HTTPBody {
                 }
             }
             
-            return data
+            return (data, nil)
         }
         
         /// Add body part from the stream and appends it to the form.

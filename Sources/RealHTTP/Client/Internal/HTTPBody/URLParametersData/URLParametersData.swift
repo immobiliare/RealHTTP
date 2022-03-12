@@ -17,7 +17,7 @@ import Foundation
 
 extension HTTPBody {
     
-    public final class URLParametersData: HTTPEncodableBody {
+    public final class URLParametersData: HTTPSerializableBody {
         
         // MARK: - Public Properties
         
@@ -27,12 +27,10 @@ extension HTTPBody {
         // MARK: - Additional Configuration
         
         /// Specify how array parameter's value are encoded into the request.
-        /// By default the `withBrackets` option is used and array are encoded as `key[]=value`.
-        public var arrayEncoding: ArrayEncodingStyle = .withBrackets
+        public let arrayEncoding: ArrayEncodingStyle
         
         /// Specify how boolean values are encoded into the request.
-        /// The default behaviour is `asNumbers` where `true=1`, `false=0`.
-        public var boolEncoding: BoolEncodingStyle = .asNumbers
+        public let boolEncoding: BoolEncodingStyle
         
         // MARK: - Initialization
         
@@ -41,18 +39,27 @@ extension HTTPBody {
         /// - Parameters:
         ///   - destination: destination of the url produced.
         ///   - parameters: parameters to encode.
-        internal init(_ parameters: HTTPRequestParametersDict?) {
+        ///   - boolEncoding: Specify how boolean values are encoded into the request.
+        ///                   The default behaviour is `asNumbers` where `true=1`, `false=0`.
+        ///   - arrayEncoding: Specify how array parameter's value are encoded into the request.
+        ///                    By default the `withBrackets` option is used and array are encoded as `key[]=value`.
+        internal init(_ parameters: HTTPRequestParametersDict?,
+                      boolEncoding: BoolEncodingStyle = .asNumbers,
+                      arrayEncoding: ArrayEncodingStyle = .withBrackets) {
             self.parameters = parameters
+            self.arrayEncoding = arrayEncoding
+            self.boolEncoding = boolEncoding
         }
         
         // MARK: - Encoding
         
-        public func encodedData() throws -> Data {
+        public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
             guard let parameters = self.parameters, parameters.isEmpty == false else {
-                return Data() // no parameters set
+                return (Data(), nil) // no parameters set
             }
             
-            return encodeParameters(parameters).data(using: .utf8) ?? Data()
+            let data = encodeParameters(parameters).data(using: .utf8) ?? Data()
+            return (data, nil)
         }
         
         // MARK: - Private Functions
