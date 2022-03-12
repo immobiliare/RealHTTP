@@ -70,41 +70,41 @@ class RequestsTests: XCTestCase {
     
     /// We tests how replacing the `url` property the final executed url does
     /// not contains the `baseURL` of the destination `HTTPClient` instance.
-    func test_validateFullRequestURL() throws {
+    func test_validateFullRequestURL() async throws {
         let fullURL = URL(string: "http://127.0.0.1:8080")!
         let req = HTTPRequest {
             $0.url = fullURL
         }
         
-        let urlRequest = try req.urlRequest(inClient: client)
+        let urlRequest = try await req.urlRequest(inClient: client)
         XCTAssert(urlRequest.url == fullURL, "We expect a full URL to replace the baseURL, we got '\(urlRequest.url?.absoluteString ?? "")'")
     }
     
     /// Using an IP it should still works returning the full URL and ignoring the client's base url.
-    func test_validateFullRequestURLWithIP() throws {
+    func test_validateFullRequestURLWithIP() async throws {
         let fullURL = URL(string: "http://127.0.0.1:8080")!
         let req = HTTPRequest {
             $0.url = fullURL
         }
         
-        let urlRequest = try req.urlRequest(inClient: client)
+        let urlRequest = try await req.urlRequest(inClient: client)
         XCTAssert(urlRequest.url == fullURL, "We expect a full URL, we got '\(urlRequest.url?.absoluteString ?? "")'")
     }
     
     /// If we specify just the path of an URL the final URL must be the
     /// URL of the request composed with the destination client's baseURL.
-    func test_validateRelativeRequestURL() throws {
+    func test_validateRelativeRequestURL() async throws {
         let req = HTTPRequest {
             $0.path = "user"
         }
         
-        let urlRequest = try req.urlRequest(inClient: client)
+        let urlRequest = try await req.urlRequest(inClient: client)
         let expectedURL = URL(string: "\(client.baseURL!.absoluteString)/\(req.path)")
         XCTAssert(urlRequest.url == expectedURL, "We expect composed URL, we got: '\(urlRequest.url?.absoluteString ?? "")'")
     }
     
     /// This test verify the query parameters you can add to the url.
-    func test_validateQueryParameters() throws {
+    func test_validateQueryParameters() async throws {
         HTTPStubber.shared.enable()
 
         let queryParams = [
@@ -123,7 +123,7 @@ class RequestsTests: XCTestCase {
             $0.add(queryItems: queryParams)
         }
         
-        let urlRequest = try req.urlRequest(inClient: client)
+        let urlRequest = try await req.urlRequest(inClient: client)
         let rComps = URLComponents(string: urlRequest.url!.absoluteString)
         
         // Validate the host, scheme and path
@@ -178,7 +178,7 @@ class RequestsTests: XCTestCase {
         }
 
         // Check the request
-        let urlRequest = try req.urlRequest(inClient: client)
+        let urlRequest = try await req.urlRequest(inClient: client)
         let urlRequestComponents = urlRequest.urlComponents
         XCTAssert(urlRequest.method == req.method, "Method used is not the same set")
         XCTAssert(urlRequestComponents?.path == req.path, "Path set is not the same set")
@@ -216,7 +216,7 @@ class RequestsTests: XCTestCase {
             "p4": ["a","b"],
             "p5": ["k1": "v1", "k2": false]
         ])
-        let encodedBody = try! urlParamsBody.encodedData()
+        let encodedBody = try! await urlParamsBody.serializeData().data
                 
         let req = HTTPRequest {
             $0.path = "/image/test_image"
@@ -224,7 +224,7 @@ class RequestsTests: XCTestCase {
             $0.method = .post
         }
         
-        let urlRequest = try req.urlRequest(inClient: client)
+        let urlRequest = try await req.urlRequest(inClient: client)
                 
         // Ensure params are inside the body and not in query string
         XCTAssert(urlRequest.body != nil, "Request message should containt the encoded url parameters")
@@ -260,10 +260,9 @@ class RequestsTests: XCTestCase {
         let urlParamsBody = HTTPBody.URLParametersData([
             "p3": false,
             "p4": ["a","b"]
-        ])
-        urlParamsBody.boolEncoding = .asLiterals
-        urlParamsBody.arrayEncoding = .noBrackets
-        
+        ],
+                                                       boolEncoding: .asLiterals,
+                                                       arrayEncoding: .noBrackets)
         
         let req = HTTPRequest {
             $0.path = "/image/test_image"
@@ -413,10 +412,10 @@ class RequestsTests: XCTestCase {
                             bornDate: Date(),
                             info: .init(acceptedLicense: true, avatar: avatarImageData))
 
-        let req = try HTTPRequest {
+        let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8080")!
             $0.method = .post
-            $0.body = try .json(user)
+            $0.body = .json(user)
         }
         
         let response = try await req.fetch(client)
@@ -466,18 +465,18 @@ class RequestsTests: XCTestCase {
     }
     
     
-    func test_jsonEncoderCanBeCustomized() throws {
+    func test_jsonEncoderCanBeCustomized() async throws {
         let newClient = HTTPClient(baseURL: nil)
     
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
         
-        let req = try HTTPRequest {
+        let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8081/initial")!
-            $0.body = try .json(TestParameters.default, encoder: encoder)
+            $0.body = .json(TestParameters.default, encoder: encoder)
         }
         
-        let request = try req.urlRequest(inClient: newClient)
+        let request = try await req.urlRequest(inClient: newClient)
 
         let expected = """
         {
@@ -487,18 +486,18 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(request.httpBody?.asString, expected)
     }
     
-    func test_jsonEncoderSortedKeysHasSortedKeys() throws {
+    func test_jsonEncoderSortedKeysHasSortedKeys() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
         
-        let req = try HTTPRequest {
+        let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8081/initial")!
-            $0.body = try .json(["z": "z", "a": "a", "p": "p"], encoder: encoder)
+            $0.body = .json(["z": "z", "a": "a", "p": "p"], encoder: encoder)
         }
         
-        let request = try req.urlRequest(inClient: newClient)
+        let request = try await req.urlRequest(inClient: newClient)
 
         let expected = """
         {"a":"a","p":"p","z":"z"}
@@ -909,7 +908,7 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(response.statusCode, .badRequest)
     }
     
-    func test_cURLRequestGETDescription() {
+    func test_cURLRequestGETDescription() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
         let url = URL(string: "http://127.0.0.1:8081/initial")!
@@ -918,7 +917,7 @@ class RequestsTests: XCTestCase {
             $0.method = .get
         }
         
-        let cURLDesc = req.cURLDescription(whenIn: newClient)
+        let cURLDesc = try await req.cURLDescription(whenIn: newClient)
         let components = cURLCommandComponents(from: cURLDesc)
 
         // Then
@@ -927,7 +926,7 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(components.last, "\"\(url)\"")
     }
     
-    func test_cURLRequestWithCustomHeader() {
+    func test_cURLRequestWithCustomHeader() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
         let url = URL(string: "http://127.0.0.1:8081/initial")!
@@ -939,12 +938,12 @@ class RequestsTests: XCTestCase {
             ])
         }
 
-        let cURLDesc = req.cURLDescription(whenIn: newClient)
+        let cURLDesc = try await req.cURLDescription(whenIn: newClient)
 
         XCTAssertNotNil(cURLDesc.range(of: "-H \"X-Custom-Header: {\\\"key\\\": \\\"value\\\"}\""))
     }
 
-    func test_cURLRequestPOSTDescription() {
+    func test_cURLRequestPOSTDescription() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
         let url = URL(string: "http://127.0.0.1:8081/initial")!
@@ -956,7 +955,7 @@ class RequestsTests: XCTestCase {
             ])
         }
 
-        let cURLDesc = req.cURLDescription(whenIn: newClient)
+        let cURLDesc = try await req.cURLDescription(whenIn: newClient)
         let components = cURLCommandComponents(from: cURLDesc)
 
         // Then
@@ -965,23 +964,23 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(components.last, "\"\(url)\"")
     }
     
-    func test_cURLRequestPOSTRequestWithJSONParameters() throws {
+    func test_cURLRequestPOSTRequestWithJSONParameters() async throws {
         let newClient = HTTPClient(baseURL: nil)
         newClient.headers = .init()
 
         let url = URL(string: "http://127.0.0.1:8081/initial")!
-        let req = try HTTPRequest {
+        let req = HTTPRequest {
             $0.url = url
             $0.method = .post
             $0.headers = .init(headers: [
                 .contentType(.json)
             ])
-            $0.body = try .json( ["foo": "bar",
-                                  "fo\"o": "b\"ar",
-                                  "f'oo": "ba'r"])
+            $0.body = .json( ["foo": "bar",
+                              "fo\"o": "b\"ar",
+                              "f'oo": "ba'r"])
         }
 
-        let cURLDesc = req.cURLDescription(whenIn: newClient)
+        let cURLDesc = try await req.cURLDescription(whenIn: newClient)
         let components = cURLCommandComponents(from: cURLDesc)
 
         // Then
@@ -997,7 +996,7 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(components.last, "\"\(url)\"")
     }
     
-    func test_POSTRequestWithCookieCURLDescription() {
+    func test_POSTRequestWithCookieCURLDescription() async throws {
         let newClient = HTTPClient(baseURL: nil)
         newClient.headers = .init()
 
@@ -1017,7 +1016,7 @@ class RequestsTests: XCTestCase {
         }
         
 
-        let cURLDesc = req.cURLDescription(whenIn: newClient)
+        let cURLDesc = try await req.cURLDescription(whenIn: newClient)
         let components = cURLCommandComponents(from: cURLDesc)
 
         XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
@@ -1026,7 +1025,7 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(components[5..<6], ["-b"])
     }
     
-    public func test_urlSessionBasedOnTransferModeLarge() throws {
+    public func test_urlSessionBasedOnTransferModeLarge() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
         let req = HTTPRequest {
@@ -1034,11 +1033,11 @@ class RequestsTests: XCTestCase {
             $0.transferMode = .largeData
         }
         
-        let sessionRequest = try req.urlSessionTask(inClient: newClient)
+        let sessionRequest = try await req.urlSessionTask(inClient: newClient)
         XCTAssertNotNil(sessionRequest as? URLSessionDownloadTask)
     }
     
-    public func test_urlSessionBasedOnTransferModeDefault() throws {
+    public func test_urlSessionBasedOnTransferModeDefault() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
         let req = HTTPRequest {
@@ -1046,25 +1045,25 @@ class RequestsTests: XCTestCase {
             $0.transferMode = .default
         }
         
-        let sessionRequest = try req.urlSessionTask(inClient: newClient)
+        let sessionRequest = try await req.urlSessionTask(inClient: newClient)
         XCTAssertNotNil(sessionRequest as? URLSessionDataTask)
     }
     
-    func test_dataIsProperlyEncodedAndProperContentTypeIsSet() throws {
+    func test_dataIsProperlyEncodedAndProperContentTypeIsSet() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
-        let req = try HTTPRequest {
+        let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8081/initial")!
-            $0.body = try .json(TestParameters.default)
+            $0.body = .json(TestParameters.default)
         }
 
-        let request = try req.urlRequest(inClient: newClient)
+        let request = try await req.urlRequest(inClient: newClient)
 
         XCTAssertEqual(request.headers["Content-Type"], "application/json")
         XCTAssertEqual(request.httpBody?.asString, "{\"property\":\"property\"}")
     }
     
-    func test_queryIsBodyEncodedAndProperContentTypeIsSetForPOSTRequest() throws {
+    func test_queryIsBodyEncodedAndProperContentTypeIsSetForPOSTRequest() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
         let req = try HTTPRequest {
@@ -1072,14 +1071,14 @@ class RequestsTests: XCTestCase {
             $0.body = try .form(object: TestParameters.default)
         }
 
-        let request = try req.urlRequest(inClient: newClient)
+        let request = try await req.urlRequest(inClient: newClient)
 
         // Then
         XCTAssertEqual(request.headers["Content-Type"], "application/x-www-form-urlencoded; charset=utf-8")
         XCTAssertEqual(request.httpBody?.asString, "property=property")
     }
     
-    func test_encoderCanBeCustomized() throws {
+    func test_encoderCanBeCustomized() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
         let req = HTTPRequest {
@@ -1087,14 +1086,14 @@ class RequestsTests: XCTestCase {
             $0.add(parameters: ["bool": true], boolEncoding: .asLiterals)
         }
 
-        let request = try req.urlRequest(inClient: newClient)
+        let request = try await req.urlRequest(inClient: newClient)
         
         // Then
         let components = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)
         XCTAssertEqual(components?.percentEncodedQuery, "bool=true")
     }
 
-    func test_encoderCanEncodeDecimalWithHighPrecision() throws {
+    func test_encoderCanEncodeDecimalWithHighPrecision() async throws {
         let newClient = HTTPClient(baseURL: nil)
 
         let req = HTTPRequest {
@@ -1102,7 +1101,7 @@ class RequestsTests: XCTestCase {
             $0.add(parameters: ["a": 1.123456])
         }
 
-        let request = try req.urlRequest(inClient: newClient)
+        let request = try await req.urlRequest(inClient: newClient)
         
         XCTAssertTrue(request.url?.absoluteString.contains("a=1.123456") ?? false)
     }
@@ -1156,6 +1155,31 @@ class RequestsTests: XCTestCase {
                                   variables: ["postId": 1])
         let result = try await req.fetch(newClient)
         XCTAssertEqual(result.statusCode, .ok)
+    }
+    
+    // MARK: - Transformers
+    
+    func test_responseTransformers() async throws {
+        let newClient = HTTPClient(baseURL: nil)
+        
+        let bodyTransformer1 = HTTPResponseTransformer { response, _ in
+            var r = response
+            r.data = "replaced".data(using: .utf8)
+            return r
+        }
+        let bodyTransformer2 = HTTPResponseTransformer { response, _ in
+            var r = response
+            let d = response.data?.asString ?? ""
+            r.data = "\(d)_final".data(using: .utf8)
+            return r
+        }
+        newClient.responseTransformers = [bodyTransformer1, bodyTransformer2]
+        
+        let req = try HTTPRequest(method: .post, "https://jsonplaceholder.typicode.com/posts",
+                                  body: try .json(["title": "foo", "body": "bar", "userId": 1]))
+        req.timeout = 10
+        let result = try await req.fetch(newClient)
+        XCTAssertEqual(result.data?.asString, "replaced_final")
     }
     
 }
