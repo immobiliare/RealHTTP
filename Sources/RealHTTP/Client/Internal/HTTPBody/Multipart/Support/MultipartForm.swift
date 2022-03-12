@@ -18,7 +18,7 @@ import Foundation
 extension HTTPBody {
     
     /// Allows to create a multipart/form-data for uploads fo forms.
-    public actor MultipartForm: HTTPSerializableBody {
+    public class MultipartForm: HTTPSerializableBody {
         
         // MARK: - Public Properties
         
@@ -166,7 +166,7 @@ extension HTTPBody {
             }
             
             return (data, .init([
-                .contentType :"\(HTTPContentType.formDataMultipart.rawValue); boundary=\(boundaryID)"
+                .contentType : contentType
             ]))
         }
         

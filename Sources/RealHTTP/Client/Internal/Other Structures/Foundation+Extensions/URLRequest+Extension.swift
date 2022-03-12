@@ -94,11 +94,22 @@ extension URLRequest {
             headers.mergeWith(result.additionalHeaders)
         } else {
             // Serialize the body and set it.
-            let result = try await body.content.serializeData()
-            httpBody = result.data
+            let result = try await bodySerializeTask(body).value
+            httpBody = result.0
             // Add any additional header received after the serialization.
-            headers.mergeWith(result.additionalHeaders)
+            headers.mergeWith(result.1)
         }
+    }
+    
+    /// Serialize in another task.
+    ///
+    /// - Parameter body: body to serialize.
+    /// - Returns: Task
+    private func bodySerializeTask(_ body: HTTPBody) -> Task<(Data,HTTPHeaders?), Error> {
+        Task<(Data, HTTPHeaders?), Error>.init(priority: .background, operation: {
+            let result = try await body.content.serializeData()
+            return result
+        })
     }
     
     /// Request's header fields in forms of `HTTPHeaders` object.

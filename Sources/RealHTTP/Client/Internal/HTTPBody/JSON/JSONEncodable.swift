@@ -19,7 +19,7 @@ extension HTTPBody {
     
     /// This represent an `Encodable` conform object which can be transformed
     /// to a JSON string and sent over the network.
-    public actor JSONEncodable: HTTPSerializableBody {
+    public class JSONEncodable: HTTPSerializableBody {
         
         // MARK: - Public Properties
         

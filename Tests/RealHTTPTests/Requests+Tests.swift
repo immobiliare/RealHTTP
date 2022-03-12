@@ -1182,6 +1182,15 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(result.data?.asString, "replaced_final")
     }
     
+    // MARK: - Multipart Form Data Tests
+    
+    func test_multipartGoodMimeType() async throws {
+        let form = HTTPBody.MultipartForm()
+        try form.add(fileURL: url(forResource: "mac_icon", withExtension: "jpg"), name: "file")
+        
+        
+    }
+    
 }
 
 public struct UserCredentials: Codable {

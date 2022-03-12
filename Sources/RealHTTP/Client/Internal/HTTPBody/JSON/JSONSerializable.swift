@@ -19,7 +19,7 @@ extension HTTPBody {
     
     /// Encapsulate an object which can be serialized using
     /// the system's `JSONSerialization` class.
-    public actor JSONSerializable: HTTPSerializableBody {
+    public class JSONSerializable: HTTPSerializableBody {
         
         // MARK: - Public Properties
         
