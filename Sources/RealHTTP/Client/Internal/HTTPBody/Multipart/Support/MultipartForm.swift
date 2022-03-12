@@ -26,6 +26,7 @@ extension HTTPBody {
         public var contentType: String {
             "multipart/form-data; boundary=\(boundary.id)"
         }
+        
         /// The length of multipart form.
         public var contentLength: UInt64 {
             formItems.reduce(0) {
@@ -142,7 +143,6 @@ extension HTTPBody {
         /// - Returns: Data
         public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
             var data = Data()
-            var contentLength: UInt64 = 0
 
             if let preamble = self.preamble?.data(using: .utf8) {
                 data.append(preamble + Boundary.crlfData)
@@ -163,7 +163,6 @@ extension HTTPBody {
                     
                     data.append(Boundary.crlfData)
                     let streamSection = try formItem.encodedData()
-                    contentLength += UInt64(streamSection.count)
                     data.append(streamSection + Boundary.crlfData)
                 }
                 
