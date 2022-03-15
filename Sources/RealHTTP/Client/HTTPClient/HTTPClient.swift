@@ -49,6 +49,9 @@ public class HTTPClient {
     /// Headers which are automatically attached to each request.
     public var headers = HTTPHeaders()
     
+    /// A list of query params values which will be appended to each request.
+    public var queryParams = [URLQueryItem]()
+    
     /// Timeout interval for requests, expressed in seconds.
     /// Defaults value is `HTTPRequest.DefaultTimeout` but each http request may use it's value.
     public var timeout: TimeInterval = HTTPRequest.DefaultTimeout
