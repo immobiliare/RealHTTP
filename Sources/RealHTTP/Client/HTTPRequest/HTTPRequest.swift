@@ -531,6 +531,11 @@ extension URLComponents {
         newComp.host = baseURL.host
         newComp.port = baseURL.port
         newComp.path = baseURL.path + (newComp.path.first == "/" ? "" : "/") + newComp.path
+        
+        if let commonQueryParams = client?.queryParams, commonQueryParams.isEmpty == false {
+            newComp.queryItems?.append(contentsOf: commonQueryParams)
+        }
+        
         return newComp.url
     }
     
