@@ -16,6 +16,19 @@
 import Foundation
 
 extension HTTPStubRequest {
+    
+    // MARK: - Dynamic HTTPStubResponse
+    
+    /// Create a dynamic stub to return a dynamic response based upon the request.
+    ///
+    /// - Parameters:
+    ///   - method: the http method which trigger this stubbed response.
+    ///   - provider: data provider callback.
+    /// - Returns: Self
+    public func stub(for method: HTTPMethod, responseProvider provider: @escaping HTTPDynamicStubResponse.DataCallbackProvider) -> Self {
+        responses[method] = HTTPDynamicStubResponse(provider)
+        return self
+    }
         
     // MARK: - Builder
     

@@ -28,7 +28,7 @@ public class HTTPStubRequest: Equatable {
     public var matchers = [HTTPStubMatcher]()
         
     /// Response to produce for each http method which match this request.
-    public var responses = [HTTPMethod: HTTPStubResponse]()
+    public var responses = [HTTPMethod: HTTPStubResponseProvider]()
         
     // MARK: - Initialization
     
@@ -52,6 +52,33 @@ public class HTTPStubRequest: Equatable {
         }
         
         return true
+    }
+    
+}
+
+// MARK: - HTTPStubResponseProvider
+
+/// The following protocol describe the possible output for a stub request.
+/// It allows to provide both static `HTTPStubResponse` objects or dynamic based upon the received request.
+public protocol HTTPStubResponseProvider {
+    
+    /// Return the response for a particular stub request matched.
+    ///
+    /// - Parameters:
+    ///   - urlRequest: url request received.
+    ///   - stubRequest: stub request matched.
+    /// - Returns: HTTPStubResponse
+    func response(forURLRequest urlRequest: URLRequest, matchedStub stubRequest: HTTPStubRequest) -> HTTPStubResponse?
+    
+}
+
+// MARK: - HTTPStubResponse Conformance to HTTPStubResponseProvider
+
+extension HTTPStubResponse: HTTPStubResponseProvider {
+    
+    public func response(forURLRequest urlRequest: URLRequest, matchedStub stubRequest: HTTPStubRequest) -> HTTPStubResponse? {
+        // it returns the object itself.
+        self
     }
     
 }
