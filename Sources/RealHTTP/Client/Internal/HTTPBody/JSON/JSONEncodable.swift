@@ -56,6 +56,15 @@ extension HTTPBody {
     
 }
 
+extension HTTPBody {
+    
+    /// Return content as `JSONEncodable`.
+    public var asJSONEncodable: JSONEncodable? {
+        content as? JSONEncodable
+    }
+    
+}
+
 // MARK: - AnyEncodable
 
 /// This is used only to encapsulate an Encodable object with type-erasure.

@@ -74,3 +74,18 @@ extension HTTPBody {
     }
     
 }
+
+
+extension HTTPBody {
+    
+    /// Return content as Data.
+    public var asData: Data? {
+        content as? Data
+    }
+    
+    /// Return content as String.
+    public var asString: String? {
+        content as? String
+    }
+    
+}

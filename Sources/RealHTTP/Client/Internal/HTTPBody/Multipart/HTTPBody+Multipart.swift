@@ -38,3 +38,12 @@ extension HTTPBody {
     }
     
 }
+
+extension HTTPBody {
+    
+    /// Return content as `MultipartForm`.
+    public var asMultipartForm: MultipartForm? {
+        content as? MultipartForm
+    }
+    
+}

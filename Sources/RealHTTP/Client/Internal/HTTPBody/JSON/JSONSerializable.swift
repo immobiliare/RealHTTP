@@ -47,3 +47,12 @@ extension HTTPBody {
     }
     
 }
+
+extension HTTPBody {
+    
+    /// Return content as `JSONSerialization` object.
+    public var asJSONSerializable: JSONSerializable? {
+        content as? JSONSerializable
+    }
+    
+}

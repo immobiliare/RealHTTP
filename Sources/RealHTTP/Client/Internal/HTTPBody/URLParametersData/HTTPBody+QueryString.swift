@@ -42,6 +42,15 @@ extension HTTPBody {
     
 }
 
+extension HTTPBody {
+    
+    /// Return body as `WWWFormURLEncodedBody`.
+    public var asFormURLEncoded: WWWFormURLEncodedBody? {
+        content as? WWWFormURLEncodedBody
+    }
+    
+}
+
 // MARK: - WWWFormURLEncoded
 
 extension HTTPBody {
