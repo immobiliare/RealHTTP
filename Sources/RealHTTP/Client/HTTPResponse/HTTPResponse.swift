@@ -106,7 +106,11 @@ public struct HTTPResponse: CustomStringConvertible {
     ///   - errorType: error type.
     ///   - error: optional error instance received.
     internal init(errorType: HTTPError.ErrorCategory = .internal, error: Error?) {
-        self.error = HTTPError(errorType, error: error)
+        if let httpError = error as? HTTPError {
+            self.error = httpError
+        } else {
+            self.error = HTTPError(errorType, error: error)
+        }
         self.innerData = nil
         self.metrics = nil
         self.urlResponse = nil

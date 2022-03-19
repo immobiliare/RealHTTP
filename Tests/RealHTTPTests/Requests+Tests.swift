@@ -581,6 +581,92 @@ class RequestsTests: XCTestCase {
         XCTAssert(response.data?.asString == "test", "Expected response not satisfied")
     }
     
+    func test_altRequestValidator() async throws {
+        let successBodyPrefix = "SUCCESS_"
+        
+        // Validate success at first attempt
+        let (r1Request, r1Response) = try await altRequestValidator(maxRetriesForOriginCall: 3, succedOnRetry: 1, responsePrefix: successBodyPrefix)
+        XCTAssertEqual(r1Response.data?.asString, "\(successBodyPrefix)1", "Failed to execute a success with no retry")
+        XCTAssertEqual(r1Request.currentRetry, 1)
+        XCTAssertNil(r1Response.error)
+
+      
+        // Validate the success at second attempt
+        let (r2Request, r2Response) = try await altRequestValidator(maxRetriesForOriginCall: 3, succedOnRetry: 2, responsePrefix: successBodyPrefix)
+        XCTAssertEqual(r2Response.data?.asString, "\(successBodyPrefix)2", "Failed to execute a success retry")
+        XCTAssertEqual(r2Request.currentRetry, 2)
+        XCTAssertNil(r2Response.error)
+
+        // Validate the failure at third attempt
+        let (r3Request, r3Response) = try await altRequestValidator(maxRetriesForOriginCall: 3, succedOnRetry: 4, responsePrefix: successBodyPrefix)
+        XCTAssertEqual(r3Request.currentRetry, 3, "Failed to retry the expected number of times")
+        XCTAssertNotNil(r3Response.error)
+    }
+    
+    private func altRequestValidator(maxRetriesForOriginCall: Int, succedOnRetry: Int, responsePrefix: String) async throws -> (request: HTTPRequest, response: HTTPResponse) {
+        setupStubber(echo: false)
+
+        var retryMade = 0
+        
+        // Prepare the stub responses
+        
+        let stubOriginRequest = HTTPStubRequest().match(urlRegex: "/someAuthCall").stub(for: .get, responseProvider: { request, stubRequest in
+            let response = HTTPStubResponse()
+
+            if succedOnRetry == retryMade {
+                // respond ok only when succeded is triggered...
+                response.body = "\(responsePrefix)\(retryMade)"
+                response.statusCode = .ok
+            } else {
+                // ... otherwise we'll deny all
+                response.statusCode = .unauthorized
+            }
+            
+            retryMade += 1
+            return response
+        })
+        HTTPStubber.shared.add(stub: stubOriginRequest)
+        
+        let stubRefreshToken = HTTPStubRequest().match(urlRegex: "/refreshToken").stub(for: .get, responseProvider: { request, stubRequest in
+            let response = HTTPStubResponse()
+            response.statusCode = .ok
+            response.body = "NEW_TOKEN"
+            return response
+        })
+        HTTPStubber.shared.add(stub: stubRefreshToken)
+
+        // Prepare the validator
+        
+        let newClient = HTTPClient(baseURL: nil)
+        
+        let altValidator = HTTPAltRequestValidator(statusCodes: [.unauthorized]) { request, response in
+            HTTPRequest {
+                $0.method = .get
+                $0.url = URL(string: "http://127.0.0.1:8080/refreshToken")!
+            }
+        } onReceiveAltResponse: { request, response in
+            let newToken = response.data?.asString ?? "NONE"
+            newClient.headers.set("X-API-TOKEN", newToken)
+        }
+        
+        newClient.validators.insert(altValidator, at: 0)
+
+        
+        // Prepare the request
+        let originRequest = HTTPRequest {
+            $0.method = .get
+            $0.timeout = 60
+            $0.maxRetries = maxRetriesForOriginCall
+            $0.url = URL(string: "http://127.0.0.1:8080/someAuthCall")!
+        }
+        
+        let response = try await newClient.fetch(originRequest)
+        
+        stopStubber()
+        
+        return (originRequest, response)
+    }
+    
     func test_retryMechanismAfterAltRequest() async throws {
         setupStubber(echo: true)
         defer { stopStubber() }
@@ -617,6 +703,7 @@ class RequestsTests: XCTestCase {
         let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8080")!
             $0.method = .post
+            $0.maxRetries = 3
             $0.body = .string("doSomething")
         }
         
@@ -636,9 +723,11 @@ class RequestsTests: XCTestCase {
         
         // Network calls
         let req = HTTPRequest {
+            $0.maxRetries = 3
             $0.url = URL(string: "http://127.0.0.1:8080/execute")!
         }
         let loginCall = HTTPRequest {
+            $0.maxRetries = 3
             $0.url = URL(string: "http://127.0.0.1:8080/login")!
         }
         

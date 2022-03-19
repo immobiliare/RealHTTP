@@ -94,25 +94,32 @@ internal class HTTPDataLoader: NSObject,
             /// It evaluates each validator in order and stops to the first one who send a non `.success`
             /// response. Validator return the action to perform in case of failure.
             let validationAction = self.client!.validate(response: response, forRequest: request)
+
+            if request.isAltRequest {
+                // request pass validator but ignore it's response. you can retry an alt request.
+                return response
+            }
+            
             switch validationAction {
             case .failChain(let error):
                 // Fail network operation with given error object.
                 return HTTPResponse(error: error)
                 
             case .retry(let strategy):
+                
                 // Perform a retry attempt using specified strategy.
-                if request.isAltRequest || request.currentRetry > request.maxRetries {
+                guard request.currentRetry < request.maxRetries else {
                     // retry strategy cannot be executed if call is an alternate request
                     // created as retry strategy, otherwise we'll get an infinite loop.
                     // In this case we want just return the response itself.
                     return response
-                } else {
-                    // Perform the retry strategy to apply and return the result
-                    let retryResponse = try await performRetryStrategy(strategy,
-                                                                       forRequest: request, task: sessionTask,
-                                                                       withResponse: response)
-                    return retryResponse
                 }
+                
+                // Perform the retry strategy to apply and return the result
+                let retryResponse = try await performRetryStrategy(strategy,
+                                                                   forRequest: request, task: sessionTask,
+                                                                   withResponse: response)
+                return retryResponse
                 
             case .nextValidator:
                 // Everything goes fine, we want to return the response of the call.
@@ -151,13 +158,17 @@ internal class HTTPDataLoader: NSObject,
             try await catcher?(altRequest, altRequestResponse)
             // wait before retry the original call, if set.
             try await Task.sleep(seconds: delayToRetryMainCall)
+       
             
-            return response
+            // try again the same request and increment the attempts counter
+            let originalRequestResponse = try await self.fetch(request)
+            return originalRequestResponse
             
         default:
             // Retry mechanism is made with a specified interval.
             // wait a certain amount of time depending by the strategy set...
             try await Task.sleep(seconds: strategy.retryInterval(forRequest: request))
+            
             // try again the same request and increment the attempts counter
             request.currentRetry += 1
             let response = try await self.fetch(request)
