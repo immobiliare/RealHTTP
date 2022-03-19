@@ -61,7 +61,7 @@ extension HTTPBody {
         // MARK: - Public Properties
         
         /// Parameters to set with url encoded body.
-        public let parameters: URLParametersData
+        public let data: URLParametersData
         
         // MARK: - Initialziation
         
@@ -69,13 +69,45 @@ extension HTTPBody {
         ///
         /// - Parameter parameters: parameters.
         public init(_ parameters: HTTPRequestParametersDict) {
-            self.parameters = URLParametersData(parameters)
+            self.data = URLParametersData(parameters)
+        }
+        
+        /// Add parameter to the form url encoded.
+        /// If the value is `nil` no action is taken.
+        ///
+        /// - Parameters:
+        ///   - value: value to add.
+        ///   - key: key to use.
+        public func set(value: Any?, forKey key: String) {
+            guard let value = value else {
+                return
+            }
+
+            data.parameters?[key] = value
+        }
+        
+        /// Remove value for a given key and return the removed value, if any.
+        ///
+        /// - Parameter key: key.
+        /// - Returns: `T?`
+        @discardableResult
+        public func removeValueForKey<T>(_ key: String) -> T? {
+            data.parameters?.removeValue(forKey: key) as? T
+        }
+        
+        /// Remove value for a given key and return the removed value, if any.
+        ///
+        /// - Parameter key: key.
+        /// - Returns: `Any`
+        @discardableResult
+        public func removeValueForKey(_ key: String) -> Any? {
+            data.parameters?.removeValue(forKey: key)
         }
         
         // MARK: - HTTPSerializableBody Conformance
         
         public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
-            try await parameters.serializeData()
+            try await data.serializeData()
         }
         
     }
