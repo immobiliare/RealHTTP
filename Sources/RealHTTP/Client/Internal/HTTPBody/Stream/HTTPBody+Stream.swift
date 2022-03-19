@@ -32,3 +32,12 @@ extension HTTPBody {
     }
     
 }
+
+extension HTTPBody {
+ 
+    /// Return the body as `StreamContent`.
+    public var asStream: StreamContent? {
+        content as? StreamContent
+    }
+    
+}
