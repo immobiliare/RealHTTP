@@ -43,7 +43,7 @@ extension HTTPBody {
         ///                   The default behaviour is `asNumbers` where `true=1`, `false=0`.
         ///   - arrayEncoding: Specify how array parameter's value are encoded into the request.
         ///                    By default the `withBrackets` option is used and array are encoded as `key[]=value`.
-        internal init(_ parameters: HTTPRequestParametersDict?,
+        public init(_ parameters: HTTPRequestParametersDict?,
                       boolEncoding: BoolEncodingStyle = .asNumbers,
                       arrayEncoding: ArrayEncodingStyle = .withBrackets) {
             self.parameters = parameters
