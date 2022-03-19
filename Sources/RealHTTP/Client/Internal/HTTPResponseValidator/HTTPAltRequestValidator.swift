@@ -37,10 +37,10 @@ open class HTTPAltRequestValidator: HTTPValidator {
     open var retryDelay: TimeInterval = 0
     
     /// Number of alternate calls to execute.
-    /// By default is set to 1.
+    /// By default is set to `nil`.
     /// It means the first alternate call which fails on a certain
     /// request will fails any other request in the same session.
-    open var maxAltRequests = 1
+    open var maxAltRequests: Int? = nil
     
     // MARK: - Public Properties (Observable Events)
     
@@ -85,7 +85,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
     
     /// Reset the state of alt requests executed.
     public func reset() {
-        numberOfAltRequestExecuted = 0
+        //numberOfAltRequestExecuted = 0
     }
     
     // MARK: - Protocol Conformance
@@ -96,7 +96,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
             return .nextValidator
         }
                         
-        if numberOfAltRequestExecuted > maxAltRequests {
+        if let maxAltRequests = maxAltRequests, numberOfAltRequestExecuted >= maxAltRequests {
             // If we reached the maximum number of alternate calls to execute we want to cancel any other attempt.
             return .failChain(HTTPError(.maxRetryAttemptsReached))
         }

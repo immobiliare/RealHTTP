@@ -17,7 +17,7 @@ import Foundation
 
 /// `HTTPError` represent an object which wrap all the infos related to an
 /// error occurred inside the library itself.
-public struct HTTPError: LocalizedError {
+public struct HTTPError: LocalizedError, CustomStringConvertible {
     
     /// HTTP Status Code if available.
     public let statusCode: HTTPStatusCode
@@ -74,6 +74,17 @@ public struct HTTPError: LocalizedError {
     /// Return `true` if error is about a missing authorization.
     public var isNotAuthorized: Bool {
         statusCode == .unauthorized
+    }
+    
+    public var description: String {
+        return """
+            Error {
+                HTTP Code:  \(statusCode)
+                Category:   \(category)
+                Cocoa Code: \(cocoaCode ?? 0)
+                Message:    \(error?.localizedDescription ?? "-")
+            }
+        """
     }
     
 }
