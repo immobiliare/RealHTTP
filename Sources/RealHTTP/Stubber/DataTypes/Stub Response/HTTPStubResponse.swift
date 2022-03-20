@@ -39,6 +39,11 @@ open class HTTPStubResponse {
     /// You can define a delay to return the reponse.
     /// If `nil` no delay is applied.
     open var responseDelay: TimeInterval? = nil
+
+    /// public initializer to make it available from outside
+    public init() {
+
+    }
     
     // MARK: - Internal Functions
     
