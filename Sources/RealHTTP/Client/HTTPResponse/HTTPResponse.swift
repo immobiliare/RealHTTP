@@ -66,7 +66,7 @@ public struct HTTPResponse: CustomStringConvertible {
     public private(set) var dataFileURL: URL?
     
     /// Error parsed.
-    public let error: HTTPError?
+    public internal(set) var error: HTTPError?
     
     /// Return `true` if call ended with error.
     public var isError: Bool {
@@ -106,16 +106,12 @@ public struct HTTPResponse: CustomStringConvertible {
     ///   - errorType: error type.
     ///   - error: optional error instance received.
     internal init(errorType: HTTPError.ErrorCategory = .internal, error: Error?) {
-        if let httpError = error as? HTTPError {
-            self.error = httpError
-        } else {
-            self.error = HTTPError(errorType, error: error)
-        }
         self.innerData = nil
         self.metrics = nil
         self.urlResponse = nil
         self.dataFileURL = nil
         self.statusCode = .none
+        setError(category: errorType, error)
     }
     
     /// Initialize with response from data loader.
@@ -131,7 +127,6 @@ public struct HTTPResponse: CustomStringConvertible {
         self.request = response.request
         self.urlRequests = response.urlRequests
     }
-    
     
     // MARK: - Decoding
     
@@ -163,6 +158,21 @@ public struct HTTPResponse: CustomStringConvertible {
 
         let object = try JSONSerialization.jsonObject(with: data, options: options)
         return object as? T
+    }
+    
+    // MARK: - Internal Functions
+        
+    /// Attach an error to the response by modifing the original error instance, if any.
+    ///
+    /// - Parameters:
+    ///   - category: error category.
+    ///   - error: error instance.
+    internal mutating func setError(category: HTTPError.ErrorCategory, _ error: Error?) {
+        if let httpError = error as? HTTPError {
+            self.error = httpError
+        } else {
+            self.error = HTTPError(category, error: error)
+        }
     }
         
 }

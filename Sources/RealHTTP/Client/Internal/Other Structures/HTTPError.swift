@@ -25,11 +25,11 @@ public struct HTTPError: LocalizedError, CustomStringConvertible {
     /// Cocoa related code.
     public var cocoaCode: Int?
     
-    /// Long description of the error.
+    /// Underlying error.
     public let error: Error?
     
     /// Category of the error.
-    public let category: ErrorCategory
+    public internal(set) var category: ErrorCategory
     
     /// Additional user info.
     public var userInfo: [String: Any]?
@@ -77,14 +77,7 @@ public struct HTTPError: LocalizedError, CustomStringConvertible {
     }
     
     public var description: String {
-        return """
-            Error {
-                HTTP Code:  \(statusCode)
-                Category:   \(category)
-                Cocoa Code: \(cocoaCode ?? 0)
-                Message:    \(error?.localizedDescription ?? "-")
-            }
-        """
+        "HTTPError {httpCode=\(statusCode), category=\(category), cocoa=\(cocoaCode ?? 0), description='\(errorDescription ?? "")'}"
     }
     
 }
@@ -106,10 +99,10 @@ public extension HTTPError {
     /// - `objectDecodeFailed`: object decoding failed
     /// - `emptyResponse`: empty response received from server
     /// - `maxRetryAttemptsReached`: the maximum number of retries for request has been reached
-    /// - `maxRetryAltRequestReached`: the maximum number of alternate request for this session has been reached
     /// - `sessionError`: error related to the used session instances (may be a systemic error or it was invalidated)
     /// - `other`: any internal error, you can use it as your own handler.
     /// - `cancelled`: cancelled by user.
+    /// - `validatorFailure`: failure returned by a validator set.
     /// - `internal`: internal library error occurred.
     enum ErrorCategory: Int {
         case invalidURL
@@ -124,12 +117,12 @@ public extension HTTPError {
         case failedBuildingURLRequest
         case objectDecodeFailed
         case emptyResponse
-        case maxRetryAttemptsReached
-        case maxRetryAltRequestReached
+        case retryAttemptsReached
         case sessionError
         case other
         case cancelled
         case timeout
+        case validatorFailure
         case `internal`
     }
     

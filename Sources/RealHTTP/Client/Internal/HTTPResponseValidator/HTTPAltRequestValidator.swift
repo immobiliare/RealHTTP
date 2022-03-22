@@ -98,7 +98,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
                         
         if let maxAltRequests = maxAltRequests, numberOfAltRequestExecuted >= maxAltRequests {
             // If we reached the maximum number of alternate calls to execute we want to cancel any other attempt.
-            return .failChain(HTTPError(.maxRetryAttemptsReached))
+            return .failChain(HTTPError(.retryAttemptsReached))
         }
 
         // if no retry operation is provided we'll skip and mark the validation as passed
