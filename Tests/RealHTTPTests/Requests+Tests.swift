@@ -581,6 +581,105 @@ class RequestsTests: XCTestCase {
         XCTAssert(response.data?.asString == "test", "Expected response not satisfied")
     }
     
+    
+    /// The following test is used to validate the output error provided by a validator when it trigger
+    /// the chain failure. We want to check if the error is reported correctly as it
+    /// <https://github.com/immobiliare/RealHTTP/issues/34>
+    func test_checkValidatorCustomErrorThrowing() async throws {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+
+        // Prepare client and validator
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.validators.insert(CustomValidator(callback: { response, request in
+            let error = MyError(title: "My Custom Message")
+            return .failChain(error)
+        }), at: 0)
+        
+        // Add stubber
+        let stub = HTTPStubRequest().match(urlRegex: "/initial").stub(for: .get) { urlRequest, _ in
+            let response = HTTPStubResponse()
+            response.body = "ciao"
+            return response
+        }
+        HTTPStubber.shared.add(stub: stub)
+        
+        // Setup request
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = .string("test")
+        }
+        
+        let response = try await req.fetch(newClient)
+        let customUnderlyingError = response.error?.error as? MyError
+
+        XCTAssertNotNil(customUnderlyingError, "Failed to receive the correct error")
+        XCTAssertEqual(response.error?.category, .validatorFailure, "Failed to intercept the correct error category")
+    }
+    
+    /// The following test check different error types returned by a request.
+    func test_checkNetworkStatusCodes() async throws {
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080/req")!
+        }
+        
+        let someErrors: [HTTPStatusCode] = [
+            .tooManyRequests,
+            .badGateway,
+            .unauthorized,
+            .forbidden,
+            .gatewayTimeout
+        ]
+        
+        for error in someErrors {
+            let response = try await generateResponseForRequest(req) { urlRequest, stubRequest in
+                let response = HTTPStubResponse()
+                response.statusCode = error
+                return response
+            }
+            XCTAssertEqual(response.error?.statusCode, error)
+        }
+    }
+    
+    func test_maxAttemptsNetworkErrorThrow() async throws {
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080/req")!
+            $0.maxRetries = 3
+        }
+        
+        let defaultValidator = HTTPDefaultValidator()
+        defaultValidator.retriableHTTPStatusCodes = [.gatewayTimeout: 0]
+       
+        let response = try await generateResponseForRequest(req, validators: [defaultValidator]) { urlRequest, stubRequest in
+            let response = HTTPStubResponse()
+            response.statusCode = .gatewayTimeout
+            return response
+        }
+        
+        XCTAssertEqual(response.error?.category, .retryAttemptsReached)
+    }
+    
+    func generateResponseForRequest(_ request: HTTPRequest, validators: [HTTPValidator] = [],
+                                    stubResponse callback: @escaping ((URLRequest, HTTPStubRequest) -> HTTPStubResponse)) async throws -> HTTPResponse {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+        
+        let regex = String(request.path.dropFirst())
+        print(regex)
+        let stub = HTTPStubRequest().match(urlRegex: regex).stub(for: .get, responseProvider: callback)
+        HTTPStubber.shared.add(stub: stub)
+        
+        // Prepare client
+        let newClient = HTTPClient(baseURL: nil)
+        if !validators.isEmpty {
+            newClient.validators = validators
+        }
+        
+        let response = try await request.fetch(newClient)
+        return response
+    }
+    
     func test_altRequestValidator() async throws {
         let successBodyPrefix = "SUCCESS_"
         
@@ -804,6 +903,8 @@ class RequestsTests: XCTestCase {
     }
     
     func test_POSTRequestWithBase64EncodedImages() async throws {
+        setupStubber(echo: true)
+        
         // Given
         let pngBase64EncodedString: String = {
             let fileURL = url(forResource: "test_rawdata", withExtension: "png")
@@ -819,10 +920,11 @@ class RequestsTests: XCTestCase {
             return data.base64EncodedString(options: .lineLength64Characters)
         }()
 
-        let parameters = ["email": "user@realhttp.com",
-                          "png_image": pngBase64EncodedString,
-                          "jpeg_image": jpegBase64EncodedString]
-
+        let parameters = [
+            "email": "user@realhttp.com",
+            "png_image": pngBase64EncodedString,
+            "jpeg_image": jpegBase64EncodedString
+        ]
 
         let req = HTTPRequest {
             $0.url = URL(string: "http://127.0.0.1:8080/execute")!
@@ -879,6 +981,7 @@ class RequestsTests: XCTestCase {
         let req = HTTPRequest {
             $0.url = URL(string: "https://jsonplaceholder.typicode.com/todos/1")!
             $0.method = .get
+            $0.timeout = 20
         }
         
         req.fetchPublisher(in: newClient).sink { _ in
@@ -888,7 +991,7 @@ class RequestsTests: XCTestCase {
             exp.fulfill()
         }.store(in: &observerBag)
 
-        wait(for: [exp], timeout: 10)
+        wait(for: [exp], timeout: 20)
     }
 
     func test_urlRequestModifierInterceptor() async throws {
@@ -1593,6 +1696,32 @@ fileprivate extension Dictionary {
         }
         
         return value as? T
+    }
+    
+}
+
+// MARK: - ErrorMessageValidator
+
+fileprivate class CustomValidator: HTTPValidator {
+    public typealias Callback = ((HTTPResponse, HTTPRequest) -> HTTPResponseValidatorResult)
+    
+    public var callback: Callback
+    
+    public init(callback: @escaping Callback) {
+        self.callback = callback
+    }
+
+    public func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
+        callback(response, request)
+    }
+    
+}
+
+fileprivate struct MyError: Error {
+    public let title: String
+
+    public init(title: String) {
+        self.title = title
     }
     
 }
