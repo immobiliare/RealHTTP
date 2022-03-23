@@ -38,7 +38,7 @@ class HeadersTests: XCTestCase {
         
         HTTPStubber.shared.enable()
         
-        let echo = HTTPStubRequest().match(urlRegex: "*").stubEcho()
+        let echo = try! HTTPStubRequest().match(urlRegex: "(?s).*").stubEcho()
         HTTPStubber.shared.add(stub: echo)
     }
     
