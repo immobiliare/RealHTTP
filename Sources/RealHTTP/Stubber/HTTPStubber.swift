@@ -138,11 +138,8 @@ public class HTTPStubber {
     ///   - options: regular expression matching options.
     /// - Returns: Self
     @discardableResult
-    public func add(ignoreURLRegex regex: String, options: NSRegularExpression.Options = []) -> Self {
-        guard let matcher = HTTPStubRegExMatcher(regex: regex, options: options, in: .url) else {
-            return self
-        }
-        
+    public func add(ignoreURLRegex regex: String, options: NSRegularExpression.Options = []) throws -> Self {
+        let matcher = try HTTPStubRegExMatcher(regex: regex, options: options, in: .url)
         return add(ignore: HTTPStubIgnoreRule(matcher))
     }
     
