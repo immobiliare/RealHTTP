@@ -66,7 +66,7 @@ public struct HTTPResponse: CustomStringConvertible {
     public private(set) var dataFileURL: URL?
     
     /// Error parsed.
-    public let error: HTTPError?
+    public internal(set) var error: HTTPError?
     
     /// Return `true` if call ended with error.
     public var isError: Bool {
@@ -106,16 +106,12 @@ public struct HTTPResponse: CustomStringConvertible {
     ///   - errorType: error type.
     ///   - error: optional error instance received.
     internal init(errorType: HTTPError.ErrorCategory = .internal, error: Error?) {
-        if let httpError = error as? HTTPError {
-            self.error = httpError
-        } else {
-            self.error = HTTPError(errorType, error: error)
-        }
         self.innerData = nil
         self.metrics = nil
         self.urlResponse = nil
         self.dataFileURL = nil
         self.statusCode = .none
+        setError(category: errorType, error)
     }
     
     /// Initialize with response from data loader.
@@ -132,13 +128,16 @@ public struct HTTPResponse: CustomStringConvertible {
         self.urlRequests = response.urlRequests
     }
     
-    
     // MARK: - Decoding
     
     /// Decode a raw response using `Decodable` object type.
     ///
     /// - Returns: `T` or `nil` if no response has been received.
     public func decode<T: Decodable>(_ decodable: T.Type, decoder: JSONDecoder = .init()) throws -> T {
+        if let error = error {
+            throw error // dispatch any error coming from fetch outside the decode.
+        }
+        
         guard let data = data else {
             throw HTTPError.init(.emptyResponse)
         }
@@ -159,10 +158,30 @@ public struct HTTPResponse: CustomStringConvertible {
     /// - Returns: T?
     public func decodeJSONData<T>(_ decodable: T.Type,
                                   options: JSONSerialization.ReadingOptions = []) throws -> T? {
+        
+        if let error = error {
+            throw error // dispatch any error coming from fetch outside the decode.
+        }
+        
         guard let data = data else { return nil }
 
         let object = try JSONSerialization.jsonObject(with: data, options: options)
         return object as? T
+    }
+    
+    // MARK: - Internal Functions
+        
+    /// Attach an error to the response by modifing the original error instance, if any.
+    ///
+    /// - Parameters:
+    ///   - category: error category.
+    ///   - error: error instance.
+    internal mutating func setError(category: HTTPError.ErrorCategory, _ error: Error?) {
+        if let httpError = error as? HTTPError {
+            self.error = httpError
+        } else {
+            self.error = HTTPError(category, error: error)
+        }
     }
         
 }

@@ -78,7 +78,7 @@ internal class HTTPDataLoader: NSObject,
             box.task?.cancel()
         }, operation: {
             // Conversion of the callback system to the async/await version.
-            let response: HTTPResponse = try await withUnsafeThrowingContinuation({ continuation in
+            var response: HTTPResponse = try await withUnsafeThrowingContinuation({ continuation in
                 box.task = self.fetch(request, task: sessionTask, completion: { [weak self] response in
                     do { // Apply optional transformers.
                         let tResponse = try self?.applyResponseTransformers(to: response, request: request) ?? response
@@ -102,8 +102,10 @@ internal class HTTPDataLoader: NSObject,
             
             switch validationAction {
             case .failChain(let error):
-                // Fail network operation with given error object.
-                return HTTPResponse(error: error)
+                // Fail operation due to validation trigger. We want to attach this message
+                // to the original response received.
+                response.setError(category: .validatorFailure, error)
+                return response
                 
             case .retry(let strategy):
                 
@@ -112,6 +114,7 @@ internal class HTTPDataLoader: NSObject,
                     // retry strategy cannot be executed if call is an alternate request
                     // created as retry strategy, otherwise we'll get an infinite loop.
                     // In this case we want just return the response itself.
+                    response.error?.category = .retryAttemptsReached
                     return response
                 }
                 
