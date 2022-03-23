@@ -1492,6 +1492,69 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(request.body, expectedData, "Data should match expected data")
     }
     
+    func test_queryParamsFromClientAndRequest() async throws {
+        // test with full absolute url
+        try await queryParametersRequestForURL(requestFullURL: URL(string: "https://somedomain.com/path"),
+                                               path: nil,
+                                               baseClientURL: nil,
+                                               expBaseURL: "https://somedomain.com/path?")
+        // test with relative composed url
+        try await queryParametersRequestForURL(requestFullURL: nil,
+                                               path: "path",
+                                               baseClientURL: URL(string: "https://somedomain.com"),
+                                               expBaseURL: "https://somedomain.com/path?")
+    }
+    
+    func queryParametersRequestForURL(requestFullURL: URL?, path: String?, baseClientURL: URL?, expBaseURL: String) async throws {
+        let clientQueryItems = [
+            URLQueryItem(name: "client_query_param_1", value: "value_1"),
+            URLQueryItem(name: "client_query_param_2", value: "value_2")
+        ]
+        
+        let newClient = HTTPClient(baseURL: baseClientURL)
+        newClient.queryParams = clientQueryItems
+        
+        let reqQueryItems = [
+            URLQueryItem(name: "r_query_param_1", value: "value_1"),
+            URLQueryItem(name: "r_query_param_2", value: "value_2")
+        ]
+        
+        let req = HTTPRequest {
+            if let path = path {
+                $0.path = path
+            } else {
+                $0.url = requestFullURL
+            }
+            $0.method = .post
+            $0.add(queryItem: reqQueryItems.first!)
+            $0.addQueryParameter(name: reqQueryItems.last!.name, value: reqQueryItems.last!.value!)
+        }
+        
+        let request = try await req.urlRequest(inClient: newClient)
+        guard let reqQueryItems = request.urlComponents?.queryItems, reqQueryItems.isEmpty == false else {
+            XCTFail("Failed to use queryParams")
+            return
+        }
+                
+        // Validate query item parameters.
+        clientQueryItems.forEach { qItem in
+            XCTAssertTrue(reqQueryItems.contains(where: { rQItem in
+                rQItem.name == qItem.name && rQItem.value == qItem.value
+            }), "Failed to validate client's query items")
+        }
+        
+        // Validate request's query parameters.
+        reqQueryItems.forEach { qItem in
+            XCTAssertTrue(reqQueryItems.contains(where: { rQItem in
+                rQItem.name == qItem.name && rQItem.value == qItem.value
+            }), "Failed to validate requests's query items")
+        }
+        
+        // Validate URL composer
+        let validateBaseURL = request.url!.absoluteString.hasPrefix(expBaseURL)
+        XCTAssertTrue(validateBaseURL, "Failed to validate the url of the request")
+    }
+    
 }
 
 public struct UserCredentials: Codable {
