@@ -709,7 +709,6 @@ class RequestsTests: XCTestCase {
         defer { stopStubber() }
         
         let regex = String(request.path.dropFirst())
-        print(regex)
         let stub = HTTPStubRequest().match(urlRegex: regex).stub(for: .get, responseProvider: callback)
         HTTPStubber.shared.add(stub: stub)
         
