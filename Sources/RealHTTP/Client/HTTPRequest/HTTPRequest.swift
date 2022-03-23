@@ -520,10 +520,15 @@ extension URLComponents {
     
     mutating func fullURLInClient(_ client: HTTPClient?) -> URL? {
         guard host == nil else {
-            return self.url
+            var components = URLComponents(url: self.url!, resolvingAgainstBaseURL: false)
+            components?.attachQueryParamsFromClient(client)
+            return components?.url
         }
         
-        guard let baseURL = client?.baseURL else { return nil }
+        guard let baseURL = client?.baseURL else {
+            return nil
+        }
+        
         // If we have not specified an absolute URL the URL
         // must be composed using the base components of the set client.
         var newComp = self
@@ -531,12 +536,20 @@ extension URLComponents {
         newComp.host = baseURL.host
         newComp.port = baseURL.port
         newComp.path = baseURL.path + (newComp.path.first == "/" ? "" : "/") + newComp.path
-        
-        if let commonQueryParams = client?.queryParams, commonQueryParams.isEmpty == false {
-            newComp.queryItems?.append(contentsOf: commonQueryParams)
-        }
+        newComp.attachQueryParamsFromClient(client)
         
         return newComp.url
+    }
+    
+    mutating func attachQueryParamsFromClient(_ client: HTTPClient?) {
+        if let commonQueryParams = client?.queryParams, commonQueryParams.isEmpty == false {
+            if queryItems != nil {
+                queryItems!.append(contentsOf: commonQueryParams)
+            } else {
+                queryItems = commonQueryParams
+            }
+        }
+        
     }
     
 }
