@@ -134,6 +134,10 @@ public struct HTTPResponse: CustomStringConvertible {
     ///
     /// - Returns: `T` or `nil` if no response has been received.
     public func decode<T: Decodable>(_ decodable: T.Type, decoder: JSONDecoder = .init()) throws -> T {
+        if let error = error {
+            throw error // dispatch any error coming from fetch outside the decode.
+        }
+        
         guard let data = data else {
             throw HTTPError.init(.emptyResponse)
         }
@@ -154,6 +158,11 @@ public struct HTTPResponse: CustomStringConvertible {
     /// - Returns: T?
     public func decodeJSONData<T>(_ decodable: T.Type,
                                   options: JSONSerialization.ReadingOptions = []) throws -> T? {
+        
+        if let error = error {
+            throw error // dispatch any error coming from fetch outside the decode.
+        }
+        
         guard let data = data else { return nil }
 
         let object = try JSONSerialization.jsonObject(with: data, options: options)
