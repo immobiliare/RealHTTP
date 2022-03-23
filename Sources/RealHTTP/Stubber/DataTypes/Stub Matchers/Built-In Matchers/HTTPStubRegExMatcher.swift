@@ -37,13 +37,9 @@ public class HTTPStubRegExMatcher: HTTPStubMatcher {
     ///   - pattern: regex pattern to validate.
     ///   - options: options for regular expression matching.
     ///   - location: where to validate the regular expression.
-    public init?(regex pattern: String, options: NSRegularExpression.Options = [], in location: HTTPMatcherLocation) {
-        do {
-            self.regex = try NSRegularExpression(pattern: pattern, options: options)
-            self.location = location
-        } catch {
-            return nil
-        }
+    public init(regex pattern: String, options: NSRegularExpression.Options = [], in location: HTTPMatcherLocation) throws {
+        self.regex = try NSRegularExpression(pattern: pattern, options: options)
+        self.location = location
     }
     
     // MARK: - Conformances

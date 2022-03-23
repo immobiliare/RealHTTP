@@ -41,11 +41,8 @@ extension HTTPStubRequest {
     ///   - pattern: pattern for validation.
     ///   - options: options for regular expression.
     /// - Returns: Self
-    public func match(urlRegex pattern: String, options: NSRegularExpression.Options = []) -> Self {
-        guard let matcher = HTTPStubRegExMatcher(regex: pattern, options: options, in: .url) else {
-            return self
-        }
-        
+    public func match(urlRegex pattern: String, options: NSRegularExpression.Options = []) throws -> Self {
+        let matcher = try HTTPStubRegExMatcher(regex: pattern, options: options, in: .url)
         return match(matcher)
     }
     
