@@ -27,7 +27,7 @@ class RequestsTests: XCTestCase {
         HTTPStubber.shared.removeAllStubs()
         
         if echo {
-            HTTPStubber.shared.add(stub: HTTPStubRequest().match(urlRegex: "*").stubEcho())
+            HTTPStubber.shared.add(stub: try! HTTPStubRequest().match(urlRegex: "(?s).*").stubEcho())
         }
     }
     
@@ -54,10 +54,10 @@ class RequestsTests: XCTestCase {
     override class func setUp() {
         super.setUp()
         
-        HTTPStubber.shared.enable()
+        //HTTPStubber.shared.enable()
         
-        let echo = HTTPStubRequest().match(urlRegex: "*").stubEcho()
-        HTTPStubber.shared.add(stub: echo)
+       // let echo = HTTPStubRequest().match(urlRegex: "*").stubEcho()
+       // HTTPStubber.shared.add(stub: echo)
     }
     
     override class func tearDown() {
@@ -597,7 +597,7 @@ class RequestsTests: XCTestCase {
         }), at: 0)
         
         // Add stubber
-        let stub = HTTPStubRequest().match(urlRegex: "/initial").stub(for: .get) { urlRequest, _ in
+        let stub = try! HTTPStubRequest().match(urlRegex: "/initial").stub(for: .get) { urlRequest, _ in
             let response = HTTPStubResponse()
             response.body = "ciao"
             return response
@@ -636,7 +636,7 @@ class RequestsTests: XCTestCase {
         }), at: 0)
         
         // Add stubber
-        let stub = HTTPStubRequest().match(urlRegex: "/initial").stub(for: .get) { urlRequest, _ in
+        let stub = try! HTTPStubRequest().match(urlRegex: "/initial").stub(for: .get) { urlRequest, _ in
             let response = HTTPStubResponse()
             response.body = "ciao"
             return response
@@ -709,7 +709,7 @@ class RequestsTests: XCTestCase {
         defer { stopStubber() }
         
         let regex = String(request.path.dropFirst())
-        let stub = HTTPStubRequest().match(urlRegex: regex).stub(for: .get, responseProvider: callback)
+        let stub = try! HTTPStubRequest().match(urlRegex: regex).stub(for: .get, responseProvider: callback)
         HTTPStubber.shared.add(stub: stub)
         
         // Prepare client
@@ -751,7 +751,7 @@ class RequestsTests: XCTestCase {
         
         // Prepare the stub responses
         
-        let stubOriginRequest = HTTPStubRequest().match(urlRegex: "/someAuthCall").stub(for: .get, responseProvider: { request, stubRequest in
+        let stubOriginRequest = try! HTTPStubRequest().match(urlRegex: "/someAuthCall").stub(for: .get, responseProvider: { request, stubRequest in
             let response = HTTPStubResponse()
 
             if succedOnRetry == retryMade {
@@ -768,7 +768,7 @@ class RequestsTests: XCTestCase {
         })
         HTTPStubber.shared.add(stub: stubOriginRequest)
         
-        let stubRefreshToken = HTTPStubRequest().match(urlRegex: "/refreshToken").stub(for: .get, responseProvider: { request, stubRequest in
+        let stubRefreshToken = try! HTTPStubRequest().match(urlRegex: "/refreshToken").stub(for: .get, responseProvider: { request, stubRequest in
             let response = HTTPStubResponse()
             response.statusCode = .ok
             response.body = "NEW_TOKEN"
@@ -887,13 +887,13 @@ class RequestsTests: XCTestCase {
         ]
 
         // Stubber to catch /execute call
-        let stubReq = HTTPStubRequest().match(urlRegex: "/execute").stub(for: .get) { response in
+        let stubReq = try! HTTPStubRequest().match(urlRegex: "/execute").stub(for: .get) { response in
             response.statusCode = .unauthorized
             response.body = mainCallErrorResponse
         }
         HTTPStubber.shared.add(stub: stubReq)
         
-        let altStubReq = HTTPStubRequest().match(urlRegex: "/login").stub(for: .get) { response in
+        let altStubReq = try! HTTPStubRequest().match(urlRegex: "/login").stub(for: .get) { response in
             response.statusCode = .internalServerError
             response.body = loginCallErrorResponse
         }
@@ -995,7 +995,7 @@ class RequestsTests: XCTestCase {
         setupStubber(echo: false)
         defer { stopStubber() }
         
-        let stub = HTTPStubRequest().match(urlRegex: "/login").stub(for: .get, delay: 10, code: .ok)
+        let stub = try! HTTPStubRequest().match(urlRegex: "/login").stub(for: .get, delay: 10, code: .ok)
         HTTPStubber.shared.add(stub: stub)
         
         let req = HTTPRequest {
@@ -1120,12 +1120,12 @@ class RequestsTests: XCTestCase {
         
         let newClient = HTTPClient(baseURL: nil)
 
-        let stubInitial = HTTPStubRequest().match(urlRegex: "/initial").stub(for: .get) { response in
+        let stubInitial = try! HTTPStubRequest().match(urlRegex: "/initial").stub(for: .get) { response in
             response.statusCode = .ok
         }
         HTTPStubber.shared.add(stub: stubInitial)
         
-        let stubModified = HTTPStubRequest().match(urlRegex: "/modified").stub(for: .get) { response in
+        let stubModified = try! HTTPStubRequest().match(urlRegex: "/modified").stub(for: .get) { response in
             response.statusCode = .badRequest
         }
         HTTPStubber.shared.add(stub: stubModified)
@@ -1359,11 +1359,11 @@ class RequestsTests: XCTestCase {
     private func setupStubsForRedirectTest() {
         // Create redirect URL
         let redirectURL = URL(string: "http://127.0.0.1:8081/redirected")!
-        let redirectStub = HTTPStubRequest().match(urlRegex: "/login").stub(method: .get, redirectsTo: redirectURL)
+        let redirectStub = try! HTTPStubRequest().match(urlRegex: "/login").stub(method: .get, redirectsTo: redirectURL)
         HTTPStubber.shared.add(stub: redirectStub)
         
         // Create final URL
-        let stubRedirect = HTTPStubRequest().match(urlRegex: "/redirected").stub(for: .get) { response in
+        let stubRedirect = try! HTTPStubRequest().match(urlRegex: "/redirected").stub(for: .get) { response in
             response.statusCode = .ok
             response.body = "redirected".data(using: .utf8)!
         }
