@@ -618,6 +618,49 @@ class RequestsTests: XCTestCase {
         XCTAssertEqual(response.error?.category, .validatorFailure, "Failed to intercept the correct error category")
     }
     
+    /// The following test is used to validate the output error provided by a validator when it trigger
+    /// the chain failure. We want to check if the error is reported correctly also when using
+    /// the decode function as it:
+    /// <https://github.com/immobiliare/RealHTTP/issues/34>
+    func test_checkValidatorCustomErrorThrowingToDecodeFunction() async throws {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+        
+        struct DummyDecodeStruct: Decodable {}
+
+        // Prepare client and validator
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.validators.insert(CustomValidator(callback: { response, request in
+            let error = MyError(title: "My Custom Message")
+            return .failChain(error)
+        }), at: 0)
+        
+        // Add stubber
+        let stub = HTTPStubRequest().match(urlRegex: "/initial").stub(for: .get) { urlRequest, _ in
+            let response = HTTPStubResponse()
+            response.body = "ciao"
+            return response
+        }
+        HTTPStubber.shared.add(stub: stub)
+        
+        // Setup request
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.body = .string("test")
+        }
+        
+        do {
+            // We try to decode a function which fails with decode because an error is throwed at fetch stage
+            // So we would to get the throwed error outside the decode.
+            _ = try await req.fetch(client: newClient, DummyDecodeStruct.self)
+            XCTFail("Fetch+Decode should fail")
+        } catch {
+            let customUnderlyingError = (error as? HTTPError)?.error as? MyError
+            XCTAssertNotNil(customUnderlyingError, "Failed to receive the correct error")
+        }
+    }
+    
     /// The following test check different error types returned by a request.
     func test_checkNetworkStatusCodes() async throws {
         let req = HTTPRequest {
