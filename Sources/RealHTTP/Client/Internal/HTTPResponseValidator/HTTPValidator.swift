@@ -35,10 +35,13 @@ public protocol HTTPValidator {
 /// - `failChain`: fail validaton chain reporting with given error.
 /// - `retry`: retry - if possible - with set strategy.
 /// - `nextValidator`: operation succeded, move to next validator or complete all.
+/// - `nextValidatorWithResponse`: operation succeded, move to the next validator by passing a modified version of the response received.
+///                                this can be useful when you need to sightly modify or return a subclass version of the original response.
 public enum HTTPResponseValidatorResult {
     case failChain(Error)
     case retry(HTTPRetryStrategy)
     case nextValidator
+    case nextValidatorWithResponse(HTTPResponse)
 }
 
 // MARK: - HTTPRetryStrategy

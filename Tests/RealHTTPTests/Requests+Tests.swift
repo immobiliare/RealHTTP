@@ -722,6 +722,79 @@ class RequestsTests: XCTestCase {
         return response
     }
     
+    /// The following test allows us to test a modified version of the response via validator.
+    /// Using a custom validator we can return a copy of the original response shightly modified useing a custom subclass.
+    func test_validatorWithModifiedResponse() async throws {
+        setupStubber(echo: false)
+        
+        let stubOriginRequest = try! HTTPStubRequest().match(urlRegex: "/someCall").stub(for: .get, responseProvider: { request, stubRequest in
+            let response = HTTPStubResponse()
+            response.contentType = .jsonUTF8
+            response.statusCode = .ok
+            response.body = """
+                { "message": "OK", "letters" : ["a","b","c","d"] }
+            """
+            return response
+        })
+        HTTPStubber.shared.add(stub: stubOriginRequest)
+
+        /// Our custom response is a subclass of the HTTPResponse
+        class MyCustomResponse: HTTPResponse {
+            var customObject: CustomObject?
+            
+            public override init(response: HTTPResponse) {
+                super.init(response: response)
+            }
+            
+        }
+        
+        /// This is a dummy object to decode for our tests.
+        struct CustomObject: Codable {
+            var message: String
+            var letters: [String]
+        }
+        
+        /// Validator allows us to return a custom response.
+        class CustomValidator: HTTPValidator {
+            
+            func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
+                /// Return a copy of the original response as subclass and modify it.
+                do {
+                    let custom = MyCustomResponse.init(response: response)
+                    custom.customObject = try custom.decode(CustomObject.self)
+                    return .nextValidatorWithResponse(custom)
+                } catch {
+                    return .failChain(error)
+                }
+            }
+            
+        }
+        
+        let newClient = HTTPClient(baseURL: nil)
+
+        let customValidator = CustomValidator()
+        newClient.validators.insert(customValidator, at: 0)
+
+        // Prepare the request
+        let originRequest = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080/someCall")!
+        }
+        
+        let response = try await newClient.fetch(originRequest)
+        print(String(describing: response))
+        
+        // Check if our response is the one we modified.
+        guard let customResponse = response as? MyCustomResponse else {
+            XCTFail("Expected MyCustomResponse")
+            return
+        }
+        
+        XCTAssertNotNil(customResponse.customObject)
+        XCTAssert(customResponse.customObject?.message == "OK")
+        
+        stopStubber()
+    }
+    
     func test_altRequestValidator() async throws {
         let successBodyPrefix = "SUCCESS_"
         
@@ -1397,15 +1470,13 @@ class RequestsTests: XCTestCase {
         let newClient = HTTPClient(baseURL: nil)
         
         let bodyTransformer1 = HTTPResponseTransformer { response, _ in
-            var r = response
-            r.data = "replaced".data(using: .utf8)
-            return r
+            response.data = "replaced".data(using: .utf8)
+            return response
         }
         let bodyTransformer2 = HTTPResponseTransformer { response, _ in
-            var r = response
             let d = response.data?.asString ?? ""
-            r.data = "\(d)_final".data(using: .utf8)
-            return r
+            response.data = "\(d)_final".data(using: .utf8)
+            return response
         }
         newClient.responseTransformers = [bodyTransformer1, bodyTransformer2]
         
