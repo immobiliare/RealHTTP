@@ -78,7 +78,7 @@ internal class HTTPDataLoader: NSObject,
             box.task?.cancel()
         }, operation: {
             // Conversion of the callback system to the async/await version.
-            var response: HTTPResponse = try await withUnsafeThrowingContinuation({ continuation in
+            let response: HTTPResponse = try await withUnsafeThrowingContinuation({ continuation in
                 box.task = self.fetch(request, task: sessionTask, completion: { [weak self] response in
                     do { // Apply optional transformers.
                         let tResponse = try self?.applyResponseTransformers(to: response, request: request) ?? response
@@ -127,6 +127,11 @@ internal class HTTPDataLoader: NSObject,
             case .nextValidator:
                 // Everything goes fine, we want to return the response of the call.
                 return response
+                
+            case .nextValidatorWithResponse(let modifiedResponse):
+                // Everything goes fine, we want to return the response of the call and modify the original response.
+                return modifiedResponse
+                
             }
         })
     }
@@ -349,7 +354,7 @@ private extension HTTPDataLoader {
         dataLoadersMap.removeAll()
         
         for handler in allHandlers {
-            var response = HTTPResponse(errorType: .sessionError, error: error)
+            let response = HTTPResponse(errorType: .sessionError, error: error)
             response.request = handler.request
             
             // Reset the link to the client

@@ -19,16 +19,16 @@ import Foundation
 
 /// This is the raw response received from server. It includes all the
 /// data collected from the request including metrics and errors.
-public struct HTTPResponse: CustomStringConvertible {
+open class HTTPResponse: CustomStringConvertible {
     
     // MARK: - Public Properties
     
     /// Each metrics  contains the taskInterval and redirectCount, as well as metrics for each
     /// request-and-response transaction made during the execution of the task.
-    public let metrics: HTTPMetrics?
+    open var metrics: HTTPMetrics?
     
     /// `URLResponse` object received from server.
-    public internal(set) var urlResponse: URLResponse?
+    open var urlResponse: URLResponse?
     
     /// Casted `HTTPURLResponse` object received from server.
     public var httpResponse: HTTPURLResponse? {
@@ -41,12 +41,12 @@ public struct HTTPResponse: CustomStringConvertible {
     ///             This value is typically the same as the initial request (`original`)
     ///             except when the server has responded to the initial request with a
     ///             redirect to a different URL.
-    public private(set) var urlRequests: (original: URLRequest?, current: URLRequest?) = (nil, nil)
+    open var urlRequests: (original: URLRequest?, current: URLRequest?) = (nil, nil)
     
     /// Raw data received from server.
     /// If the file is saved on disk (`dataFileURL != nil`) calling this method
     /// will cause the system to read file and get it as output.
-    public var data: Data? {
+    open var data: Data? {
         get {
             if let dataFileURL = dataFileURL {
                 return try? Data(contentsOf: dataFileURL)
@@ -63,29 +63,29 @@ public struct HTTPResponse: CustomStringConvertible {
     /// If it's a large data transfer (`transferMode = .largeData`) the output
     /// of the call is automatically saved on disk at this link.
     /// The file is your responsibility, you should delete if once you've done.
-    public private(set) var dataFileURL: URL?
+    open var dataFileURL: URL?
     
     /// Error parsed.
-    public internal(set) var error: HTTPError?
+    open var error: HTTPError?
     
     /// Return `true` if call ended with error.
-    public var isError: Bool {
+    open var isError: Bool {
         error != nil
     }
     
     /// Weak reference to the original request.
-    public internal(set) weak var request: HTTPRequest?
+    open weak var request: HTTPRequest?
     
     /// HTTP status code of the response, if available.
-    public let statusCode: HTTPStatusCode
+    open var statusCode: HTTPStatusCode
     
     /// Headers received into the response.
-    public var headers: HTTPHeaders {
+    open var headers: HTTPHeaders {
         httpResponse?.headers ?? HTTPHeaders()
     }
     
     /// Description of the response.
-    public var description: String {
+    open var description: String {
         if isError {
             return "[\(statusCode)] \(error?.localizedDescription ?? "")"
         } else {
@@ -124,6 +124,22 @@ public struct HTTPResponse: CustomStringConvertible {
         self.innerData = response.data
         self.dataFileURL = response.dataFileURL
         self.metrics = HTTPMetrics(metrics: response.metrics, task: response.request.sessionTask)
+        self.request = response.request
+        self.urlRequests = response.urlRequests
+    }
+    
+    // MARK: - Public Initialization
+    
+    /// Initialize a new response with another instance.
+    ///
+    /// - Parameter response: instance where the data is copied from.
+    public init(response: HTTPResponse) {
+        self.urlResponse = response.urlResponse
+        self.error = response.error
+        self.statusCode = response.statusCode
+        self.innerData = response.innerData
+        self.dataFileURL = response.dataFileURL
+        self.metrics = response.metrics
         self.request = response.request
         self.urlRequests = response.urlRequests
     }
@@ -176,7 +192,7 @@ public struct HTTPResponse: CustomStringConvertible {
     /// - Parameters:
     ///   - category: error category.
     ///   - error: error instance.
-    internal mutating func setError(category: HTTPError.ErrorCategory, _ error: Error?) {
+    internal func setError(category: HTTPError.ErrorCategory, _ error: Error?) {
         if let httpError = error as? HTTPError {
             self.error = httpError
         } else {
