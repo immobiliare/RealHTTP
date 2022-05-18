@@ -1721,6 +1721,30 @@ class RequestsTests: XCTestCase {
                                                expBaseURL: "https://somedomain.com/path?")
     }
     
+    /// The following test check the exclusive write access to the internal HTTPDataLoader's running task container
+    /// and verify no exc_bad_access error can be triggered due multiple access from several threads.
+    func test_concurrentNetworkCallsDataLoaderTest() async throws {
+        var requests = [HTTPRequest]()
+        let newClient = HTTPClient(baseURL: nil)
+
+        for _ in 0..<100 {
+            let req = try! HTTPRequest(method: .post, "https://www.apple.com",
+                                      body: try .json(["title": "foo", "body": "bar", "userId": 1]))
+            
+            requests.append(req)
+        }
+        
+        await withThrowingTaskGroup(of: HTTPResponse.self, body: { group in
+            for req in requests {
+                group.addTask(priority: .high) {
+                    let result = try await req.fetch(newClient)
+                    return result
+                }
+            }
+            
+        })
+    }
+    
     func queryParametersRequestForURL(requestFullURL: URL?, path: String?, baseClientURL: URL?, expBaseURL: String) async throws {
         let clientQueryItems = [
             URLQueryItem(name: "client_query_param_1", value: "value_1"),
