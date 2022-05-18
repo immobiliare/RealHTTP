@@ -42,7 +42,10 @@ internal class HTTPDataLoader: NSObject,
     
     /// List of active running operations.
     private var dataLoadersMap = [URLSessionTask: HTTPDataLoaderResponse]()
-        
+    
+    /// Loaders data protect.
+    private var dataLoadersLock = RWLock()
+    
     // MARK: - Initialization
     
     /// Initialize a new client configuration.
@@ -193,9 +196,17 @@ internal class HTTPDataLoader: NSObject,
     /// - Returns: `URLSessionTask`
     private func fetch(_ request: HTTPRequest, task: URLSessionTask,
                        completion: @escaping HTTPDataLoaderResponse.Completion) -> URLSessionTask {
-        session.delegateQueue.addOperation {
+        session.delegateQueue.addOperation { [weak self] in
+            guard let self = self else { return }
+            
             let response = HTTPDataLoaderResponse(request: request, completion: completion)
-            self.dataLoadersMap[task] = response
+            
+            // URLSession's finish delegate is called on a secondary thread so it may happens
+            // multiple finished calls attempt to modify the dataLoadersMap dictionary causing
+            // this crash <https://github.com/immobiliare/RealHTTP/issues/44>
+            self.dataLoadersLock.exclusivelyWrite {
+                self.dataLoadersMap[task] = response
+            }
             
             if let client = self.client {
                 client.delegate?.client(client, didEnqueue: (request, task))
@@ -400,7 +411,9 @@ private extension HTTPDataLoader {
             handler.error = error
         }
         
-        dataLoadersMap[task] = nil
+        self.dataLoadersLock.exclusivelyWrite {
+            self.dataLoadersMap[task] = nil
+        }
         
         let response = HTTPResponse(response: handler)
         handler.completion(response)
