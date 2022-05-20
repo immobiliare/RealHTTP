@@ -169,11 +169,11 @@ public extension HTTPMetrics.RequestMetrics {
         // MARK: - Initialization
         
         fileprivate static func stage(_ kind: Stage.Kind, _ start: Date?, _ end: Date?) -> Stage? {
-            guard let start = start, let end = end else {
+            guard let interval = DateInterval(dateA: start, dateB: end) else {
                 return nil
             }
             
-            return Stage(kind: kind, interval: .init(start: start, end: end))
+            return Stage(kind: kind, interval: interval)
         }
         
         public static func < (lhs: HTTPMetrics.RequestMetrics.Stage,
@@ -189,6 +189,28 @@ public extension HTTPMetrics.RequestMetrics {
     }
     
 }
+
+// MARK: - DateInterval Extension
+
+fileprivate extension DateInterval {
+    
+    /// Initialize the interval between two optional dates. Both the dates
+    /// must be not `nil` or the init will fail returning `nil`.
+    /// Date are adjusted automatically to set the start interval with the older
+    /// date and the end with the max (recent) date.
+    init?(dateA: Date?, dateB: Date?) {
+        guard let dateA = dateA, let dateB = dateB else {
+            return nil
+        }
+
+        let fromDate = min(dateA, dateB)
+        let toDate = max(dateA, dateB)
+        self.init(start: fromDate, end: toDate)
+    }
+    
+}
+
+// MARK: - HTTPMetrics.RequestMetrics.Stage
 
 public extension HTTPMetrics.RequestMetrics.Stage {
     
