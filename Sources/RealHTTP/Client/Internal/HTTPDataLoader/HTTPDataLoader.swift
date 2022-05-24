@@ -250,7 +250,9 @@ internal class HTTPDataLoader: NSObject,
     
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask,
                            didReceive data: Data) {
-        dataLoadersMap[dataTask]?.appendData(data)
+        self.dataLoadersLock.exclusivelyWrite {
+            self.dataLoadersMap[dataTask]?.appendData(data)
+        }
     }
     
     func urlSession(_ session: URLSession,
@@ -268,10 +270,13 @@ internal class HTTPDataLoader: NSObject,
     
     func urlSession(_ session: URLSession, task: URLSessionTask,
                     didFinishCollecting metrics: URLSessionTaskMetrics) {
-        dataLoadersMap[task]?.metrics = metrics
+        
+        self.dataLoadersLock.exclusivelyWrite {
+            self.dataLoadersMap[task]?.metrics = metrics
+        }
         
         if let delegate = client?.delegate, let client = client,
-            let request = dataLoadersMap[task],
+           let request = self.dataLoadersLock.concurrentlyRead({ dataLoadersMap[task] }),
            let metrics = HTTPMetrics(metrics: metrics, task: task) {
             delegate.client(client, didCollectedMetricsFor: (request.request, task), metrics: metrics)
         }
@@ -286,14 +291,17 @@ internal class HTTPDataLoader: NSObject,
         let progress = HTTPProgress(event: .upload,
                                     progress: task.progress,
                                     currentLength: totalBytesSent, expectedLength: totalBytesExpectedToSend)
-        dataLoadersMap[task]?.request.progress = progress
+        
+        self.dataLoadersLock.concurrentlyRead {
+            dataLoadersMap[task]?.request.progress = progress
+        }
     }
     
     // MARK: - Download Progress
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
                     didFinishDownloadingTo location: URL) {
-        guard let handler = dataLoadersMap[downloadTask],
+        guard let handler = self.dataLoadersLock.concurrentlyRead({ dataLoadersMap[downloadTask] }),
               let fileURL = location.copyFileToDefaultLocation(task: downloadTask,
                                                                forRequest: handler.request) else {
             // copy file from a temporary location to a valid location
@@ -311,7 +319,10 @@ internal class HTTPDataLoader: NSObject,
         let progress = HTTPProgress(event: .download,
                                     progress: downloadTask.progress,
                                     currentLength: totalBytesWritten, expectedLength: totalBytesExpectedToWrite)
-        dataLoadersMap[downloadTask]?.request.progress = progress
+        
+        dataLoadersLock.exclusivelyWrite {
+            self.dataLoadersMap[downloadTask]?.request.progress = progress
+        }
     }
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
@@ -321,14 +332,17 @@ internal class HTTPDataLoader: NSObject,
                                     progress: downloadTask.progress,
                                     currentLength: fileOffset,
                                     expectedLength: expectedTotalBytes)
-        dataLoadersMap[downloadTask]?.request.progress = progress
+        
+        dataLoadersLock.exclusivelyWrite {
+            self.dataLoadersMap[downloadTask]?.request.progress = progress
+        }
     }
     
     // MARK: - Stream
     
     public func urlSession(_ session: URLSession, task: URLSessionTask,
                            needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
-        guard let request = dataLoadersMap[task]?.request else {
+        guard let request = dataLoadersLock.concurrentlyRead({ dataLoadersMap[task]?.request }) else {
             return
         }
 
@@ -343,7 +357,7 @@ internal class HTTPDataLoader: NSObject,
     
     func urlSession(_ session: URLSession, taskIsWaitingForConnectivity task: URLSessionTask) {
         guard let client = self.client,
-              let request = dataLoadersMap[task]?.request else {
+              let request = dataLoadersLock.concurrentlyRead({ dataLoadersMap[task]?.request }) else {
             return
         }
         
@@ -382,9 +396,11 @@ private extension HTTPDataLoader {
     ///   - task: target task finished.
     ///   - error: error received, if any.
     func completeTask(_ task: URLSessionTask, error: Error?) {
-        dataLoadersMap[task]?.urlResponse = task.response
+        dataLoadersLock.exclusivelyWrite {
+            self.dataLoadersMap[task]?.urlResponse = task.response
+        }
         
-        guard let handler = dataLoadersMap[task] else {
+        guard let handler = dataLoadersLock.concurrentlyRead({ dataLoadersMap[task] }) else {
             return
         }
         
@@ -433,7 +449,10 @@ private extension HTTPDataLoader {
     func evaluateRedirect(task: URLSessionTask, response: HTTPURLResponse, request: URLRequest,
                           completion: @escaping (URLRequest?) -> Void) {
         // missing components, continue to the default behaviour
-        guard let client = client, let handler = dataLoadersMap[task] else {
+        let handler = self.dataLoadersLock.concurrentlyRead {
+            dataLoadersMap[task]
+        }
+        guard let client = client, let handler = handler else {
             completion(request)
             return
         }
@@ -471,7 +490,7 @@ private extension HTTPDataLoader {
     ///   - completionHandler: completion callback.
     func evaluateAuthChallange(_ task: URLSessionTask, challenge: URLAuthenticationChallenge,
                                       completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        guard let request = dataLoadersMap[task]?.request,
+        guard let request = self.dataLoadersLock.concurrentlyRead({ dataLoadersMap[task]?.request }),
               let security = request.security ?? client?.security else {
             // if not security is settings for both client and request we can use the default handling
             completionHandler(.performDefaultHandling, nil)
