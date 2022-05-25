@@ -31,7 +31,7 @@ extension HTTPRequest {
     /// response for an executed request.
     ///
     /// - Returns: String
-    func cURLDescription(whenIn client: HTTPClient?) async throws -> String {
+    public func cURLDescription(whenIn client: HTTPClient?) async throws -> String {
         let request = try await urlRequest(inClient: client)
         return cURLHelper.cURLDescription(request: request, client: client)
     }
@@ -45,7 +45,7 @@ extension HTTPResponse {
     /// Return the cURL description for origin request who generated this response.
     ///
     /// - Returns: String
-    func cURLDescription() -> String {
+    public func cURLDescription() -> String {
         cURLHelper.cURLDescription(request: request?.sessionTask?.originalRequest, client: request?.client)
     }
     
