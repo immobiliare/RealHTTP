@@ -289,13 +289,13 @@ extension FileManager {
     /// Creates a folder if no folder exists
     private func createFolderIfNeeded(_ folderPath: String) {
         let fm = FileManager.default
-        if !fm.fileExists(atPath: folderPath) {
-            do {
-                let folderURL = URL(fileURLWithPath: folderPath, isDirectory: true)
-                try fm.createDirectory(at: folderURL, withIntermediateDirectories: true, attributes: nil)
-            } catch {
-                return
-            }
+        guard !fm.fileExists(atPath: folderPath) else { return }
+        
+        do {
+            let folderURL = URL(fileURLWithPath: folderPath, isDirectory: true)
+            try fm.createDirectory(at: folderURL, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            return
         }
     }
     
