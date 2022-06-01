@@ -319,6 +319,7 @@ class RequestsTests: XCTestCase {
         let response = try await req.fetch(client)
         XCTAssert(progressionReports > 0, "Failed to receive updates from 5MB file download")
         XCTAssert(response.data?.count ?? 0 > 0, "Failed to receive data")
+        XCTAssertNotNil(response.dataFileURL, "Failed to store file")
     }
     
     func test_largeFileProgressActivity() async throws {
