@@ -280,9 +280,22 @@ extension FileManager {
     
     internal func temporaryFileLocation() -> URL {
         let fileName = UUID().uuidString
-        let documentsDir = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true).first! as NSString
-        let destinationURL = URL(fileURLWithPath: documentsDir.appendingPathComponent(fileName))
+        let documentsDir = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true).first!
+        createFolderIfNeeded(documentsDir)
+        let destinationURL = URL(fileURLWithPath: (documentsDir as NSString).appendingPathComponent(fileName))
         return destinationURL
+    }
+    
+    /// Creates a folder if no folder exists
+    private func createFolderIfNeeded(_ folderPath: String) {
+        let fm = FileManager.default
+        if !fm.fileExists(atPath: folderPath), let folderURL = URL(string: folderPath) {
+            do {
+                try fm.createDirectory(at: folderURL, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                return
+            }
+        }
     }
     
 }
