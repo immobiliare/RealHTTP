@@ -280,9 +280,8 @@ extension FileManager {
     
     internal func temporaryFileLocation() -> URL {
         let fileName = UUID().uuidString
-        let documentsDir = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true).first! as NSString
-        let destinationURL = URL(fileURLWithPath: documentsDir.appendingPathComponent(fileName))
-        return destinationURL
+        let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)       
+        return tmpURL
     }
     
 }
