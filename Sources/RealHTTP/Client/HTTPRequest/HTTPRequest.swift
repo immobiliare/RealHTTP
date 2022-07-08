@@ -147,11 +147,8 @@ public class HTTPRequest: CustomStringConvertible {
         "[\(method)] \(url?.absoluteString ?? "")"
     }
     
-     /// Download file name
-     public var downloadFileName: String {
-         get { UUID().uuidString }
-         set { self.downloadFileName = newValue }
-    }
+    /// Download file name
+    public var downloadFileName = UUID().uuidString
     
     // MARK: - Public Properties [Response]
     
