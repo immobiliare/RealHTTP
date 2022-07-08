@@ -263,7 +263,7 @@ extension URL {
     internal func copyFileToDefaultLocation(task: URLSessionDownloadTask,
                                             forRequest request: HTTPRequest) -> URL? {
 
-        let destinationURL = FileManager.default.temporaryFileLocation()
+        let destinationURL = FileManager.default.temporaryFileLocation(fileName: request.downloadFileName)
         do {
             try FileManager.default.copyItem(at: self, to: destinationURL)
             return destinationURL
@@ -278,8 +278,7 @@ extension URL {
 
 extension FileManager {
     
-    internal func temporaryFileLocation() -> URL {
-        let fileName = UUID().uuidString
+    internal func temporaryFileLocation(fileName: String) -> URL {
         let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)       
         return tmpURL
     }
@@ -293,9 +292,9 @@ extension Data {
     /// Write to temporary file location.
     ///
     /// - Returns: URL
-    internal func writeToTemporaryFile() -> URL? {
+    internal func writeToTemporaryFile(fileName: String) -> URL? {
         do {
-            let fileURL = FileManager.default.temporaryFileLocation()
+            let fileURL = FileManager.default.temporaryFileLocation(fileName: fileName)
             try write(to: fileURL)
             return fileURL
         } catch {
