@@ -110,9 +110,21 @@ extension String {
             return true
         }
         
-        let regEx = #"(\b(https?|ftp|file):\/\/)?[-A-Za-z0-9+&@#\/%?=~_|!:,.;]+[-A-Za-z0-9+&@#\/%=~_|]"#
-        let predicate = NSPredicate(format: "SELF MATCHES %@", argumentArray: [regEx])
-        return predicate.evaluate(with: self)
+        return hasRegExpMatch(#"^([a-z]+://|//)"#)
+    }
+    
+    /// Validate the regex.
+    ///
+    /// - Parameter regExpPattern: pattern to validate.
+    /// - Returns: `Bool`
+    func hasRegExpMatch(_ regExpPattern: String) -> Bool {
+        do {
+            let expression = try NSRegularExpression(pattern: regExpPattern, options: .caseInsensitive)
+            let res = expression.firstMatch(in: self, options: [], range: NSRange(location: 0, length: self.count))
+            return (res != nil)
+        } catch {
+            return false
+        }
     }
     
     /// Return the suggested mime type for path extension of the receiver.
