@@ -289,7 +289,7 @@ extension URL {
 // MARK: - FileManager
 
 extension FileManager {
-    
+   
     internal func temporaryFileLocation(fileName: String) -> URL {
         let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)       
         return tmpURL
