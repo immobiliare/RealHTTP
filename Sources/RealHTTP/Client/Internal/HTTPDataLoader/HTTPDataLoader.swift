@@ -414,7 +414,7 @@ private extension HTTPDataLoader {
                                                     currentLength: 0,
                                                     expectedLength: 0, partialData: resumableData)
             // Also store the resumable data on response
-            handler.dataFileURL = resumableData.writeToTemporaryFile()
+            handler.dataFileURL = resumableData.writeToTemporaryFile(fileName: handler.request.downloadFileName)
         }
         
         // Reset the link to the client
