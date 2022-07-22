@@ -327,11 +327,7 @@ public extension HTTPRequest {
                 // An absolute URL will replace any settings from destination client.
                 urlComponents = parsed
             } else {
-                if newValue.first == "/" {
-                    urlComponents.path = newValue
-                } else {
-                    urlComponents.path = "/\(newValue)"
-                }
+                urlComponents.path = newValue
             }
         }
     }
