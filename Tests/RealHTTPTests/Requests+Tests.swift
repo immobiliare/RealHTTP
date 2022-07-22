@@ -66,6 +66,32 @@ class RequestsTests: XCTestCase {
         super.tearDown()
     }
     
+    func test_isAbsoluteURLTest() async throws {
+        let dataArray: [(url: String, expected: Bool)] = [
+            ("/connect/login", false), // false, path
+            ("connect/login", false), // false, path
+            ("http://www.mydomain.com/api/v1", true), // true
+            ("http://www.mydomain.com/api/v1?param1=value", true), // true
+            ("https://www.mydomain.com/api/v1?param1=value", true), // true
+            ("localhost:3434/api/v1?param1=value", true), // true - localhost
+            ("/myfolder/test.txt", false), // false - relative URL
+            ("test", false), // false - also relative URL
+            ("HTTP://EXAMPLE.COM'", true), // true - HTTP upper-case absolute URL
+            ("http://example.com", true), // true - regular http absolute URL
+            ("/redirect?target=http://example.org", false)
+        ]
+        
+        for data in dataArray {
+            let isAbs = data.url.isAbsoluteURL
+            let expectedValue = data.expected
+            print("  [\(isAbs) should be \(expectedValue)]:\t \(data.url)")
+            if isAbs != data.expected {
+                print("FAIL \(data.url)")
+            }
+            //XCTAssertEqual(isAbs, data.expected)
+        }
+    }
+    
     // MARK: - URL Composition Tests
     
     /// We tests how replacing the `url` property the final executed url does

@@ -147,6 +147,9 @@ public class HTTPRequest: CustomStringConvertible {
         "[\(method)] \(url?.absoluteString ?? "")"
     }
     
+    /// Download file name
+    public var downloadFileName = UUID().uuidString
+    
     // MARK: - Public Properties [Response]
     
     /// If task is monitorable (`expectedDataType` is `large`) and data is available
