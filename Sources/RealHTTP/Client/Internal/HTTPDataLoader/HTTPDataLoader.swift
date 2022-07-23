@@ -199,6 +199,7 @@ internal class HTTPDataLoader: NSObject,
         session.delegateQueue.addOperation { [weak self] in
             guard let self = self else { return }
             
+            request.client = self.client
             let response = HTTPDataLoaderResponse(request: request, completion: completion)
             
             // URLSession's finish delegate is called on a secondary thread so it may happens
