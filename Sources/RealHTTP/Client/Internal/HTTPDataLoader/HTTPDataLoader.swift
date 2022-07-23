@@ -417,10 +417,6 @@ private extension HTTPDataLoader {
             handler.dataFileURL = resumableData.writeToTemporaryFile(fileName: handler.request.downloadFileName)
         }
         
-        // Reset the link to the client
-        handler.request.client = nil
-        handler.request.sessionTask = nil
-        
         handler.urlRequests = (task.originalRequest, task.currentRequest)
         
         if let error = error {
