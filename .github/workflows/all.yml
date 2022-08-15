@@ -1,5 +1,12 @@
 name: "RealHTTP Push CI"
-on: [pull_request, push]
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
 
 env:
   DEVELOPER_DIR: /Applications/Xcode_13.2.1.app/Contents/Developer
@@ -16,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        swift: ["5.5"]
+        swift: ["5.5", "5.6"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: fwal/setup-swift@2040b795e5c453c3a05fcb8316496afc8a74f192
