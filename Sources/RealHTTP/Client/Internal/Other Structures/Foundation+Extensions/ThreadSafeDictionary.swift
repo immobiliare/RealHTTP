@@ -15,11 +15,18 @@
 
 import Foundation
 
+/// Thread safe dictionary object for get and set. Concurrent reads are allowed,
+/// while exclusive write was implemented via barrier of Grand Central Dispatch.
 internal class ThreadSafeDictionary<V: Hashable,T>: Collection {
+    
+    // MARK: - Private Properties
 
     private var dictionary: [V: T]
     private let concurrentQueue = DispatchQueue(label: "Dictionary Barrier Queue",
                                                 attributes: .concurrent)
+    
+    // MARK: - Implementation Properties
+    
     var startIndex: Dictionary<V, T>.Index {
         self.concurrentQueue.sync {
             return self.dictionary.startIndex
@@ -31,18 +38,21 @@ internal class ThreadSafeDictionary<V: Hashable,T>: Collection {
             return self.dictionary.endIndex
         }
     }
+    
+    // MARK: - Initialization
 
     init(dict: [V: T] = [V:T]()) {
         self.dictionary = dict
     }
-    // this is because it is an apple protocol method
-    // swiftlint:disable identifier_name
+
+    // MARK: - Implementation Properties
+
     func index(after i: Dictionary<V, T>.Index) -> Dictionary<V, T>.Index {
         self.concurrentQueue.sync {
             return self.dictionary.index(after: i)
         }
     }
-    // swiftlint:enable identifier_name
+
     subscript(key: V) -> T? {
         set(newValue) {
             self.concurrentQueue.async(flags: .barrier) {[weak self] in
@@ -56,7 +66,6 @@ internal class ThreadSafeDictionary<V: Hashable,T>: Collection {
         }
     }
 
-    // has implicity get
     subscript(index: Dictionary<V, T>.Index) -> Dictionary<V, T>.Element {
         self.concurrentQueue.sync {
             return self.dictionary[index]
