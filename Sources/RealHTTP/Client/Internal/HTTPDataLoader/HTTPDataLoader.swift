@@ -147,10 +147,13 @@ internal class HTTPDataLoader: NSObject,
                                       forRequest request: HTTPRequest, task: URLSessionTask,
                                       withResponse response: HTTPResponse) async throws -> HTTPResponse {
         
-        if request.isAltRequest, let client = self.client {
-            client.delegate?.client(client, request: (request, task),
-                                    willRetryWithStrategy: strategy,
-                                    afterResponse: response)
+        if request.isAltRequest {
+            DispatchQueue.main.async { [weak self] in
+                guard let client = self?.client else { return }
+                client.delegate?.client(client, request: (request, task),
+                                        willRetryWithStrategy: strategy,
+                                        afterResponse: response)
+            }
         }
         
         switch strategy {
@@ -204,7 +207,8 @@ internal class HTTPDataLoader: NSObject,
             // this crash <https://github.com/immobiliare/RealHTTP/issues/44>
             self.dataLoadersMap[task.taskIdentifier] = response
             
-            if let client = self.client {
+            DispatchQueue.main.async { [weak self] in
+                guard let client = self?.client else { return }
                 client.delegate?.client(client, didEnqueue: (request, task))
             }
         }
@@ -259,7 +263,8 @@ internal class HTTPDataLoader: NSObject,
     
     public func urlSession(_ session: URLSession, task: URLSessionTask,
                            didCompleteWithError error: Error?) {
-        completeTask(task, error: error)
+        let handler = dataLoadersMap[task.taskIdentifier]
+        completeTask(task, handler: handler, error: error)
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask,
@@ -298,7 +303,7 @@ internal class HTTPDataLoader: NSObject,
         }
         
         handler.dataFileURL = fileURL
-        completeTask(downloadTask, error: nil)
+        completeTask(downloadTask, handler: handler, error: nil)
     }
     
     public func urlSession(_ session: Foundation.URLSession, downloadTask: URLSessionDownloadTask,
@@ -341,12 +346,14 @@ internal class HTTPDataLoader: NSObject,
     // MARK: - Other Events
     
     func urlSession(_ session: URLSession, taskIsWaitingForConnectivity task: URLSessionTask) {
-        guard let client = self.client,
-              let request = dataLoadersMap[task.taskIdentifier]?.request else {
+        guard let request = dataLoadersMap[task.taskIdentifier]?.request else {
             return
         }
         
-        client.delegate?.client(client, taskIsWaitingForConnectivity: (request, task))
+        DispatchQueue.main.async { [weak self] in
+            guard let client = self?.client else { return }
+            client.delegate?.client(client, taskIsWaitingForConnectivity: (request, task))
+        }
     }
     
 }
@@ -379,14 +386,15 @@ private extension HTTPDataLoader {
     ///
     /// - Parameters:
     ///   - task: target task finished.
+    ///   - handler: response received.
     ///   - error: error received, if any.
-    func completeTask(_ task: URLSessionTask, error: Error?) {
-        self.dataLoadersMap[task.taskIdentifier]?.urlResponse = task.response
-        
-        guard let handler = dataLoadersMap[task.taskIdentifier] else {
+    func completeTask(_ task: URLSessionTask, handler: HTTPDataLoaderResponse?, error: Error?) {
+        guard let handler = handler else {
             return
         }
         
+        self.dataLoadersMap[task.taskIdentifier]?.urlResponse = task.response
+
         if handler.request.transferMode == .largeData,
             let error = error, let  nsError = error as NSError?,
            let resumableData = nsError.userInfo[NSURLSessionDownloadTaskResumeData] as? Data {
@@ -411,7 +419,8 @@ private extension HTTPDataLoader {
         let response = HTTPResponse(response: handler)
         handler.completion(response)
         
-        if let client = self.client {
+        DispatchQueue.main.async { [weak self] in
+            guard let client = self?.client else { return }
             client.delegate?.client(client, didFinish: (handler.request, task), response: response)
         }
     }
@@ -472,7 +481,8 @@ private extension HTTPDataLoader {
             return
         }
         
-        if let client = client {
+        DispatchQueue.main.async { [weak self] in
+            guard let client = self?.client else { return }
             client.delegate?.client(client, didReceiveAuthChallangeFor: (request, task), authChallenge: challenge)
         }
         

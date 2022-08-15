@@ -1763,17 +1763,13 @@ class RequestsTests: XCTestCase {
                                       body: try .json(["title": "foo", "body": "bar", "userId": 1]))
             
             requests.append(req)
-            
-           // let r = UInt32.random(in: 0..<20000)
-         //   usleep(r)
-         //   print("Added request after \(r)")
         }
         
         await withThrowingTaskGroup(of: HTTPResponse.self, body: { group in
             for req in requests {
                 group.addTask(priority: .high) {
                     let result = try await req.fetch(newClient)
-                    print(result.data?.asString)
+                    print(result.data?.asString ?? "")
                     return result
                 }
             }
