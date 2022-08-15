@@ -123,7 +123,7 @@ open class HTTPResponse: CustomStringConvertible {
         self.statusCode = HTTPStatusCode.fromResponse(response.urlResponse)
         self.innerData = response.data
         self.dataFileURL = response.dataFileURL
-        self.metrics = HTTPMetrics(metrics: response.metrics, task: response.request.sessionTask)
+        self.metrics = response.httpMetrics
         self.request = response.request
         self.urlRequests = response.urlRequests
     }

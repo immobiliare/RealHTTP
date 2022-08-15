@@ -270,12 +270,18 @@ internal class HTTPDataLoader: NSObject,
     func urlSession(_ session: URLSession, task: URLSessionTask,
                     didFinishCollecting metrics: URLSessionTaskMetrics) {
         
-        self.dataLoadersMap[task.taskIdentifier]?.metrics = metrics
+        // Metrics may fire after URLSession:task:didCompleteWithError: is called, delegate may be nil
+        guard let handler = self.dataLoadersMap[task.taskIdentifier] else { return }
         
-        if let delegate = client?.delegate, let client = client,
-           let request = dataLoadersMap[task.taskIdentifier],
-           let metrics = HTTPMetrics(metrics: metrics, task: task) {
-            delegate.client(client, didCollectedMetricsFor: (request.request, task), metrics: metrics)
+        let httpMetrics = HTTPMetrics(metrics: metrics, task: task)
+        handler.sessionTaskMetrics = metrics
+        handler.httpMetrics = httpMetrics
+        
+        if let httpMetrics = httpMetrics {
+            DispatchQueue.main.async { [weak self] in
+                guard let client = self?.client else { return }
+                client.delegate?.client(client, didCollectedMetricsFor: (handler.request, task), metrics: httpMetrics)
+            }
         }
     }
     

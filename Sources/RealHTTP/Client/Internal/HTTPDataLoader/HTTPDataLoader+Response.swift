@@ -28,8 +28,11 @@ internal class HTTPDataLoaderResponse {
     /// Downloaded data URL for `largeData` transfer mode.
     var dataFileURL: URL?
     
-    /// Metrics stats.
-    var metrics: URLSessionTaskMetrics?
+    /// `URLSessionTaskMetrics` received data.
+    var sessionTaskMetrics: URLSessionTaskMetrics?
+    
+    /// Parsed HTTP Metrics from `sessionTaskMetrics`.
+    var httpMetrics: HTTPMetrics?
     
     /// Error occurred.
     var error: Error?
