@@ -39,7 +39,7 @@ extension HTTPBody {
         
         // MARK: - HTTPSerializableBody Conformance
         
-        public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
+        public func serializeData() throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
             let data = try JSONSerialization.data(withJSONObject: object, options: options)
             return (data, .forData(data))
         }

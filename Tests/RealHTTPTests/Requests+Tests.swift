@@ -242,7 +242,7 @@ class RequestsTests: XCTestCase {
             "p4": ["a","b"],
             "p5": ["k1": "v1", "k2": false]
         ])
-        let encodedBody = try! await urlParamsBody.serializeData().data
+        let encodedBody = try! urlParamsBody.serializeData().data
                 
         let req = HTTPRequest {
             $0.path = "/image/test_image"
@@ -1751,20 +1751,29 @@ class RequestsTests: XCTestCase {
     /// The following test check the exclusive write access to the internal HTTPDataLoader's running task container
     /// and verify no exc_bad_access error can be triggered due multiple access from several threads.
     func test_concurrentNetworkCallsDataLoaderTest() async throws {
+        HTTPStubber.shared.enable()
+        HTTPStubber.shared.removeAllStubs()
+        HTTPStubber.shared.add(stub: try! HTTPStubRequest().match(urlRegex: "(?s).*").stubEcho())
+        
         var requests = [HTTPRequest]()
         let newClient = HTTPClient(baseURL: nil)
 
-        for _ in 0..<100 {
+        for _ in 0..<10000 {
             let req = try! HTTPRequest(method: .post, "https://www.apple.com",
                                       body: try .json(["title": "foo", "body": "bar", "userId": 1]))
             
             requests.append(req)
+            
+           // let r = UInt32.random(in: 0..<20000)
+         //   usleep(r)
+         //   print("Added request after \(r)")
         }
         
         await withThrowingTaskGroup(of: HTTPResponse.self, body: { group in
             for req in requests {
                 group.addTask(priority: .high) {
                     let result = try await req.fetch(newClient)
+                    print(result.data?.asString)
                     return result
                 }
             }

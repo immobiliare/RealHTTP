@@ -22,11 +22,10 @@ import Foundation
 public protocol HTTPSerializableBody {
     
     /// Return encoded data from the body structure used.
-    /// The operation is made asynchronously in another actor.
     /// Throw an exception if something fails.
     ///
     /// - Returns: Data and additional headers to append before making the call.
-    func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?)
+    func serializeData() throws -> (data: Data, additionalHeaders: HTTPHeaders?)
             
 }
 
@@ -35,7 +34,7 @@ public protocol HTTPSerializableBody {
 /// A simple Data instance as body of the request.
 extension Data: HTTPSerializableBody {
     
-    public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
+    public func serializeData() throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
         (self, .forData(self))
     }
     
@@ -46,7 +45,7 @@ extension Data: HTTPSerializableBody {
 /// A simple String instance as body of the request.
 extension String: HTTPSerializableBody {
     
-    public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
+    public func serializeData() throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
         let data = self.data(using: .utf8) ?? Data()
         return (data, .forData(data))
     }

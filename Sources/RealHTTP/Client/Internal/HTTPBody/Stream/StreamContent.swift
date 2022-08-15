@@ -68,7 +68,7 @@ extension HTTPBody {
         
         // MARK: - Protocol Conformance
         
-        public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
+        public func serializeData() throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
             (Data(), .init([
                 .contentLength: String(length)
             ]))

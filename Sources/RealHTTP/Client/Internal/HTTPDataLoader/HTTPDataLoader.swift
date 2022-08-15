@@ -41,10 +41,7 @@ internal class HTTPDataLoader: NSObject,
     private var queue = OperationQueue()
     
     /// List of active running operations.
-    private var dataLoadersMap = [URLSessionTask: HTTPDataLoaderResponse]()
-    
-    /// Loaders data protect.
-    private var dataLoadersLock = RWLock()
+    private var dataLoadersMap = ThreadSafeDictionary<Int,HTTPDataLoaderResponse>()
     
     // MARK: - Initialization
     
@@ -205,9 +202,7 @@ internal class HTTPDataLoader: NSObject,
             // URLSession's finish delegate is called on a secondary thread so it may happens
             // multiple finished calls attempt to modify the dataLoadersMap dictionary causing
             // this crash <https://github.com/immobiliare/RealHTTP/issues/44>
-            self.dataLoadersLock.exclusivelyWrite {
-                self.dataLoadersMap[task] = response
-            }
+            self.dataLoadersMap[task.taskIdentifier] = response
             
             if let client = self.client {
                 client.delegate?.client(client, didEnqueue: (request, task))
@@ -251,9 +246,7 @@ internal class HTTPDataLoader: NSObject,
     
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask,
                            didReceive data: Data) {
-        self.dataLoadersLock.exclusivelyWrite {
-            self.dataLoadersMap[dataTask]?.appendData(data)
-        }
+        self.dataLoadersMap[dataTask.taskIdentifier]?.appendData(data)
     }
     
     func urlSession(_ session: URLSession,
@@ -272,12 +265,10 @@ internal class HTTPDataLoader: NSObject,
     func urlSession(_ session: URLSession, task: URLSessionTask,
                     didFinishCollecting metrics: URLSessionTaskMetrics) {
         
-        self.dataLoadersLock.exclusivelyWrite {
-            self.dataLoadersMap[task]?.metrics = metrics
-        }
+        self.dataLoadersMap[task.taskIdentifier]?.metrics = metrics
         
         if let delegate = client?.delegate, let client = client,
-           let request = self.dataLoadersLock.concurrentlyRead({ dataLoadersMap[task] }),
+           let request = dataLoadersMap[task.taskIdentifier],
            let metrics = HTTPMetrics(metrics: metrics, task: task) {
             delegate.client(client, didCollectedMetricsFor: (request.request, task), metrics: metrics)
         }
@@ -292,17 +283,14 @@ internal class HTTPDataLoader: NSObject,
         let progress = HTTPProgress(event: .upload,
                                     progress: task.progress,
                                     currentLength: totalBytesSent, expectedLength: totalBytesExpectedToSend)
-        
-        self.dataLoadersLock.concurrentlyRead {
-            dataLoadersMap[task]?.request.progress = progress
-        }
+        dataLoadersMap[task.taskIdentifier]?.request.progress = progress
     }
     
     // MARK: - Download Progress
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
                     didFinishDownloadingTo location: URL) {
-        guard let handler = self.dataLoadersLock.concurrentlyRead({ dataLoadersMap[downloadTask] }),
+        guard let handler = dataLoadersMap[downloadTask.taskIdentifier],
               let fileURL = location.copyFileToDefaultLocation(task: downloadTask,
                                                                forRequest: handler.request) else {
             // copy file from a temporary location to a valid location
@@ -321,9 +309,7 @@ internal class HTTPDataLoader: NSObject,
                                     progress: downloadTask.progress,
                                     currentLength: totalBytesWritten, expectedLength: totalBytesExpectedToWrite)
         
-        dataLoadersLock.exclusivelyWrite {
-            self.dataLoadersMap[downloadTask]?.request.progress = progress
-        }
+        self.dataLoadersMap[downloadTask.taskIdentifier]?.request.progress = progress
     }
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
@@ -334,16 +320,14 @@ internal class HTTPDataLoader: NSObject,
                                     currentLength: fileOffset,
                                     expectedLength: expectedTotalBytes)
         
-        dataLoadersLock.exclusivelyWrite {
-            self.dataLoadersMap[downloadTask]?.request.progress = progress
-        }
+        self.dataLoadersMap[downloadTask.taskIdentifier]?.request.progress = progress
     }
     
     // MARK: - Stream
     
     public func urlSession(_ session: URLSession, task: URLSessionTask,
                            needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
-        guard let request = dataLoadersLock.concurrentlyRead({ dataLoadersMap[task]?.request }) else {
+        guard let request = dataLoadersMap[task.taskIdentifier]?.request else {
             return
         }
 
@@ -358,7 +342,7 @@ internal class HTTPDataLoader: NSObject,
     
     func urlSession(_ session: URLSession, taskIsWaitingForConnectivity task: URLSessionTask) {
         guard let client = self.client,
-              let request = dataLoadersLock.concurrentlyRead({ dataLoadersMap[task]?.request }) else {
+              let request = dataLoadersMap[task.taskIdentifier]?.request else {
             return
         }
         
@@ -376,7 +360,7 @@ private extension HTTPDataLoader {
     ///
     /// - Parameter error: error generated.
     func didCompleteAllHandlersWithSessionError(_ error: Error?) {
-        let allHandlers = dataLoadersMap.values
+        /*let allHandlers = dataLoadersMap.values
         dataLoadersMap.removeAll()
         
         for handler in allHandlers {
@@ -388,7 +372,7 @@ private extension HTTPDataLoader {
             handler.request.sessionTask = nil
             
             handler.completion(response)
-        }
+        }*/
     }
     
     /// Method called to perform finalization of a request and return of the operation.
@@ -397,11 +381,9 @@ private extension HTTPDataLoader {
     ///   - task: target task finished.
     ///   - error: error received, if any.
     func completeTask(_ task: URLSessionTask, error: Error?) {
-        dataLoadersLock.exclusivelyWrite {
-            self.dataLoadersMap[task]?.urlResponse = task.response
-        }
+        self.dataLoadersMap[task.taskIdentifier]?.urlResponse = task.response
         
-        guard let handler = dataLoadersLock.concurrentlyRead({ dataLoadersMap[task] }) else {
+        guard let handler = dataLoadersMap[task.taskIdentifier] else {
             return
         }
         
@@ -424,9 +406,7 @@ private extension HTTPDataLoader {
             handler.error = error
         }
         
-        self.dataLoadersLock.exclusivelyWrite {
-            self.dataLoadersMap[task] = nil
-        }
+        self.dataLoadersMap[task.taskIdentifier] = nil
         
         let response = HTTPResponse(response: handler)
         handler.completion(response)
@@ -446,9 +426,7 @@ private extension HTTPDataLoader {
     func evaluateRedirect(task: URLSessionTask, response: HTTPURLResponse, request: URLRequest,
                           completion: @escaping (URLRequest?) -> Void) {
         // missing components, continue to the default behaviour
-        let handler = self.dataLoadersLock.concurrentlyRead {
-            dataLoadersMap[task]
-        }
+        let handler = dataLoadersMap[task.taskIdentifier]
         guard let client = client, let handler = handler else {
             completion(request)
             return
@@ -487,7 +465,7 @@ private extension HTTPDataLoader {
     ///   - completionHandler: completion callback.
     func evaluateAuthChallange(_ task: URLSessionTask, challenge: URLAuthenticationChallenge,
                                       completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        guard let request = self.dataLoadersLock.concurrentlyRead({ dataLoadersMap[task]?.request }),
+        guard let request = dataLoadersMap[task.taskIdentifier]?.request,
               let security = request.security ?? client?.security else {
             // if not security is settings for both client and request we can use the default handling
             completionHandler(.performDefaultHandling, nil)

@@ -85,7 +85,7 @@ extension URLRequest {
     
     // MARK: - Public Functions
     
-    mutating internal func setHTTPBody(_ body: HTTPBody) async throws {
+    mutating internal func setHTTPBody(_ body: HTTPBody) throws {
         if let stream = body.content as? HTTPBody.StreamContent {
             // Prepare the stream
             let result = stream.inputStream(recreate: false)
@@ -94,22 +94,11 @@ extension URLRequest {
             headers.mergeWith(result.additionalHeaders)
         } else {
             // Serialize the body and set it.
-            let result = try await bodySerializeTask(body).value
-            httpBody = result.0
+            let result = try body.content.serializeData()
+            httpBody = result.data
             // Add any additional header received after the serialization.
-            headers.mergeWith(result.1)
+            headers.mergeWith(result.additionalHeaders)
         }
-    }
-    
-    /// Serialize in another task.
-    ///
-    /// - Parameter body: body to serialize.
-    /// - Returns: Task
-    private func bodySerializeTask(_ body: HTTPBody) -> Task<(Data,HTTPHeaders?), Error> {
-        Task<(Data, HTTPHeaders?), Error>.init(priority: .background, operation: {
-            let result = try await body.content.serializeData()
-            return result
-        })
     }
     
     /// Request's header fields in forms of `HTTPHeaders` object.

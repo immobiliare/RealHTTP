@@ -141,7 +141,7 @@ extension HTTPBody {
         ///
         /// - Throws: throw an exception if encoding fails.
         /// - Returns: Data
-        public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
+        public func serializeData() throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
             var data = Data()
 
             if let preamble = self.preamble?.data(using: .utf8) {

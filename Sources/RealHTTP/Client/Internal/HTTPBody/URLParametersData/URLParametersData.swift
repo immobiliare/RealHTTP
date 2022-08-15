@@ -53,7 +53,7 @@ extension HTTPBody {
         
         // MARK: - Encoding
         
-        public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
+        public func serializeData() throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
             guard let parameters = self.parameters, parameters.isEmpty == false else {
                 return (Data(), nil) // no parameters set
             }

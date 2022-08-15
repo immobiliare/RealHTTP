@@ -106,8 +106,8 @@ extension HTTPBody {
         
         // MARK: - HTTPSerializableBody Conformance
         
-        public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
-            try await data.serializeData()
+        public func serializeData() throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
+            try data.serializeData()
         }
         
     }

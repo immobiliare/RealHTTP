@@ -464,7 +464,7 @@ extension HTTPRequest {
                                         headers: requestHeaders)
         urlRequest.httpShouldHandleCookies = true
         urlRequest.allowsCellularAccess = allowsCellularAccess
-        try await urlRequest.setHTTPBody(body) // setup the body
+        try urlRequest.setHTTPBody(body) // setup the body
         return urlRequest
     }
     

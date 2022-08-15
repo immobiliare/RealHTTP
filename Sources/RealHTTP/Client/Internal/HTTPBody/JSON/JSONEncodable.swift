@@ -47,7 +47,7 @@ extension HTTPBody {
         /// Encode the data.
         ///
         /// - Returns: Data
-        public func serializeData() async throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
+        public func serializeData() throws -> (data: Data, additionalHeaders: HTTPHeaders?) {
             let data = try jsonEncoder.encode(_object)
             return (data, .forData(data))
         }
