@@ -145,6 +145,7 @@ RealHTTP is provided with an extensive documentation.
   - [cURL Command Output](./Documentation/6.Other_Debugging_Tools.md#curl-command-output)
   - [Monitor Connection Metrics](./Documentation/6.Other_Debugging_Tools.md#monitor-connection-metrics)
 - [**7 - HTTP Stubber**](./Documentation/7.Stubber.md#http-stubber)
+  - [Using HTTPStubber in your unit tests](./Documentation/7.Stubber.md#using-httpstubber-in-your-unit-tests)
   - [Stub a Request](./Documentation/7.Stubber.md#stub-a-request)
   - [Stub Matchers](./Documentation/7.Stubber.md#stub-matchers)
     - [Echo Matcher](./Documentation/7.Stubber.md#echo-matcher)
