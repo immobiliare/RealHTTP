@@ -70,11 +70,11 @@ open class HTTPStubResponse {
 /// Define the response interval for a stubbed request:
 /// - `immediate`: return an immediate response with no delay
 /// - `delayedBy`: return a response after a certain delay interval in seconds
-/// - `withConnection`: return a response by simulating a connection quality.
+/// - `withSpeed`: return a response by simulating a connection quality.
 public enum HTTPStubResponseInterval {
     case immediate
     case delayedBy(TimeInterval)
-    case withConnection(HTTPConnectionSpeed)
+    case withSpeed(HTTPConnectionSpeed)
 }
 
 // MARK: - HTTPConnectionSpeed

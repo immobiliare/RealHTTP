@@ -1830,23 +1830,36 @@ class RequestsTests: XCTestCase {
     public func testStub() async throws {
         HTTPStubber.shared.enable()
         
-        let x = randomString(length: 1000)
-        print(x)
+        // Create a response.
+        let randomData = randomString(length: 5000)
+        let mock = try HTTPStubRequest()
+            .match(urlRegex: "(?s).*")
+            .stub(for: .get, {
+                $0.statusCode = .ok
+                $0.responseInterval = .withSpeed(.speed1kbps)
+                $0.contentType = .text
+                $0.body = randomData
+                $0.headers = [
+                    "Content-Length": String(randomData.count)
+                ]
+            })
+        HTTPStubber.shared.add(stub: mock)
         
-        let stub = try HTTPStubRequest().match(urlRegex: "(?s).*")
-            .stub(for: .get, code: .ok, interval: .withConnection(.speedSlow), contentType: .text, body: x)
-        HTTPStubber.shared.add(stub: stub)
-        
+        // Create a request
         let req = HTTPRequest {
+            $0.transferMode = .largeData
             $0.method = .get
             $0.timeout = 120
             $0.url = URL(string: "http://www.google.com")
         }
-        let f = try await req.fetch()
-        print(f.data?.asString ?? "")
+        
+        let response = try await req.fetch()
+        XCTAssertEqual(response.data?.asString, randomData)
     }
     
-    func randomString(length: Int) -> String {
+    // MARK: - Private Functions
+    
+    fileprivate func randomString(length: Int) -> String {
         let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return String((0..<length).map{ _ in letters.randomElement()! })
     }

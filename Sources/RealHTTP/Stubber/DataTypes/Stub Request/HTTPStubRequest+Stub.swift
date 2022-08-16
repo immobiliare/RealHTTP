@@ -129,14 +129,19 @@ extension HTTPStubRequest {
     ///   - interval: interval for response.
     ///   - contentType: content type of the response.
     ///   - body: body of the response.
+    ///   - headers: headers to set.
     /// - Returns: Self
-    public func stub(for method: HTTPMethod, code: HTTPStatusCode = .ok, interval: HTTPStubResponseInterval = .immediate,
-                     contentType: HTTPContentType, body: HTTPStubDataConvertible?) -> Self {
+    public func stub(for method: HTTPMethod, code: HTTPStatusCode = .ok,
+                     interval: HTTPStubResponseInterval = .immediate,
+                     contentType: HTTPContentType,
+                     body: HTTPStubDataConvertible?,
+                     headers: HTTPHeaders = .init()) -> Self {
         stub(for: method) {
             $0.contentType = contentType
             $0.statusCode = code
             $0.body = body
             $0.responseInterval = interval
+            $0.headers = headers
         }
     }
     

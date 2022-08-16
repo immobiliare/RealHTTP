@@ -103,7 +103,7 @@ public class HTTPStubURLProtocol: URLProtocol {
             })
             DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated).asyncAfter(deadline: .now() + interval,
                                                                                      execute: responseWorkItem!)
-        case .withConnection(let speed):
+        case .withSpeed(let speed):
             let data = stubResponse.body?.data ?? Data()
             let inputStream = InputStream(data: data)
 
@@ -165,17 +165,20 @@ public class HTTPStubURLProtocol: URLProtocol {
                 let data = Data(bytes: buffer, count: bytesRead)
                 print("Sending \(data.count) bytes...")
                 // Wait for 'slotTime' seconds before sending the chunk.
-                // NOTE:
-                // If bytesRead < chunkSizePerSlot (because we are near the EOF),
+                //
+                // NOTE
+                // If `bytesRead < chunkSizePerSlot` (because we are near the EOF),
                 // adjust slotTime proportionally to the bytes remaining
                 DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + timingInfo.slotTime) {
                     self.client?.urlProtocol(self, didLoad: data)
                     self.streamData(inputStream, forRequest: request, forStub: stub, speed: speed, completion: completion)
                 }
             } else {
-                // Note: We may also arrive here with no error if we were just at the end of the stream (EOF)
-                // In that case, hasBytesAvailable did return YES (because at the limit of OEF) but nothing were read (because EOF)
-                // But then in that case inputStream.streamError will be nil so that's cool, we won't return an error anyway
+                // NOTE
+                // We may also arrive here with no error if we were just at the end of the stream (EOF)
+                // In that case, `hasBytesAvailable` did return true (because at the limit of OEF) but nothing
+                // were read (because EOF).
+                // In this case `inputStream.streamError` will be `nil` so that's okay, we'll return no error.
                 completion(inputStream.streamError)
             }
         }
@@ -228,18 +231,20 @@ public class HTTPStubURLProtocol: URLProtocol {
 internal struct HTTPStubStreamTiming {
     
     /// The default slot interval, must be > 0.
-    ///  We will send a chunk of the data from the stream each 'slotTime' seconds.
+    /// We will send a chunk of the data from the stream each 'slotTime' seconds.
+    /// This value is 0.25 seconds.
     static let defaultSlotTime: TimeInterval = 0.25
     
-    var slotTime: TimeInterval
-    var chunkSizePerSlot: Double
-    var cumulativeChunkSize: Double
+    // MARK: - Private Properties
     
-    init(slotTime: TimeInterval = HTTPStubStreamTiming.defaultSlotTime,
-         chunkSize: Double = 0, cumulativeChunkSize: Double = 0) {
+    var slotTime: TimeInterval
+    var chunkSizePerSlot: Double = 0.0
+    var cumulativeChunkSize: Double = 0.0
+    
+    // MARK: - Initialization
+    
+    init(slotTime: TimeInterval = HTTPStubStreamTiming.defaultSlotTime) {
         self.slotTime = slotTime
-        self.chunkSizePerSlot = chunkSize
-        self.cumulativeChunkSize = cumulativeChunkSize
     }
     
 }
