@@ -1827,7 +1827,28 @@ class RequestsTests: XCTestCase {
         XCTAssertTrue(validateBaseURL, "Failed to validate the url of the request")
     }
     
-    public func testSimulatedSpeedConnection() async throws {
+    public func test_simulateNoConnection() async throws {
+        HTTPStubber.shared.enable()
+
+        let notConnectedError = NSError(domain: NSURLErrorDomain, code: URLError.notConnectedToInternet.rawValue)
+        let mock = try HTTPStubRequest()
+            .match(urlRegex: "(?s).*")
+            .stub(for: .get, error: notConnectedError)
+        
+        // Create a request
+        let req = HTTPRequest {
+            $0.transferMode = .largeData
+            $0.method = .get
+            $0.timeout = 120
+            $0.url = URL(string: "http://www.google.com")
+        }
+        HTTPStubber.shared.add(stub: mock)
+
+        let response = try await req.fetch()
+        print(response.error)
+    }
+    
+    public func test_simulatedSpeedConnection() async throws {
         HTTPStubber.shared.enable()
         
         // Create a response.
@@ -1855,6 +1876,9 @@ class RequestsTests: XCTestCase {
         
         let response = try await req.fetch()
         XCTAssertEqual(response.data?.asString, randomData)
+        
+        HTTPStubber.shared.removeAllStubs()
+        HTTPStubber.shared.disable()
     }
     
     // MARK: - Private Functions

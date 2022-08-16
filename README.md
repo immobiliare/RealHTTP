@@ -154,9 +154,12 @@ RealHTTP is provided with an extensive documentation.
     - [Body Matcher](./Documentation/7.Stubber.md#body-matcher)
     - [URL Matcher](./Documentation/7.Stubber.md#url-matcher)
     - [Custom Matcher](./Documentation/7.Stubber.md#custom-matcher)
-  - [Simulate Network Conditions](./Documentation/7.Stubber.md#simulate-network-conditions)
   - [Add Ignore Rule](./Documentation/7.Stubber.md#add-ignore-rule)
   - [Unhandled Rules](./Documentation/7.Stubber.md#unhandled-rules)
+  - [Bad and down network](./Documentation/7.Stubber.md#bad-and-down-network)
+    - [Simulate Network Conditions](./Documentation/7.Stubber.md#simulate-network-conditions)
+    - [Simulate a down network](./Documentation/7.Stubber.md#simulate-a-down-network)
+    
 ## Test
 
 RealHTTP has an extensive unit test suite which covers many of the standard and edge cases including request build, parameter encoding, queuing and retry strategies.  
