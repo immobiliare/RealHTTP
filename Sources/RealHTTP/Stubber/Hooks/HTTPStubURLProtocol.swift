@@ -94,18 +94,18 @@ public class HTTPStubURLProtocol: URLProtocol {
             return
         }
         
-        guard let delay = stubResponse.responseDelay else {
+        switch stubResponse.responseInterval {
+        case .immediate:
             finishRequest(request, withStub: stubResponse, cookies: cookieStorage)
-            return
+        case .delayedBy(let interval):
+            self.responseWorkItem = DispatchWorkItem(block: { [weak self] in
+                self?.finishRequest(request, withStub: stubResponse, cookies: cookieStorage)
+            })
+            DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated).asyncAfter(deadline: .now() + interval,
+                                                                                     execute: responseWorkItem!)
+        case .withConnection(let speed):
+            break
         }
-        
-        // Perform delayed reply
-        self.responseWorkItem = DispatchWorkItem(block: { [weak self] in
-            self?.finishRequest(request, withStub: stubResponse, cookies: cookieStorage)
-        })
-
-        DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated)
-            .asyncAfter(deadline: .now() + delay, execute: responseWorkItem!)
     }
     
     public override func stopLoading() {

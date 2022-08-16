@@ -1095,7 +1095,7 @@ class RequestsTests: XCTestCase {
         setupStubber(echo: false)
         defer { stopStubber() }
         
-        let stub = try! HTTPStubRequest().match(urlRegex: "/login").stub(for: .get, delay: 10, code: .ok)
+        let stub = try! HTTPStubRequest().match(urlRegex: "/login").stub(for: .get, interval: .delayedBy(10), code: .ok)
         HTTPStubber.shared.add(stub: stub)
         
         let req = HTTPRequest {

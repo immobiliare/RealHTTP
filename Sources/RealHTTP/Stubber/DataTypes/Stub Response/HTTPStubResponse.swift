@@ -37,8 +37,8 @@ open class HTTPStubResponse {
     open var cachePolicy: URLCache.StoragePolicy = .notAllowed
     
     /// You can define a delay to return the reponse.
-    /// If `nil` no delay is applied.
-    open var responseDelay: TimeInterval? = nil
+    /// By default `immediate` is used.
+    open var responseInterval: HTTPStubResponseInterval = .immediate
 
     /// public initializer to make it available from outside
     public init() {
@@ -55,4 +55,42 @@ open class HTTPStubResponse {
         self
     }
     
+}
+
+// MARK: - HTTPStubResponseInterval
+
+/// Define the response interval for a stubbed request:
+/// - `immediate`: return an immediate response with no delay
+/// - `delayedBy`: return a response after a certain delay interval in seconds
+/// - `withConnection`: return a response by simulating a connection quality.
+public enum HTTPStubResponseInterval {
+    case immediate
+    case delayedBy(TimeInterval)
+    case withConnection(HTTPConnectionSpeed)
+}
+
+// MARK: - HTTPConnectionSpeed
+
+/// Simulate a connection speed.
+public enum HTTPConnectionSpeed {
+    case speed1kbps
+    case speedSlow
+    case speedGPRS
+    case speedEdge
+    case speed3G
+    case speed3GPlus
+    case speedWiFi
+    
+    /// kbps -> KB/s
+    internal var value: Double {
+        switch self {
+        case .speed1kbps:   return 8/8
+        case .speedSlow:    return 12/8
+        case .speedGPRS:    return 56/8
+        case .speedEdge:    return 128/8
+        case .speed3G:      return 3200/8
+        case .speed3GPlus:  return 7200/8
+        case .speedWiFi:    return 12000/8
+        }
+    }
 }

@@ -64,12 +64,12 @@ extension HTTPStubRequest {
     ///
     /// - Parameters:
     ///   - method: the http method which trigger this stubbed response.
-    ///   - delay: (optional) delay interval for response.
+    ///   - interval: response interval, by default is `immediate`.
     ///   - code: status code to produce.
     /// - Returns: Self
-    public func stub(for method: HTTPMethod, delay: TimeInterval? = nil, code: HTTPStatusCode) -> Self {
+    public func stub(for method: HTTPMethod, interval: HTTPStubResponseInterval = .immediate, code: HTTPStatusCode) -> Self {
         stub(for: method) {
-            $0.responseDelay = delay
+            $0.responseInterval = interval
             $0.statusCode = code
         }
     }
@@ -80,12 +80,12 @@ extension HTTPStubRequest {
     ///
     /// - Parameters:
     ///   - method: the http method which trigger this stubbed response.
-    ///   - delay: (optional) delay interval for response.
+    ///   - interval: response interval, by default is `immediate`.
     ///   - error: error to trigger.
-    public func stub(for method: HTTPMethod, delay: TimeInterval? = nil, error: Error) -> Self {
+    public func stub(for method: HTTPMethod, interval: HTTPStubResponseInterval = .immediate, error: Error) -> Self {
         stub(for: method) {
             $0.failError = error
-            $0.responseDelay = delay
+            $0.responseInterval = interval
         }
     }
     
@@ -95,11 +95,11 @@ extension HTTPStubRequest {
     ///
     /// - Parameters:
     ///   - method: the http method which trigger this stubbed response.
-    ///   - delay: (optional) delay interval for response.
+    ///   - interval: interval for response.
     ///   - string: json string (encoded as utf8).
     /// - Returns: Self
-    public func stub(for method: HTTPMethod, delay: TimeInterval? = nil, json string: String?) -> Self {
-        stub(for: method, delay: delay, contentType: .json, body: string)
+    public func stub(for method: HTTPMethod, interval: HTTPStubResponseInterval = .immediate, json string: String?) -> Self {
+        stub(for: method, interval: interval, contentType: .json, body: string)
     }
     
     /// Generic stub response with custom content type and response get from file at specified url.
@@ -108,17 +108,17 @@ extension HTTPStubRequest {
     /// - Parameters:
     ///   - method: the http method which trigger this stubbed response.
     ///   - code: http status code.
-    ///   - delay: (optional) delay interval for response.
+    ///   - interval: interval for response.
     ///   - contentType: content type of the response.
     ///   - bodyFileURL: body of the response.
     /// - Returns: Self
-    public func stub(for method: HTTPMethod, code: HTTPStatusCode = .ok, delay: TimeInterval? = nil,
+    public func stub(for method: HTTPMethod, code: HTTPStatusCode = .ok, interval: HTTPStubResponseInterval = .immediate,
                      contentType: HTTPContentType, bodyFileURL: URL) -> Self {
         guard let data = Data.fromURL(bodyFileURL) else {
             return self
         }
         
-        return stub(for: method, code: code, delay: delay, contentType: contentType, body: data)
+        return stub(for: method, code: code, interval: interval, contentType: contentType, body: data)
     }
     
     /// Generic stub response with custom content type.
@@ -126,17 +126,17 @@ extension HTTPStubRequest {
     /// - Parameters:
     ///   - method: the http method which trigger this stubbed response.
     ///   - code: http status code.
-    ///   - delay: (optional) delay interval for response.
+    ///   - interval: interval for response.
     ///   - contentType: content type of the response.
     ///   - body: body of the response.
     /// - Returns: Self
-    public func stub(for method: HTTPMethod, code: HTTPStatusCode = .ok, delay: TimeInterval? = nil,
+    public func stub(for method: HTTPMethod, code: HTTPStatusCode = .ok, interval: HTTPStubResponseInterval = .immediate,
                      contentType: HTTPContentType, body: HTTPStubDataConvertible?) -> Self {
         stub(for: method) {
             $0.contentType = contentType
             $0.statusCode = code
             $0.body = body
-            $0.responseDelay = delay
+            $0.responseInterval = interval
         }
     }
     
@@ -149,17 +149,17 @@ extension HTTPStubRequest {
     ///   - statusCode: (optional) status code for response (should be part of the redirect category).
     ///                 By default is `.found` (302).
     ///   - redirectURL: final redirect url for client.
-    ///   - delay: delay interval in response.
+    ///   - interval: interval for response.
     ///   - headers: headers to set.
     public func stub(method: HTTPMethod,
                      statusCode: HTTPStatusCode = .found,
-                     redirectsTo redirectURL: URL, delay: TimeInterval? = nil,
+                     redirectsTo redirectURL: URL, interval: HTTPStubResponseInterval = .immediate,
                      headers: HTTPHeaders = .init()) -> Self {
         stub(for: method) { response in
             response.body = "Location: \(redirectURL.absoluteString)"
             response.statusCode = statusCode
             response.headers = headers
-            response.responseDelay = delay
+            response.responseInterval = interval
         }
     }
     
