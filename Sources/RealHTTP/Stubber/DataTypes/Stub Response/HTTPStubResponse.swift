@@ -27,7 +27,14 @@ open class HTTPStubResponse {
     open var failError: Error? = nil
     
     /// Contains a map of the data to return.
-    open var body: HTTPStubDataConvertible? = nil
+    open var body: HTTPStubDataConvertible? = nil {
+        didSet {
+            self.dataSize = body?.data?.count ?? 0
+        }
+    }
+        
+    /// The size of the fake response body, in bytes.
+    public private(set) var dataSize: Int = 0
     
     /// The headers to send back with the response.
     open var headers =  HTTPHeaders()
@@ -54,6 +61,7 @@ open class HTTPStubResponse {
     open func adaptForRequest(_ request: URLRequest) -> HTTPStubResponse {
         self
     }
+    
     
 }
 

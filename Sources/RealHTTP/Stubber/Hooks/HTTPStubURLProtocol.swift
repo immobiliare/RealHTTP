@@ -104,6 +104,11 @@ public class HTTPStubURLProtocol: URLProtocol {
             DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated).asyncAfter(deadline: .now() + interval,
                                                                                      execute: responseWorkItem!)
         case .withConnection(let speed):
+            streamData(request, forStub: stubResponse, speed: speed) { error in
+                if let error = error {
+                    self.client?.urlProtocol(self, didFailWithError: error)
+                }
+            }
             break
         }
     }
@@ -113,6 +118,58 @@ public class HTTPStubURLProtocol: URLProtocol {
     }
     
     // MARK: - Private Functions
+    
+    private func streamData(_ request: URLRequest, forStub stub: HTTPStubResponse, speed: HTTPConnectionSpeed,
+                            completion: @escaping ((Error?) -> Void)) {
+        
+        let inputStream = InputStream(data: stub.body?.data ?? Data())
+        guard stub.dataSize > 0 && inputStream.hasBytesAvailable else {
+            return
+        }
+        
+        // Compute timing data once and for all for this stub.
+        var timingInfo = HTTPStubStreamTiming()
+        // Bytes send each 'slotTime' seconds = Speed in KB/s * 1000 * slotTime in seconds
+        timingInfo.chunkSizePerSlot = (fabs(speed.value) * 1000) * timingInfo.slotTime
+        
+        if inputStream.hasBytesAvailable {
+            // This is needed in case we computed a non-integer chunkSizePerSlot, to avoid cumulative errors
+            let cumulativeChunkSizeAfterRead = timingInfo.cumulativeChunkSize + timingInfo.chunkSizePerSlot
+            let chunkSizeToRead = Int(floor(cumulativeChunkSizeAfterRead) - floor(timingInfo.cumulativeChunkSize))
+            timingInfo.cumulativeChunkSize = cumulativeChunkSizeAfterRead;
+
+            if chunkSizeToRead == 0 { // Nothing to read at this pass, but probably later
+                DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + timingInfo.slotTime) {
+                    self.streamData(request, forStub: stub, speed: speed, completion: completion)
+                }
+            } else {
+                let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: chunkSizeToRead)
+                let bytesRead = inputStream.read(buffer, maxLength: chunkSizeToRead)
+                defer {
+                    buffer.deallocate()
+                }
+                
+                if bytesRead > 0 {
+                    let data = Data(bytes: buffer, count: bytesRead)
+                    // Wait for 'slotTime' seconds before sending the chunk.
+                    // NOTE:
+                    // If bytesRead < chunkSizePerSlot (because we are near the EOF),
+                    // adjust slotTime proportionally to the bytes remaining
+                    DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + timingInfo.slotTime) {
+                        self.client?.urlProtocol(self, didLoad: data)
+                        self.streamData(request, forStub: stub, speed: speed, completion: completion)
+                    }
+                } else {
+                    // Note: We may also arrive here with no error if we were just at the end of the stream (EOF)
+                    // In that case, hasBytesAvailable did return YES (because at the limit of OEF) but nothing were read (because EOF)
+                    // But then in that case inputStream.streamError will be nil so that's cool, we won't return an error anyway
+                    completion(inputStream.streamError)
+                }
+            }
+        } else {
+            completion(nil)
+        }
+    }
     
     private func finishRequest(_ request: URLRequest, withStub stubResponse: HTTPStubResponse, cookies: HTTPCookieStorage) {
         let url = request.url!
@@ -152,6 +209,27 @@ public class HTTPStubURLProtocol: URLProtocol {
             client?.urlProtocol(self, didLoad: data)
         }
         client?.urlProtocolDidFinishLoading(self)
+    }
+    
+}
+
+// MARK: - HTTPStubStreamTiming
+
+internal struct HTTPStubStreamTiming {
+    
+    /// The default slot interval, must be > 0.
+    ///  We will send a chunk of the data from the stream each 'slotTime' seconds.
+    static let defaultSlotTime: TimeInterval = 0.25
+    
+    var slotTime: TimeInterval
+    var chunkSizePerSlot: Double
+    var cumulativeChunkSize: Double
+    
+    init(slotTime: TimeInterval = HTTPStubStreamTiming.defaultSlotTime,
+         chunkSize: Double = 0, cumulativeChunkSize: Double = 0) {
+        self.slotTime = slotTime
+        self.chunkSizePerSlot = chunkSize
+        self.cumulativeChunkSize = cumulativeChunkSize
     }
     
 }
