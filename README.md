@@ -154,6 +154,7 @@ RealHTTP is provided with an extensive documentation.
     - [Body Matcher](./Documentation/7.Stubber.md#body-matcher)
     - [URL Matcher](./Documentation/7.Stubber.md#url-matcher)
     - [Custom Matcher](./Documentation/7.Stubber.md#custom-matcher)
+  - [Simulate Network Conditions](./Documentation/7.Stubber.md#simulate-network-conditions)
   - [Add Ignore Rule](./Documentation/7.Stubber.md#add-ignore-rule)
   - [Unhandled Rules](./Documentation/7.Stubber.md#unhandled-rules)
 ## Test

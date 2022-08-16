@@ -69,7 +69,7 @@ extension HTTPStubRequest {
     /// - Returns: Self
     public func stub(for method: HTTPMethod, interval: HTTPStubResponseInterval = .immediate, code: HTTPStatusCode) -> Self {
         stub(for: method) {
-            $0.responseInterval = interval
+            $0.responseTime = interval
             $0.statusCode = code
         }
     }
@@ -85,7 +85,7 @@ extension HTTPStubRequest {
     public func stub(for method: HTTPMethod, interval: HTTPStubResponseInterval = .immediate, error: Error) -> Self {
         stub(for: method) {
             $0.failError = error
-            $0.responseInterval = interval
+            $0.responseTime = interval
         }
     }
     
@@ -140,7 +140,7 @@ extension HTTPStubRequest {
             $0.contentType = contentType
             $0.statusCode = code
             $0.body = body
-            $0.responseInterval = interval
+            $0.responseTime = interval
             $0.headers = headers
         }
     }
@@ -164,7 +164,7 @@ extension HTTPStubRequest {
             response.body = "Location: \(redirectURL.absoluteString)"
             response.statusCode = statusCode
             response.headers = headers
-            response.responseInterval = interval
+            response.responseTime = interval
         }
     }
     

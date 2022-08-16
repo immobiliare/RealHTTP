@@ -44,9 +44,14 @@ open class HTTPStubResponse {
     open var cachePolicy: URLCache.StoragePolicy = .notAllowed
     
     /// You can define a delay to return the reponse.
+    /// You can use it to simulate network speed.
     /// By default `immediate` is used.
-    open var responseInterval: HTTPStubResponseInterval = .immediate
-
+    open var responseTime: HTTPStubResponseInterval = .immediate
+    
+    /// Stubber will wait `requestTime` before sending the `NSHTTPURLResponse` headers.
+    /// You can use it to simulate a slow network.
+    open var requestTime: TimeInterval? = nil
+    
     /// public initializer to make it available from outside
     public init() {
 

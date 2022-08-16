@@ -94,7 +94,7 @@ public class HTTPStubURLProtocol: URLProtocol {
             return
         }
         
-        switch stubResponse.responseInterval {
+        switch stubResponse.responseTime {
         case .immediate:
             finishRequest(request, withStub: stubResponse, cookies: cookieStorage)
         case .delayedBy(let interval):

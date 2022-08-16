@@ -1827,7 +1827,7 @@ class RequestsTests: XCTestCase {
         XCTAssertTrue(validateBaseURL, "Failed to validate the url of the request")
     }
     
-    public func testStub() async throws {
+    public func testSimulatedSpeedConnection() async throws {
         HTTPStubber.shared.enable()
         
         // Create a response.
@@ -1836,7 +1836,7 @@ class RequestsTests: XCTestCase {
             .match(urlRegex: "(?s).*")
             .stub(for: .get, {
                 $0.statusCode = .ok
-                $0.responseInterval = .withSpeed(.speed1kbps)
+                $0.responseTime = .withSpeed(.speed1kbps)
                 $0.contentType = .text
                 $0.body = randomData
                 $0.headers = [
