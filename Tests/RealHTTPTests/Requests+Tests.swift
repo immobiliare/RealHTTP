@@ -1827,6 +1827,30 @@ class RequestsTests: XCTestCase {
         XCTAssertTrue(validateBaseURL, "Failed to validate the url of the request")
     }
     
+    public func testStub() async throws {
+        HTTPStubber.shared.enable()
+        
+        let x = randomString(length: 1000)
+        print(x)
+        
+        let stub = try HTTPStubRequest().match(urlRegex: "(?s).*")
+            .stub(for: .get, code: .ok, interval: .withConnection(.speedSlow), contentType: .text, body: x)
+        HTTPStubber.shared.add(stub: stub)
+        
+        let req = HTTPRequest {
+            $0.method = .get
+            $0.timeout = 120
+            $0.url = URL(string: "http://www.google.com")
+        }
+        let f = try await req.fetch()
+        print(f.data?.asString ?? "")
+    }
+    
+    func randomString(length: Int) -> String {
+        let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return String((0..<length).map{ _ in letters.randomElement()! })
+    }
+        
 }
 
 public struct UserCredentials: Codable {

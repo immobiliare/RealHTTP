@@ -104,9 +104,23 @@ public class HTTPStubURLProtocol: URLProtocol {
             DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated).asyncAfter(deadline: .now() + interval,
                                                                                      execute: responseWorkItem!)
         case .withConnection(let speed):
-            streamData(request, forStub: stubResponse, speed: speed) { error in
+            let data = stubResponse.body?.data ?? Data()
+            let inputStream = InputStream(data: data)
+
+            inputStream.open()
+
+            guard data.count > 0, inputStream.hasBytesAvailable else {
+                self.client?.urlProtocol(self, didLoad: Data())
+                inputStream.close()
+                return
+            }
+
+            streamData(inputStream, forRequest: request, forStub: stubResponse, speed: speed) { error in
+                inputStream.close()
                 if let error = error {
                     self.client?.urlProtocol(self, didFailWithError: error)
+                } else {
+                    self.client?.urlProtocolDidFinishLoading(self)
                 }
             }
             break
@@ -119,55 +133,51 @@ public class HTTPStubURLProtocol: URLProtocol {
     
     // MARK: - Private Functions
     
-    private func streamData(_ request: URLRequest, forStub stub: HTTPStubResponse, speed: HTTPConnectionSpeed,
+    private func streamData(_ inputStream: InputStream,
+                            forRequest request: URLRequest, forStub stub: HTTPStubResponse,
+                            speed: HTTPConnectionSpeed,
                             completion: @escaping ((Error?) -> Void)) {
         
-        let inputStream = InputStream(data: stub.body?.data ?? Data())
-        guard stub.dataSize > 0 && inputStream.hasBytesAvailable else {
-            return
-        }
+        
         
         // Compute timing data once and for all for this stub.
         var timingInfo = HTTPStubStreamTiming()
         // Bytes send each 'slotTime' seconds = Speed in KB/s * 1000 * slotTime in seconds
         timingInfo.chunkSizePerSlot = (fabs(speed.value) * 1000) * timingInfo.slotTime
         
-        if inputStream.hasBytesAvailable {
-            // This is needed in case we computed a non-integer chunkSizePerSlot, to avoid cumulative errors
-            let cumulativeChunkSizeAfterRead = timingInfo.cumulativeChunkSize + timingInfo.chunkSizePerSlot
-            let chunkSizeToRead = Int(floor(cumulativeChunkSizeAfterRead) - floor(timingInfo.cumulativeChunkSize))
-            timingInfo.cumulativeChunkSize = cumulativeChunkSizeAfterRead;
-
-            if chunkSizeToRead == 0 { // Nothing to read at this pass, but probably later
-                DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + timingInfo.slotTime) {
-                    self.streamData(request, forStub: stub, speed: speed, completion: completion)
-                }
-            } else {
-                let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: chunkSizeToRead)
-                let bytesRead = inputStream.read(buffer, maxLength: chunkSizeToRead)
-                defer {
-                    buffer.deallocate()
-                }
-                
-                if bytesRead > 0 {
-                    let data = Data(bytes: buffer, count: bytesRead)
-                    // Wait for 'slotTime' seconds before sending the chunk.
-                    // NOTE:
-                    // If bytesRead < chunkSizePerSlot (because we are near the EOF),
-                    // adjust slotTime proportionally to the bytes remaining
-                    DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + timingInfo.slotTime) {
-                        self.client?.urlProtocol(self, didLoad: data)
-                        self.streamData(request, forStub: stub, speed: speed, completion: completion)
-                    }
-                } else {
-                    // Note: We may also arrive here with no error if we were just at the end of the stream (EOF)
-                    // In that case, hasBytesAvailable did return YES (because at the limit of OEF) but nothing were read (because EOF)
-                    // But then in that case inputStream.streamError will be nil so that's cool, we won't return an error anyway
-                    completion(inputStream.streamError)
-                }
+        // This is needed in case we computed a non-integer chunkSizePerSlot, to avoid cumulative errors
+        let cumulativeChunkSizeAfterRead = timingInfo.cumulativeChunkSize + timingInfo.chunkSizePerSlot
+        let chunkSizeToRead = Int(floor(cumulativeChunkSizeAfterRead) - floor(timingInfo.cumulativeChunkSize))
+        timingInfo.cumulativeChunkSize = cumulativeChunkSizeAfterRead;
+        
+        if chunkSizeToRead == 0 { // Nothing to read at this pass, but probably later
+            DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + timingInfo.slotTime) {
+                self.streamData(inputStream, forRequest: request, forStub: stub, speed: speed, completion: completion)
             }
         } else {
-            completion(nil)
+            let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: chunkSizeToRead)
+            let bytesRead = inputStream.read(buffer, maxLength: chunkSizeToRead)
+            defer {
+                buffer.deallocate()
+            }
+            
+            if bytesRead > 0 {
+                let data = Data(bytes: buffer, count: bytesRead)
+                print("Sending \(data.count) bytes...")
+                // Wait for 'slotTime' seconds before sending the chunk.
+                // NOTE:
+                // If bytesRead < chunkSizePerSlot (because we are near the EOF),
+                // adjust slotTime proportionally to the bytes remaining
+                DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + timingInfo.slotTime) {
+                    self.client?.urlProtocol(self, didLoad: data)
+                    self.streamData(inputStream, forRequest: request, forStub: stub, speed: speed, completion: completion)
+                }
+            } else {
+                // Note: We may also arrive here with no error if we were just at the end of the stream (EOF)
+                // In that case, hasBytesAvailable did return YES (because at the limit of OEF) but nothing were read (because EOF)
+                // But then in that case inputStream.streamError will be nil so that's cool, we won't return an error anyway
+                completion(inputStream.streamError)
+            }
         }
     }
     
