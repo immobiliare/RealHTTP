@@ -59,6 +59,7 @@ public class HTTPStubRegExMatcher: HTTPStubMatcher {
                 return false
             }
             
+            // swiftlint:disable unused_enumerated
             for (_, element) in headers.enumerated() {
                 let valueToCheck = (location == .headersKey ? element.key : element.value)
                 return regex.hasMatches(valueToCheck)

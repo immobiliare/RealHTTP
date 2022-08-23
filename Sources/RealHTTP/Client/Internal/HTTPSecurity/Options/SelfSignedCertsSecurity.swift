@@ -23,7 +23,10 @@ import Foundation
 /// This is useful for debug purpose: don't use it on production.
 public struct SelfSignedCertsSecurity: HTTPSecurityService {
     
-    public func receiveChallenge(_ challenge: URLAuthenticationChallenge, forRequest request: HTTPRequest, task: URLSessionTask, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    public func receiveChallenge(_ challenge: URLAuthenticationChallenge,
+                                 forRequest request: HTTPRequest,
+                                 task: URLSessionTask,
+                                 completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         guard let trust = challenge.protectionSpace.serverTrust else {
             completionHandler(.useCredential, nil)
             return

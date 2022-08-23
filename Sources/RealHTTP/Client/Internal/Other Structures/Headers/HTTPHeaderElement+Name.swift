@@ -123,6 +123,7 @@ public extension HTTPHeaders.Element {
         case proxyAuthorization
         case range
         case referer
+        // swiftlint:disable identifier_name
         case te
         case trailer
         case transferEncoding

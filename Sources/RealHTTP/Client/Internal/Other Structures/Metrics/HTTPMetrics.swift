@@ -78,7 +78,6 @@ public struct HTTPMetrics {
         renderer.render(with: self)
     }
     
-    
 }
 
 // MARK: - RequestMetrics

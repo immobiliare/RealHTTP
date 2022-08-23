@@ -47,6 +47,7 @@ public extension HTTPHeaders {
         public static let defaultUserAgent: Element = {
             let libraryVersion = "\(RealHTTP.agentIdentifier)/\(RealHTTP.sdkVersion)"
             let mainBundle = Bundle.main
+            // swiftlint:disable line_length
             let value = "\(mainBundle.executableName)/\(mainBundle.appVersion) (\(mainBundle.bundleID); build:\(mainBundle.appBuild); \(mainBundle.osNameIdentifier)) \(libraryVersion)"
             return .userAgent(value)
         }()
@@ -163,7 +164,6 @@ public extension HTTPHeaders.Element {
     }
     
 }
-
 
 // MARK: - HTTPHeader + Accept
 
@@ -290,7 +290,6 @@ public extension HTTPHeaders.Element {
     }
     
 }
-
 
 // MARK: - HTTPHeader + Other
 

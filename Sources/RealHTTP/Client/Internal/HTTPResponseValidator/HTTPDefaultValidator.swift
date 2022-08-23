@@ -93,15 +93,15 @@ open class HTTPDefaultValidator: HTTPValidator {
         }
         
         switch urlError.code {
-            case URLError.timedOut,
-                 URLError.cannotFindHost,
-                 URLError.cannotConnectToHost,
-                 URLError.networkConnectionLost,
-                 URLError.dnsLookupFailed:
+        case URLError.timedOut,
+            URLError.cannotFindHost,
+            URLError.cannotConnectToHost,
+            URLError.networkConnectionLost,
+            URLError.dnsLookupFailed:
             return .retry(.immediate)
-                
-            default:
-                return nil
+            
+        default:
+            return nil
         }
     }
     

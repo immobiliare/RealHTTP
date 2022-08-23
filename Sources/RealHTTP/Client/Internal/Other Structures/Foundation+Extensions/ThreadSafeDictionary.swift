@@ -17,7 +17,7 @@ import Foundation
 
 /// Thread safe dictionary object for get and set. Concurrent reads are allowed,
 /// while exclusive write was implemented via barrier of Grand Central Dispatch.
-internal class ThreadSafeDictionary<V: Hashable,T>: Collection {
+internal class ThreadSafeDictionary<V: Hashable, T>: Collection {
     
     // MARK: - Private Properties
 
@@ -41,27 +41,27 @@ internal class ThreadSafeDictionary<V: Hashable,T>: Collection {
     
     // MARK: - Initialization
 
-    init(dict: [V: T] = [V:T]()) {
+    init(dict: [V: T] = [V: T]()) {
         self.dictionary = dict
     }
 
     // MARK: - Implementation Properties
 
-    func index(after i: Dictionary<V, T>.Index) -> Dictionary<V, T>.Index {
+    func index(after index: Dictionary<V, T>.Index) -> Dictionary<V, T>.Index {
         self.concurrentQueue.sync {
-            return self.dictionary.index(after: i)
+            return self.dictionary.index(after: index)
         }
     }
 
     subscript(key: V) -> T? {
-        set(newValue) {
-            self.concurrentQueue.async(flags: .barrier) {[weak self] in
-                self?.dictionary[key] = newValue
-            }
-        }
         get {
             self.concurrentQueue.sync {
                 return self.dictionary[key]
+            }
+        }
+        set(newValue) {
+            self.concurrentQueue.async(flags: .barrier) {[weak self] in
+                self?.dictionary[key] = newValue
             }
         }
     }

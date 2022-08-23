@@ -35,7 +35,7 @@ public class HTTPRequest: CustomStringConvertible {
     
     /// An user info dictionary where you can add your own data.
     /// Initially only the `fingerprint` key is set with an unique id of the request.
-    public var userInfo: [AnyHashable : Any] = [
+    public var userInfo: [AnyHashable: Any] = [
         UserInfoKeys.fingerprint: UUID().uuidString
     ]
     
@@ -76,7 +76,7 @@ public class HTTPRequest: CustomStringConvertible {
     /// This method defines how redirects are managed.
     /// By default the behavior is driven by the `redirectMode` of the `HTTPClient`
     /// where the request is begin executed.
-    public var redirectMode: HTTPRequest.RedirectMode? = nil
+    public var redirectMode: HTTPRequest.RedirectMode?
     
     /// Set the full absolute URL for the request by ignoring the the url components
     /// and the `baseURL` of the destination client.
@@ -513,7 +513,6 @@ extension HTTPRequest {
     }
     
 }
-
 
 extension URLComponents {
     

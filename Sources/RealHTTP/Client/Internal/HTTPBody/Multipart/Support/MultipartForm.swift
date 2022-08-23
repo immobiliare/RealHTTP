@@ -43,7 +43,7 @@ extension HTTPBody {
         /// Can be used as an explanatory note for
         /// recipients who read the message with pre-MIME software,
         /// since such notes will be ignored by MIME-compliant software.
-        public var preamble: String? = nil
+        public var preamble: String?
         
         // MARK: - Private Properties
         
@@ -113,6 +113,7 @@ extension HTTPBody {
             
             let formHeaders = formItemHeaders(name: name, fileName: fileName, mimeType: mimeType)
             
+            // swiftlint:disable force_cast
             let fileSize = try FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as! NSNumber
             
             guard let fileStream = InputStream(url: fileURL) else {
@@ -171,7 +172,7 @@ extension HTTPBody {
             }
             
             return (data, .init([
-                .contentType : contentType,
+                .contentType: contentType,
                 .contentLength: String(contentLength)
             ]))
         }
@@ -202,7 +203,6 @@ extension HTTPBody {
             add(stream: stream, withLength: length, headers: headers)
         }
         
-        
         /// Generate the `Content-Disposition` for a single form item.
         ///
         /// - Parameters:
@@ -223,7 +223,6 @@ extension HTTPBody {
             
             return headers
         }
-        
         
     }
     

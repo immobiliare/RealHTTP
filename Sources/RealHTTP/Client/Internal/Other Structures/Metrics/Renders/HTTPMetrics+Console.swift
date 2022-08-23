@@ -67,7 +67,7 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
         var buffer: [String] = []
         
         let taskIdentifier = (stats.task?.taskIdentifier != nil ? "\(stats.task!.taskIdentifier)" : "-")
-        buffer.append("Task ID: \(taskIdentifier) lifetime: \(stats.elapsedInterval.ms) redirects: \(stats.countRedirects)")
+        buffer.append("Task ID: \(taskIdentifier) lifetime: \(stats.elapsedInterval.milliseconds) redirects: \(stats.countRedirects)")
         
         for metric in stats.requests {
             buffer.append(renderHeader(with: metric))
@@ -89,7 +89,7 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
     private func totalDateInterval(from metric: HTTPMetrics.RequestMetrics) -> DateInterval? {
         if let total = metric.stages.filter({ $0.kind == .total }).first {
             return total.interval
-        } else if let first = metric.stages.first  {
+        } else if let first = metric.stages.first {
             // calculate total from all available Durations
             var total = first.interval
             total.duration += metric.stages.dropFirst().reduce(TimeInterval(0), { accumulated, duration in
@@ -117,7 +117,7 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
     private func renderDuration(line: HTTPMetrics.RequestMetrics.Stage, total: DateInterval?) -> String {
         let name = line.kind.name.padding(toLength: columns.left, withPad: " ", startingAt: 0)
         let plot = total.flatMap({ visualize(interval: line.interval, total: $0, within: self.columns.middle) }) ?? ""
-        let time = line.interval.duration.ms.leftPadding(toLength: columns.right, withPad: " ")
+        let time = line.interval.duration.milliseconds.leftPadding(toLength: columns.right, withPad: " ")
         return "\(name)\(plot)\(time)"
     }
 
@@ -150,14 +150,14 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
         let meta = [
             "protocol: \(networkProtocolName)",
             "proxy: \(metric.transactionMetrics.isProxyConnection)",
-            "reusedconn: \(metric.transactionMetrics.isReusedConnection)",
+            "reusedconn: \(metric.transactionMetrics.isReusedConnection)"
         ]
         return meta.joined(separator: " ")
     }
 
     private func renderMetricSummary(for interval: DateInterval) -> String {
         let width = columns.left + columns.middle + columns.right
-        return "total   \(interval.duration.ms)".leftPadding(toLength: width, withPad: " ")
+        return "total   \(interval.duration.milliseconds)".leftPadding(toLength: width, withPad: " ")
     }
     
 }
@@ -167,7 +167,7 @@ public struct HTTPMetricsConsoleRenderer: HTTPMetricsRenderer {
 private extension TimeInterval {
     
     /// Milliseconds formatting
-    var ms: String {
+    var milliseconds: String {
         String(format: "%.1fms", self * 1000)
     }
     
@@ -180,8 +180,8 @@ private extension String {
     func leftPadding(toLength: Int, withPad character: Character) -> String {
         let newLength = self.count
         guard newLength < toLength else {
-            let i = index(startIndex, offsetBy: newLength - toLength)
-            return String(self[i..<endIndex])
+            let startIndex = index(startIndex, offsetBy: newLength - toLength)
+            return String(self[startIndex..<endIndex])
         }
 
         return String(repeatElement(character, count: toLength - newLength)) + self

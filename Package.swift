@@ -19,11 +19,23 @@ let package = Package(
         // .package(url: /* package url */, from: "1.0.0"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages this package depends on.
+        // Specify where to download the compiled swiftlint tool from
+        .binaryTarget(
+            name: "SwiftLintBinary",
+            url: "https://github.com/juozasvalancius/SwiftLint/releases/download/spm-accommodation/SwiftLintBinary-macos.artifactbundle.zip",
+            checksum: "cdc36c26225fba80efc3ac2e67c2e3c3f54937145869ea5dbcaa234e57fc3724"
+        ),
+        // Define the SPM plugin
+        .plugin(
+            name: "SwiftLintXcode",
+            capability: .buildTool(),
+            dependencies: ["SwiftLintBinary"]
+        ),
         .target(
             name: "RealHTTP",
-            dependencies: []),
+            dependencies: [],
+            plugins: ["SwiftLintXcode"]
+        ),
         .testTarget(
             name: "RealHTTPTests",
             dependencies: ["RealHTTP"],

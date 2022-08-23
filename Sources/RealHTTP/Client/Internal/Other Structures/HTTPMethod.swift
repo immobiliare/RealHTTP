@@ -34,7 +34,7 @@ import Foundation
 /// - `trace`: The TRACE method performs a message loop-back test along the path to the target resource.
 /// - `options`: The OPTIONS method is used to describe the communication options for the target resource.
 /// - `patch`: The PATCH method is used to apply partial modifications to a resource.
-public struct HTTPMethod: RawRepresentable, Equatable, Hashable, CaseIterable, CustomStringConvertible  {
+public struct HTTPMethod: RawRepresentable, Equatable, Hashable, CaseIterable, CustomStringConvertible {
     
     public static var allCases: [HTTPMethod] = [.connect, .delete, .get, .head, .options, .patch, .post, .put, .trace]
     

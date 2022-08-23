@@ -41,7 +41,7 @@ internal class HTTPDataLoader: NSObject,
     private var queue = OperationQueue()
     
     /// List of active running operations.
-    private var dataLoadersMap = ThreadSafeDictionary<Int,HTTPDataLoaderResponse>()
+    private var dataLoadersMap = ThreadSafeDictionary<Int, HTTPDataLoaderResponse>()
     
     // MARK: - Initialization
     
@@ -170,7 +170,6 @@ internal class HTTPDataLoader: NSObject,
             // wait before retry the original call, if set.
             try await Task.sleep(seconds: delayToRetryMainCall)
        
-            
             // try again the same request and increment the attempts counter
             let originalRequestResponse = try await self.fetch(request)
             return originalRequestResponse
@@ -235,10 +234,12 @@ internal class HTTPDataLoader: NSObject,
         return tResponse
     }
     
-
     // MARK: - Security Support
     
-    public func urlSession(_ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    public func urlSession(_ session: URLSession,
+                           task: URLSessionTask,
+                           didReceive challenge: URLAuthenticationChallenge,
+                           completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         evaluateAuthChallange(task, challenge: challenge, completionHandler: completionHandler)
     }
     
@@ -479,7 +480,7 @@ private extension HTTPDataLoader {
     ///   - challenge: challange.
     ///   - completionHandler: completion callback.
     func evaluateAuthChallange(_ task: URLSessionTask, challenge: URLAuthenticationChallenge,
-                                      completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+                               completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         guard let request = dataLoadersMap[task.taskIdentifier]?.request,
               let security = request.security ?? client?.security else {
             // if not security is settings for both client and request we can use the default handling

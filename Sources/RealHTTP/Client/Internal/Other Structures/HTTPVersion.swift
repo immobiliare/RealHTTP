@@ -21,6 +21,7 @@ public struct HTTPVersion: Equatable, Hashable, Codable, RawRepresentable,
     
     // MARK: - Available Values
     
+    // swiftlint:disable identifier_name
     public static let v0_9: Self = 0.9
     public static let v1_0: Self = 1.0
     public static let v1_1: Self = 1.1

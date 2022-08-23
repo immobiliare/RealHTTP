@@ -36,7 +36,10 @@ public struct CredentialSecurity: HTTPSecurityService {
     
     // MARK: - Conformance
     
-    public func receiveChallenge(_ challenge: URLAuthenticationChallenge, forRequest request: HTTPRequest, task: URLSessionTask, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    public func receiveChallenge(_ challenge: URLAuthenticationChallenge,
+                                 forRequest request: HTTPRequest,
+                                 task: URLSessionTask,
+                                 completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         guard let cred = callback(challenge) else {
             completionHandler(.rejectProtectionSpace, nil)
             return

@@ -26,10 +26,9 @@ public protocol HTTPClientDelegate: AnyObject {
     ///   - request: request instance.
     func client(_ client: HTTPClient, didEnqueue request: ExecutedRequest)
     
-    
     /// This method is called when a request is about to be retry due to failure.
     ///
-    ///- Parameters:
+    /// - Parameters:
     /// - `client`: client target of the request.
     /// - `request`: request to be re-executed.
     /// - `strategy`: retry strategy to follow.

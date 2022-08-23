@@ -68,7 +68,7 @@ extension HTTPBody {
 // MARK: - AnyEncodable
 
 /// This is used only to encapsulate an Encodable object with type-erasure.
-internal struct AnyEncodable : Encodable {
+internal struct AnyEncodable: Encodable {
     
     /// Object to encapsulate.
     var value: Encodable
@@ -83,9 +83,8 @@ internal struct AnyEncodable : Encodable {
     
     func encode(to encoder: Encoder) throws {
         let container = encoder.singleValueContainer()
+        // swiftlint:disable force_cast
         try value.encode(to: container as! Encoder)
     }
     
 }
-
-

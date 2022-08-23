@@ -15,19 +15,6 @@
 
 import Foundation
 
-//
-//  IndomioHTTP
-//
-//  Created by the Mobile Team @ ImmobiliareLabs
-//  Email: mobile@immobiliare.it
-//  Web: http://labs.immobiliare.it
-//
-//  Copyright ©2021 Immobiliare.it SpA. All rights reserved.
-//  Licensed under MIT License.
-//
-
-import Foundation
-
 /// An object which is conform to this protocol allows you to render
 /// the statistics about the http operation executed.
 

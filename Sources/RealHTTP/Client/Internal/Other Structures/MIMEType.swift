@@ -68,7 +68,7 @@ public enum MIMEType: ExpressibleByStringLiteral {
         case .gif:          return "image/gif"
         case .png:          return "image/png"
         case .webp:         return "image/webp"
-        case .custom(let v):return v
+        case .custom(let value): return value
         }
     }
     

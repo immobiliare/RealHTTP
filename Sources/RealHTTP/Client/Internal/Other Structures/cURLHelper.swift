@@ -54,12 +54,13 @@ extension HTTPResponse {
 // MARK: - cURLHelper
 
 /// Contains the relevant information to print cURL description for requests and responses.
+// swiftlint:disable type_name
 public struct cURLHelper {
     
     fileprivate static func cURLDescription(request: URLRequest?, client: HTTPClient?) -> String {
         guard let client = client,
               let request = request,
-              let _ = request.url else {
+              request.url != nil else {
                   return "$ curl command could not be created"
               }
         

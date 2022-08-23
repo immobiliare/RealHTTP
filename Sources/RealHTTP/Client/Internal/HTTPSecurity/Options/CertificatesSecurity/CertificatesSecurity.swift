@@ -44,7 +44,7 @@ open class CertificatesSecurity: HTTPSecurityService {
         
         if self.usePublicKeys {
             self.publicKeys = certificates.compactMap { cert in
-                if let data = cert.certData , cert.publicKey == nil  {
+                if let data = cert.certData, cert.publicKey == nil {
                     cert.publicKey = data.extractPublicKey()
                 }
                 guard let publicKey = cert.publicKey else {
@@ -73,7 +73,10 @@ open class CertificatesSecurity: HTTPSecurityService {
     
     // MARK: - Conformance
     
-    open func receiveChallenge(_ challenge: URLAuthenticationChallenge, forRequest request: HTTPRequest, task: URLSessionTask, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    open func receiveChallenge(_ challenge: URLAuthenticationChallenge,
+                               forRequest request: HTTPRequest,
+                               task: URLSessionTask,
+                               completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
               let trust = challenge.protectionSpace.serverTrust,
               isValid(trust: trust, forDomain: challenge.protectionSpace.host) else {
@@ -120,7 +123,7 @@ open class CertificatesSecurity: HTTPSecurityService {
             SecCertificateCreateWithData(nil, $0 as CFData)!
         }
         
-        SecTrustSetAnchorCertificates(trust,collect as CFArray)
+        SecTrustSetAnchorCertificates(trust, collect as CFArray)
         var result: SecTrustResultType = SecTrustResultType(rawValue: UInt32(0))!
         if SecTrustEvaluateWithError(trust, nil) == false {
             result = .fatalTrustFailure
@@ -133,6 +136,7 @@ open class CertificatesSecurity: HTTPSecurityService {
         var trustedCount = 0
         for serverCert in serverCerts {
             for cert in certs {
+                // swiftlint:disable for_where
                 if cert == serverCert {
                     trustedCount += 1
                     break
@@ -218,7 +222,7 @@ fileprivate extension SecCertificate {
         var possibleTrust: SecTrust?
         SecTrustCreateWithCertificates(self, policy, &possibleTrust)
         if let trust = possibleTrust {
-            let evaluates = (SecTrustEvaluateWithError(trust, nil));
+            let evaluates = (SecTrustEvaluateWithError(trust, nil))
             guard evaluates else {
                 return nil
             }

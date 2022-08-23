@@ -137,6 +137,7 @@ public enum HTTPStatusCode: Int, Error {
 
     // MARK: - Success - 2xx
     
+    // swiftlint:disable identifier_name
     case ok = 200
     case created = 201
     case accepted = 202
@@ -262,12 +263,12 @@ public extension HTTPStatusCode {
             }
             
             switch httpStatusCode {
-                case 100 ..< 200:   self = .informational
-                case 200 ..< 300:   self = .success
-                case 300 ..< 400:   self = .redirection
-                case 400 ..< 500:   self = .clientError
-                case 500 ..< 600:   self = .serverError
-                default:            self = .undefined
+            case 100 ..< 200:   self = .informational
+            case 200 ..< 300:   self = .success
+            case 300 ..< 400:   self = .redirection
+            case 400 ..< 500:   self = .clientError
+            case 500 ..< 600:   self = .serverError
+            default:            self = .undefined
             }
         }
         

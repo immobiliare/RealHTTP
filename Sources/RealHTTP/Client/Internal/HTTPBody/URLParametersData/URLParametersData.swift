@@ -44,8 +44,8 @@ extension HTTPBody {
         ///   - arrayEncoding: Specify how array parameter's value are encoded into the request.
         ///                    By default the `withBrackets` option is used and array are encoded as `key[]=value`.
         public init(_ parameters: HTTPRequestParametersDict?,
-                      boolEncoding: BoolEncodingStyle = .asNumbers,
-                      arrayEncoding: ArrayEncodingStyle = .withBrackets) {
+                    boolEncoding: BoolEncodingStyle = .asNumbers,
+                    arrayEncoding: ArrayEncodingStyle = .withBrackets) {
             self.parameters = parameters
             self.arrayEncoding = arrayEncoding
             self.boolEncoding = boolEncoding
@@ -146,7 +146,6 @@ extension HTTPBody {
     }
     
 }
-
 
 // MARK: - HTTPRequestBuilder (ArrayEncoding, BoolEncoding)
 

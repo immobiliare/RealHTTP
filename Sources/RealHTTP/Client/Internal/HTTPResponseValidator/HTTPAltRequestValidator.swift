@@ -40,7 +40,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
     /// By default is set to `nil`.
     /// It means the first alternate call which fails on a certain
     /// request will fails any other request in the same session.
-    open var maxAltRequests: Int? = nil
+    open var maxAltRequests: Int?
     
     // MARK: - Public Properties (Observable Events)
     
@@ -85,7 +85,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
     
     /// Reset the state of alt requests executed.
     public func reset() {
-        //numberOfAltRequestExecuted = 0
+        // numberOfAltRequestExecuted = 0
     }
     
     // MARK: - Protocol Conformance

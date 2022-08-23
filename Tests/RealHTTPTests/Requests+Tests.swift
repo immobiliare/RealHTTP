@@ -1845,7 +1845,7 @@ class RequestsTests: XCTestCase {
         HTTPStubber.shared.add(stub: mock)
 
         let response = try await req.fetch()
-        print(response.error)
+        print(response.error ?? "")
     }
     
     public func test_simulatedSpeedConnection() async throws {

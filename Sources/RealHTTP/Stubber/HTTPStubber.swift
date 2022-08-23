@@ -103,7 +103,6 @@ public class HTTPStubber {
     
     // MARK: - Manage Ignore Rules
     
-    
     /// Add new ignore rule.
     ///
     /// - Parameter rule: rule.

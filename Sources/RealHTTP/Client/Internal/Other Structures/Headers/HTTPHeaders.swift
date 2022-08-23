@@ -124,8 +124,8 @@ public struct HTTPHeaders: ExpressibleByArrayLiteral, ExpressibleByDictionaryLit
         headers[position]
     }
 
-    public func index(after i: Int) -> Int {
-        headers.index(after: i)
+    public func index(after index: Int) -> Int {
+        headers.index(after: index)
     }
     
     // MARK: - Add Headers Functions
@@ -319,7 +319,6 @@ extension URLSessionConfiguration {
     }
     
 }
-
 
 // MARK: - Array Extensions
 

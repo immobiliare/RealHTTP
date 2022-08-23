@@ -21,13 +21,13 @@ open class HTTPStubResponse {
     open var statusCode: HTTPStatusCode = .none
     
     /// Content type of the response.
-    open var contentType: HTTPContentType? = nil
+    open var contentType: HTTPContentType?
     
     /// Once set this value is returned instead of the data set.
-    open var failError: Error? = nil
+    open var failError: Error?
     
     /// Contains a map of the data to return.
-    open var body: HTTPStubDataConvertible? = nil {
+    open var body: HTTPStubDataConvertible? {
         didSet {
             self.dataSize = body?.data?.count ?? 0
         }
@@ -50,7 +50,7 @@ open class HTTPStubResponse {
     
     /// Stubber will wait `requestTime` before sending the `NSHTTPURLResponse` headers.
     /// You can use it to simulate a slow network.
-    open var requestTime: TimeInterval? = nil
+    open var requestTime: TimeInterval?
     
     /// public initializer to make it available from outside
     public init() {
@@ -66,7 +66,6 @@ open class HTTPStubResponse {
     open func adaptForRequest(_ request: URLRequest) -> HTTPStubResponse {
         self
     }
-    
     
 }
 

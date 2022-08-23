@@ -58,7 +58,7 @@ open class SSLCertificate {
     /// - Parameter URLs: URLs list.
     /// - Returns: [SSLCert]
     public static func fromFileURLs(_ URLs: [URL]) -> [SSLCertificate] {
-        URLs.compactMap( { .init(fileURL: $0 )})
+        URLs.compactMap({ .init(fileURL: $0 )})
     }
     
 }

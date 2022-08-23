@@ -87,11 +87,12 @@ public enum HTTPRetryStrategy {
             return pow(Double(base), Double(numberOfPreviousAttempts - 1))
             
         case .fibonacci:
+            // swiftlint:disable identifier_name
             func fibonacci(n: Int) -> Int {
                 switch n {
-                    case ...0: return 0
-                    case 1: return 1
-                    default: return fibonacci(n: n - 2) + fibonacci(n: n - 1)
+                case ...0: return 0
+                case 1: return 1
+                default: return fibonacci(n: n - 2) + fibonacci(n: n - 1)
                 }
             }
             return Double(fibonacci(n: numberOfPreviousAttempts))

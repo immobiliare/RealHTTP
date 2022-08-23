@@ -29,7 +29,6 @@ public class HTTPStubURLProtocol: URLProtocol {
     
     private var urlSessionTask: URLSessionTask?
 
-    
     // MARK: - Overrides
     
     /// The following call is called when a new request is about to being executed.
@@ -53,7 +52,7 @@ public class HTTPStubURLProtocol: URLProtocol {
         request
     }
     
-    public override class func requestIsCacheEquivalent(_ a: URLRequest, to b: URLRequest) -> Bool {
+    public override class func requestIsCacheEquivalent(_ requestA: URLRequest, to requestB: URLRequest) -> Bool {
         false
     }
     
@@ -62,7 +61,6 @@ public class HTTPStubURLProtocol: URLProtocol {
       self.urlSessionTask = task
     }
 
-    
     public override func startLoading() {
         var request = self.request
         
@@ -123,7 +121,6 @@ public class HTTPStubURLProtocol: URLProtocol {
                     self.client?.urlProtocolDidFinishLoading(self)
                 }
             }
-            break
         }
     }
     
@@ -138,8 +135,6 @@ public class HTTPStubURLProtocol: URLProtocol {
                             speed: HTTPConnectionSpeed,
                             completion: @escaping ((Error?) -> Void)) {
         
-        
-        
         // Compute timing data once and for all for this stub.
         var timingInfo = HTTPStubStreamTiming()
         // Bytes send each 'slotTime' seconds = Speed in KB/s * 1000 * slotTime in seconds
@@ -148,7 +143,7 @@ public class HTTPStubURLProtocol: URLProtocol {
         // This is needed in case we computed a non-integer chunkSizePerSlot, to avoid cumulative errors
         let cumulativeChunkSizeAfterRead = timingInfo.cumulativeChunkSize + timingInfo.chunkSizePerSlot
         let chunkSizeToRead = Int(floor(cumulativeChunkSizeAfterRead) - floor(timingInfo.cumulativeChunkSize))
-        timingInfo.cumulativeChunkSize = cumulativeChunkSizeAfterRead;
+        timingInfo.cumulativeChunkSize = cumulativeChunkSizeAfterRead
         
         if chunkSizeToRead == 0 { // Nothing to read at this pass, but probably later
             DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + timingInfo.slotTime) {

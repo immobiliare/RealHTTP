@@ -218,7 +218,6 @@ public extension InputStream {
         return data
     }
     
-    
 }
 
 // MARK: - Array String

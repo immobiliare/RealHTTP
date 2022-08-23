@@ -33,5 +33,4 @@ final class URLHook: HTTPStubHookProtocol {
         return false
     }
     
-    
 }
