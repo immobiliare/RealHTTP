@@ -1758,7 +1758,7 @@ class RequestsTests: XCTestCase {
         var requests = [HTTPRequest]()
         let newClient = HTTPClient(baseURL: nil)
 
-        for _ in 0..<10000 {
+        for _ in 0..<100 {
             let req = try! HTTPRequest(method: .post, "https://www.apple.com",
                                       body: try .json(["title": "foo", "body": "bar", "userId": 1]))
             
@@ -1850,7 +1850,8 @@ class RequestsTests: XCTestCase {
     
     public func test_simulatedSpeedConnection() async throws {
         HTTPStubber.shared.enable()
-        
+        HTTPStubber.shared.removeAllStubs()
+
         // Create a response.
         let randomData = randomString(length: 5000)
         let mock = try HTTPStubRequest()
