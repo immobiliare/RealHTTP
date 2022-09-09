@@ -20,7 +20,10 @@ let package = Package(
     ],
     targets: [
         // Specify where to download the compiled swiftlint tool from
-        .binaryTarget(
+        // Temporary disabled due to a bug in Xcode 13.4.1 and SPM plugins
+        // <https://forums.swift.org/t/spm-plugin-with-binary-target-high-cpu-usage/59535>
+        // <https://github.com/immobiliare/RealHTTP/issues/60>
+        /*.binaryTarget(
             name: "SwiftLintBinary",
             url: "https://github.com/juozasvalancius/SwiftLint/releases/download/spm-accommodation/SwiftLintBinary-macos.artifactbundle.zip",
             checksum: "cdc36c26225fba80efc3ac2e67c2e3c3f54937145869ea5dbcaa234e57fc3724"
@@ -30,11 +33,11 @@ let package = Package(
             name: "SwiftLintXcode",
             capability: .buildTool(),
             dependencies: ["SwiftLintBinary"]
-        ),
+        ),*/
         .target(
             name: "RealHTTP",
-            dependencies: [],
-            plugins: ["SwiftLintXcode"]
+            dependencies: []
+            // plugins: ["SwiftLintXcode"]
         ),
         .testTarget(
             name: "RealHTTPTests",
