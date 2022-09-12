@@ -1,6 +1,8 @@
-
 <p align="center">
-<img src="./Documentation/assets/realhttp.png" alt="RealHTTP" width="350"/>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./Documentation/assets/realhttp-dark.png" width="350">
+  <img alt="logo-library" src="./Documentation/assets/realhttp-light.png" width="350">
+</picture>
 </p>
 
 [![Swift](https://img.shields.io/badge/Swift-5.3_5.4_5.5_5.6-orange?style=flat-square)](https://img.shields.io/badge/Swift-5.3_5.4_5.5_5.6-Orange?style=flat-square)
@@ -216,9 +218,7 @@ pod 'RealHTTP'
 The fantastic mobile team at ImmobiliareLabs created RealHTTP.
 We are currently using RealHTTP in all of our products.
 
-**If you are using RealHTTP in your app [drop us a message](mailto:mobile@immobiliare.it), we'll add below**.
-
-<a href="https://apps.apple.com/us/app/immobiiiare-it-indomio/id335948517"><img src="./Documentation/assets/immobiliare-app.png" alt="Indomio" width="270"/></a>
+**If you are using RealHTTP in your app [drop us a message](mailto:mobile@immobiliare.it)**.
 
 ## Support & Contribute
 
@@ -226,3 +226,5 @@ Made with ❤️ by [ImmobiliareLabs](https://github.com/orgs/immobiliare) & [Co
 
 We'd love for you to contribute to RealHTTP!  
 If you have questions about using RealHTTP, bugs, and enhancement, please feel free to reach out by opening a [GitHub Issue](https://github.com/immobiliare/RealHTTP/issues).
+
+<a href="https://apps.apple.com/us/app/immobiiiare-it-indomio/id335948517"><img src="./Documentation/assets/immobiliarelabs.png" alt="Indomio" width="200"/></a>
