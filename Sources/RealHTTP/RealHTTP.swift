@@ -18,7 +18,7 @@ import Foundation
 public enum RealHTTP {
     
     /// Current RealHTTP version.
-    static let sdkVersion = "1.7.1"
+    static let sdkVersion = "1.7.2"
     
     /// Identifier of the agent string.
     static let agentIdentifier = "realhttp"
