@@ -56,9 +56,14 @@ public class HTTPStubURLProtocol: URLProtocol {
         false
     }
     
-    init(task: URLSessionTask, cachedResponse: CachedURLResponse?, client: URLProtocolClient?) {
-      super.init(request: task.currentRequest!, cachedResponse: cachedResponse, client: client)
-      self.urlSessionTask = task
+    // Occasionally called by iOS, even though init(task:...) is implemented. Will cause a crash if not present.
+    public override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: URLProtocolClient?) {
+        super.init(request: request, cachedResponse: cachedResponse, client: client)
+    }
+    
+    public init(task: URLSessionTask, cachedResponse: CachedURLResponse?, client: URLProtocolClient?) {
+        super.init(request: task.currentRequest!, cachedResponse: cachedResponse, client: client)
+        self.urlSessionTask = task
     }
 
     public override func startLoading() {
