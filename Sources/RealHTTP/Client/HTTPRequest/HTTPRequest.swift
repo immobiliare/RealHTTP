@@ -96,15 +96,14 @@ public class HTTPRequest: CustomStringConvertible {
         }
     }
     
-    /// Headers to send along the request.
+    /// Headers to send with the request.
     ///
-    /// NOTE:
-    /// Values here are combined with HTTPClient's values where the request is executed
-    /// with precedence for request's keys.
-    public var headers: HTTPHeaders {
-        get { body.headers }
-        set { body.headers = newValue }
-    }
+    /// DISCUSSION:
+    /// Resulting `URLRequest`'s headers are a combination of the following properties in order:
+    ///  - parent `HTTPClient.headers` where the headers are executed in.
+    ///  - request's custom `headers` (this property)
+    ///  - optionally headers received by the particular body set (`body.headers` property).
+    public var headers = HTTPHeaders()
     
     /// What kind of data we should expect.
     /// If you are creating a request for a small amount of data (ie RESTful calls) you can use `default`.
@@ -454,7 +453,11 @@ extension HTTPRequest {
         
         let requestCachePolicy = cachePolicy ?? client.cachePolicy
         let requestTimeout = timeout ?? client.timeout
-        let requestHeaders = (client.headers + headers)
+        // Headers are taken from:
+        //  - client's common headers (user defined)
+        //  - specific body's headers (automatically set)
+        //  - request's custom headers set by the user (user defined)
+        let requestHeaders = (client.headers + self.body.headers + self.headers)
         
         // Prepare the request
         var urlRequest = try URLRequest(url: fullURL,
