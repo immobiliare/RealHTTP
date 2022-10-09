@@ -114,6 +114,47 @@ class HeadersTests: XCTestCase {
         }
     }
     
+    /// The following tests validate the order of overrides for a request's headers.
+    /// Specifically the final list of headers for a request is a sum of the following
+    /// properties in order:
+    ///   - client's defined headers
+    ///   - body's specific headers (set automatically and/or defined by the user once the body is set)
+    ///   - request's headers specified by the user
+    func test_headers_priorityOverrides() async throws {
+        let customClient = HTTPClient(baseURL: nil)
+        customClient.headers = .init(arrayLiteral:
+            .userAgent("MyAgent"),
+            .contentType(.avi),
+            .authBearerToken("NOPE")
+        )
+        
+        let request = try HTTPRequest {
+            $0.url = URL(stringLiteral: "http://www.mywebservice.com/register")
+            $0.headers = HTTPHeaders([
+                .authorization:"Bearer abcdefg",
+                .contentType:"multipart/form-data"
+            ])
+            
+            $0.method = .post
+            $0.body = try .multipart(boundary: nil, { form in
+                try form.add(string: "Mark", name: "name")
+                try form.add(string: "Smith", name: "surname")
+                try form.add(string: "mark.smith@gmail.com", name: "email")
+            })
+        }
+
+        let urlRequest = try await request.urlRequest(inClient: customClient)
+        
+        // should be present, never overriden
+        XCTAssertEqual(urlRequest.headers["User-Agent"], "MyAgent")
+        // should be present, value is overriden by the specific body's set
+        XCTAssertTrue(urlRequest.headers["Content-Type"]?.hasPrefix("multipart/form-data;") ?? false)
+        // should be present, set by the body and correct
+        XCTAssertEqual(urlRequest.headers["Content-Length"], "29")
+        // should be present, set by the user into the request and override a client value
+        XCTAssertEqual(urlRequest.headers["Authorization"], "Bearer abcdefg")
+    }
+    
     /// Test the presence of the default headers into the call.
     func test_headers_defaultHeaders() async throws {
         let req = HTTPRequest {

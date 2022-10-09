@@ -32,7 +32,13 @@ public struct HTTPBody {
     
     // MARK: - Internal Properties
     
-    /// Additional headers to set.
+    /// Additional headers set by the particular body configuration.
+    ///
+    /// These values may override both client's headers and specific body's headers.
+    /// Final headers are sum of the following properties in order:  
+    ///     - client's common headers
+    ///     - request's body specific headers
+    ///     - request's user defined headers
     internal var headers: HTTPHeaders
     
     // MARK: - Initialization

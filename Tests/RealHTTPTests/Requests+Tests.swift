@@ -1758,7 +1758,7 @@ class RequestsTests: XCTestCase {
         var requests = [HTTPRequest]()
         let newClient = HTTPClient(baseURL: nil)
 
-        for _ in 0..<100 {
+        for _ in 0..<50 {
             let req = try! HTTPRequest(method: .post, "https://www.apple.com",
                                       body: try .json(["title": "foo", "body": "bar", "userId": 1]))
             
