@@ -44,7 +44,7 @@ public class HTTPStubRequest: Equatable {
     ///
     /// - Parameter urlRequest: url request.
     /// - Returns: Bool
-    internal func match(_ urlRequest: URLRequest) -> Bool {
+    public func match(_ urlRequest: URLRequest) -> Bool {
         for matcher in matchers {
             if matcher.matches(request: urlRequest, for: self) == false {
                 return false
