@@ -402,16 +402,17 @@ class RequestsTests: XCTestCase {
             } else if progress?.percentage == 1 {
                 resumedDownloadFinished = true
             }
-        }.store(in: &observerBag)
-        
-        // At certain point we want to break the download
-        DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 0.5, execute: {
-            // And produce some resumable data for test
-            req.cancel { partialData in
-                print("Produced partial data: \(partialData?.count ?? 0) bytes")
-                req.partialData = partialData // set the partial data to request to allows resume!
+            // At certain point we want to break the download
+            if let progressPercentage = progress?.percentage,
+               progressPercentage > 0.5,
+               req.partialData == nil
+            {
+                req.cancel { partialData in
+                    print("Produced partial data: \(partialData?.count ?? 0) bytes")
+                    req.partialData = partialData // set the partial data to request to allows resume!
+                }
             }
-        })
+        }.store(in: &observerBag)
         
         // Start the first download
         let _ = try await req.fetch(client)

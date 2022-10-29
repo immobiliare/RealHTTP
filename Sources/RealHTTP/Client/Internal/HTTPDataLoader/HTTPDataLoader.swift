@@ -73,10 +73,7 @@ internal class HTTPDataLoader: NSObject,
         request.client = nil
         
         let box = Box()
-        return try await withTaskCancellationHandler(handler: {
-            // Support for task cancellation
-            box.task?.cancel()
-        }, operation: {
+        return try await withTaskCancellationHandler(operation: {
             // Conversion of the callback system to the async/await version.
             let response: HTTPResponse = try await withUnsafeThrowingContinuation({ continuation in
                 box.task = self.fetch(request, task: sessionTask, completion: { [weak self] response in
@@ -133,6 +130,10 @@ internal class HTTPDataLoader: NSObject,
                 return modifiedResponse
                 
             }
+        }, onCancel: {
+            // Support for task cancellation
+            box.task?.cancel()
+            
         })
     }
     
