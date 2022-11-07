@@ -173,6 +173,23 @@ internal class HTTPDataLoader: NSObject,
             // try again the same request and increment the attempts counter
             let originalRequestResponse = try await self.fetch(request)
             return originalRequestResponse
+
+        case .afterTask(let delayToRetryMainCall, let task,  let errorCatcher):
+            // If `request` did fail we want to execute some work and retry again the original one.
+            // An example of this case is the auth expiration; we want to perform an authentication refresh
+            // and retry again the original call.
+            request.currentRetry += 1
+            do {
+                try await task(request)
+            } catch {
+                await errorCatcher?(error)
+            }
+            // wait before retry the original call, if set.
+            try await Task.sleep(seconds: delayToRetryMainCall)
+
+            // try again the same request and increment the attempts counter
+            let originalRequestResponse = try await self.fetch(request)
+            return originalRequestResponse
             
         default:
             // Retry mechanism is made with a specified interval.

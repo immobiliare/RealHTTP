@@ -58,12 +58,15 @@ public enum HTTPResponseValidatorResult {
 ///              - an optional async callback to execute once you got the response of the alt request before retry the original request.
 public enum HTTPRetryStrategy {
     public typealias AltRequestCatcher = ((_ request: HTTPRequest, _ response: HTTPResponse) async throws -> Void)
+    public typealias RetryTask = ((_ originalRequest: HTTPRequest) async throws -> Void)
+    public typealias RetryTaskErrorCatcher = ((_ error: Error) async -> Void)
     
     case immediate
     case delayed(_ interval: TimeInterval)
     case exponential(_ base: Int)
     case fibonacci
     case after(HTTPRequest, TimeInterval, AltRequestCatcher?)
+    case afterTask(TimeInterval, RetryTask, RetryTaskErrorCatcher?)
     
     // MARK: - Internal Functions
     
@@ -98,6 +101,9 @@ public enum HTTPRetryStrategy {
             return Double(fibonacci(n: numberOfPreviousAttempts))
             
         case .after:
+            return 0
+
+        case .afterTask:
             return 0
         }
     }
