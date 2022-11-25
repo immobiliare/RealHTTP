@@ -62,7 +62,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
     // MARK: - Private Properties
     
     /// Number of executed alternate request.
-    private var numberOfAltRequestExecuted = 0
+    open var numberOfAltRequestExecuted = 0
     
     // MARK: - Initialization
     
@@ -90,7 +90,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
     
     // MARK: - Protocol Conformance
     
-    public func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
+    open func validate(response: HTTPResponse, forRequest request: HTTPRequest) -> HTTPResponseValidatorResult {
         guard statusCodes.contains(response.statusCode) else {
             // if received status code for this request is not inside the triggerable status codes we'll skip the validator.
             return .nextValidator
