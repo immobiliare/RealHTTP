@@ -1,18 +1,20 @@
 //
-//  IndomioHTTP
+//  RealHTTP
+//  Lightweight Async/Await Network Layer/Stubber for Swift
 //
-//  Created by the Mobile Team @ ImmobiliareLabs
+//  Created & Maintained by Mobile Platforms Team @ ImmobiliareLabs.it
 //  Email: mobile@immobiliare.it
 //  Web: http://labs.immobiliare.it
 //
-//  Copyright ©2022 Immobiliare.it SpA. All rights reserved.
+//  Created by: Daniele Margutti <hello@danielemargutti.com>
+
+//  CONTRIBUTORS:
+//  Thank you to all the contributors who made this project better:
+//  <https://github.com/immobiliare/RealHTTP/graphs/contributors>
+//
+//  Copyright ©2022 Immobiliare.it SpA.
 //  Licensed under MIT License.
 //
-//  ============================================
-//  The following implementation was created by:
-//  Kyle Fuller <https://github.com/kylef>
-//  for URITemplate
-//  <https://github.com/kylef/URITemplate.swift>
 
 import Foundation
 
