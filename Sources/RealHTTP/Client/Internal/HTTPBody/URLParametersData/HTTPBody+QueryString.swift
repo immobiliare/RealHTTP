@@ -30,10 +30,17 @@ extension HTTPBody {
     
     /// Create a new body which contains the query string with passed parameters.
     ///
-    /// - Parameter parameters: parameters.
-    /// - Returns: HTTPBody
-    public static func formURLEncodedBody(_ parameters: HTTPRequestParametersDict) -> HTTPBody {
-        let content = WWWFormURLEncodedBody(parameters)
+    /// - Parameters:
+    ///   - parameters: parameters to encode.
+    ///   - boolEncoding: Specify how boolean values in `parameters` are encoded into the request.
+    ///                   The default behaviour is `asNumbers` where `true=1`, `false=0`.
+    ///   - arrayEncoding: Specify how array in `parameters` are encoded into the request.
+    ///                    By default the `withBrackets` option is used and array are encoded as `key[]=value`.
+    /// - Returns: encoded body.
+    public static func formURLEncodedBody(_ parameters: HTTPRequestParametersDict,
+                                          boolEncoding: URLParametersData.BoolEncodingStyle = .asNumbers,
+                                          arrayEncoding: URLParametersData.ArrayEncodingStyle = .withBrackets) -> HTTPBody {
+        let content = WWWFormURLEncodedBody(parameters, boolEncoding: boolEncoding, arrayEncoding: arrayEncoding)
         let body = HTTPBody(content: content, headers: [
             .contentType(MIMEType.wwwFormUtf8.rawValue)
         ])
@@ -67,9 +74,20 @@ extension HTTPBody {
         
         /// Initialize a new body with parameters dictionary.
         ///
-        /// - Parameter parameters: parameters.
-        public init(_ parameters: HTTPRequestParametersDict) {
-            self.data = URLParametersData(parameters)
+        /// - Parameters:
+        ///   - parameters: parameters to initialize form url.
+        ///   - boolEncoding: Specify how boolean values in `parameters` are encoded into the request.
+        ///                   The default behaviour is `asNumbers` where `true=1`, `false=0`.
+        ///   - arrayEncoding: Specify how array in `parameters` are encoded into the request.
+        ///                    By default the `withBrackets` option is used and array are encoded as `key[]=value`.
+        public init(_ parameters: HTTPRequestParametersDict,
+                    boolEncoding: URLParametersData.BoolEncodingStyle = .asNumbers,
+                    arrayEncoding: URLParametersData.ArrayEncodingStyle = .withBrackets) {
+            self.data = URLParametersData(
+                parameters,
+                boolEncoding: boolEncoding,
+                arrayEncoding: arrayEncoding
+            )
         }
         
         /// Add parameter to the form url encoded.
