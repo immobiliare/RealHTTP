@@ -84,7 +84,7 @@ open class HTTPAltRequestValidator: HTTPValidator {
     // MARK: - Public Functions
     
     /// Reset the state of alt requests executed.
-    public func reset() {
+    open func reset() {
         // numberOfAltRequestExecuted = 0
     }
     
