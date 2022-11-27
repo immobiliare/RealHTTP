@@ -18,6 +18,24 @@ import XCTest
 import Combine
 @testable import RealHTTP
 
+class StubberTests: XCTestCase {
+    
+    /// Test stubber along with port specified.
+    public func test_matchStubberWithExplicitPort() async throws {
+        let stub = HTTPStubRequest()
+            .match(URL: URL(string: "http://localhost:3001/some/path")!)
+            .stub(for: .get) { _, _ in
+                let response = HTTPStubResponse()
+                response.statusCode = .ok
+                return response
+            }
+        
+        let matches = stub.matchers[0].matches(request: URLRequest(url: URL(string: "http://localhost:3001/some/path")!), for: stub)
+        XCTAssertTrue(matches, "Failed to match host with port")
+    }
+    
+}
+
 class RequestsTests: XCTestCase {
     
     private var observerBag = Set<AnyCancellable>()

@@ -262,7 +262,7 @@ extension URL {
     /// "https://www.apple.com/v1/test?param=test"
     /// would be "https://www.apple.com/v1/test"
     public var baseString: String? {
-        guard let scheme = scheme, let host = host else { return nil }
+        guard let scheme = scheme, let host = fullHost else { return nil }
         return scheme + "://" + host + path
     }
 
@@ -284,6 +284,16 @@ extension URL {
         } catch {
             return nil
         }
+    }
+    
+    // MARK: - Public Properties
+    
+    /// Return the complete host along with port (if available).
+    ///
+    /// NOTE: the original `host` method strip the port.
+    public var fullHost: String? {
+        guard let host = host else { return nil }
+        return host + (port != nil ? ":\(port!)" : "")
     }
     
 }
