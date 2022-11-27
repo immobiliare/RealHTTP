@@ -292,7 +292,7 @@ extension URL {
     ///
     /// NOTE: the original `host` method strip the port.
     public var fullHost: String? {
-        guard let host else { return nil }
+        guard let host = host else { return nil }
         return host + (port != nil ? ":\(port!)" : "")
     }
     
