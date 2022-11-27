@@ -141,6 +141,7 @@ RealHTTP provides an extensive documentation.
    - [Alt Request Validator](./Documentation/3.Advanced_HTTPClient.md#alt-request-validator)
    - [Custom Validators](./Documentation/3.Advanced_HTTPClient.md#custom-validators)
    - [Retry After [Another] Call](./Documentation/3.Advanced_HTTPClient.md#retry-after-another-call)
+   - [Retry by modify the original request](./Documentation/3.Advanced_HTTPClient.md#retry-by-modify-the-original-request)
 - [**4 - Handle Large Data Request**](./Documentation/4.Handle_LargeData_Requests.md#handle-large-data-request)
    - [Track Progress](./Documentation/4.Handle_LargeData_Requests.m#track-progress)
    - [Cancel Downloads with resumable data](./Documentation/4.Handle_LargeData_Requests.md#cancel-downloads-with-resumable-data)
