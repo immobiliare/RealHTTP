@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "RealHTTP"
-  s.version      = "1.7.4"
+  s.version      = "1.8.0"
   s.summary      = "Lightweight yet powerful http-client & stubber for Swift with native async/await support"
   s.homepage     = "https://github.com/immobiliare/RealHTTP.git"
   s.license      = { :type => "MIT", :file => "LICENSE" }
@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
     :git => 'https://github.com/immobiliare/RealHTTP.git',
     :tag => s.version.to_s
   }
-  s.swift_versions = ['5.0', '5.1', '5.3', '5.4', '5.5']
+  s.swift_versions = ['5.0', '5.1', '5.3', '5.4', '5.5', '5.7']
   s.framework = 'Foundation'
 
   s.source_files = 'Sources/RealHTTP/**/*.swift'
