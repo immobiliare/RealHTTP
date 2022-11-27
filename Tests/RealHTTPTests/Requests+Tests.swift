@@ -1011,6 +1011,90 @@ class RequestsTests: XCTestCase {
         XCTAssert(response.statusCode == .unauthorized, "Main call should fail with unathorized")
         XCTAssert(response.data?.asString == mainCallErrorResponse, "Failed to validate main call error")
     }
+
+    func test_retryMechanismAfterTask() async throws {
+        setupStubber(echo: true)
+        defer { stopStubber() }
+
+        var retryTaskError: Error?
+        let retryTask: (HTTPRequest) async throws -> Void = { originalRequest in
+            originalRequest.headers.set(.authBearerToken("abcdefg"))
+        }
+
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.validators = [
+            CallbackValidator { response, request in
+                if request.currentRetry == 0 {
+                    return .retry(.afterTask(0, { originalRequest in
+                        try await retryTask(originalRequest)
+                    }, { error in
+                        retryTaskError = error
+                    }))
+                } else {
+                    // the next time is okay
+                    return .nextValidator
+                }
+            }
+        ]
+
+        // Setup request
+        let req = HTTPRequest {
+            $0.url = URL(string: "http://127.0.0.1:8080")!
+            $0.method = .post
+            $0.maxRetries = 3
+            $0.body = .string("doSomething")
+        }
+
+        let response = try await req.fetch(newClient)
+        let responseString = response.data?.asString
+        XCTAssert(responseString == "doSomething", "Response received after retry with alt call is wrong")
+        // should be present, set during retry
+        XCTAssertEqual(req.headers["Authorization"], "Bearer abcdefg", "Original request headers are not updated with new authorization")
+        // should be missing, because no error occurs
+        XCTAssertNil(retryTaskError, "Retry task has failed")
+    }
+
+    func test_retryMechanismAfterTaskAndFail() async throws {
+        setupStubber(echo: false)
+        defer { stopStubber() }
+
+        var retryTaskError: Error?
+        let mainCallErrorResponse = "login required"
+
+        // Network calls
+        let req = HTTPRequest {
+            $0.maxRetries = 3
+            $0.url = URL(string: "http://127.0.0.1:8080/execute")!
+        }
+
+        let newClient = HTTPClient(baseURL: nil)
+        newClient.validators = [
+            CallbackValidator { response, request in
+                return .retry(.afterTask(0, { originalRequest in
+                    throw HTTPStatusCode.internalServerError
+                }, { error in
+                    retryTaskError = error
+                }))
+            }
+        ]
+
+        // Stubber to catch /execute call
+        let stubReq = try! HTTPStubRequest().match(urlRegex: "/execute").stub(for: .get) { response in
+            response.statusCode = .unauthorized
+            response.body = mainCallErrorResponse
+        }
+        HTTPStubber.shared.add(stub: stubReq)
+
+        // Execute
+        let response = try await req.fetch(newClient)
+
+        // Check retry task result
+        XCTAssert(retryTaskError as? HTTPStatusCode == HTTPStatusCode.internalServerError, "Failed to validate retry task error")
+
+        // Check main call
+        XCTAssert(response.statusCode == .unauthorized, "Main call should fail with unathorized")
+        XCTAssert(response.data?.asString == mainCallErrorResponse, "Failed to validate main call error")
+    }
     
     func test_POSTRequestWithUnicodeParameters() async throws {
         setupStubber(echo: true)
