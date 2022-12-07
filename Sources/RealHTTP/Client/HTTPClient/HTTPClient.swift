@@ -28,7 +28,7 @@ public class HTTPClient {
     public static let shared = HTTPClient(baseURL: nil)
     
     /// Delegate of the client.
-    public var delegate: HTTPClientDelegate?
+    public weak var delegate: HTTPClientDelegate?
         
     /// Base URL used to compose each request.
     ///
