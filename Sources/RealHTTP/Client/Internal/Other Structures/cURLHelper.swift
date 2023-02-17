@@ -143,11 +143,11 @@ public struct cURLHelper {
         let configuration = client.session.configuration
         var headers = HTTPHeaders()
         
-        for header in configuration.headers where header.name != "Cookie" {
+        for header in configuration.headers {
             headers[header.name] = header.value
         }
         
-        for header in request.headers where header.name != "Cookie" {
+        for header in request.headers {
             headers[header.name] = header.value
         }
         
