@@ -84,8 +84,7 @@ public struct HTTPProgress: Comparable, Equatable {
         self.partialData = partialData
         
         if expectedLength != NSURLSessionTransferSizeUnknown, expectedLength != 0 {
-            let slice = Double(1.0)/Double(expectedLength)
-            self.percentage = slice*Double(currentLength)
+            self.percentage = Double(currentLength)/Double(expectedLength)
         } else {
             self.percentage = 0
         }
