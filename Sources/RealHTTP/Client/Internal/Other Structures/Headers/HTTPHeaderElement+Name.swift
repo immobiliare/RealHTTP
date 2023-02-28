@@ -109,6 +109,7 @@ public extension HTTPHeaders.Element {
         case contentMD5
         case contentType
         case cookie
+        case setCookie
         case date
         case expect
         case forwarded
@@ -167,6 +168,7 @@ public extension HTTPHeaders.Element {
             case .contentMD5: return "Content-MD5"
             case .contentType: return "Content-Type"
             case .cookie: return "Cookie"
+            case .setCookie: return "Set-Cookie"
             case .date: return "Date"
             case .expect: return "Expect"
             case .forwarded: return "Forwarded"
