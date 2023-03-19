@@ -63,6 +63,7 @@ public enum HTTPRetryStrategy {
     public typealias AltRequestCatcher = ((_ request: HTTPRequest, _ response: HTTPResponse) async throws -> Void)
     public typealias RetryTask = ((_ originalRequest: HTTPRequest) async throws -> Void)
     public typealias RetryTaskErrorCatcher = ((_ error: Error) async -> Void)
+    public typealias CustomRetryIntervalProvider = (_ request: HTTPRequest) -> TimeInterval
     
     case immediate
     case delayed(_ interval: TimeInterval)
@@ -70,6 +71,7 @@ public enum HTTPRetryStrategy {
     case fibonacci
     case after(HTTPRequest, TimeInterval, AltRequestCatcher?)
     case afterTask(TimeInterval, RetryTask, RetryTaskErrorCatcher?)
+    case custom(_ retryIntervalProvider: CustomRetryIntervalProvider)
     
     // MARK: - Internal Functions
     
@@ -108,6 +110,9 @@ public enum HTTPRetryStrategy {
 
         case .afterTask:
             return 0
+
+        case .custom(let retryIntervalProvider):
+            return retryIntervalProvider(request)
         }
     }
     
