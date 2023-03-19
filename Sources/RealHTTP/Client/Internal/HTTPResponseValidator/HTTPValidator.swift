@@ -59,6 +59,8 @@ public enum HTTPResponseValidatorResult {
 ///              - the request you want to execute before retry the original request.
 ///              - the amount of time before retry the original request once you got the response for the alt request.
 ///              - an optional async callback to execute once you got the response of the alt request before retry the original request.
+/// - `custom` will retry the original call after the amount of seconds returned by the closure you are required to provide for this case.
+///            The closure provides you with the failed `HTTPRequest` object so you have the chance to define any custom logic based on it and return the desired amount of seconds.
 public enum HTTPRetryStrategy {
     public typealias AltRequestCatcher = ((_ request: HTTPRequest, _ response: HTTPResponse) async throws -> Void)
     public typealias RetryTask = ((_ originalRequest: HTTPRequest) async throws -> Void)
