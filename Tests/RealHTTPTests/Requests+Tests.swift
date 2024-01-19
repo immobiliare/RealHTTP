@@ -322,6 +322,28 @@ class RequestsTests: XCTestCase {
         XCTAssert(parsedParams.params("p4").count == 2, "Failed to encode array")
     }
     
+    func test_queryParametersArrayEncoding() {
+        let req = HTTPRequest {
+            $0.path = "/some"
+            $0.add(parameters: ["param": [1, 2]], arrayEncoding: .withBrackets)
+            $0.add(parameters: ["anotherParam": [1, 2]], arrayEncoding: .noBrackets)
+        }
+        
+        guard let queryItems = req.query else {
+            return XCTFail("Query Items not found")
+        }
+        
+        XCTAssertEqual(queryItems.count, 4)
+        XCTAssertEqual(queryItems[0].name, "param[]".queryEscaped)
+        XCTAssertEqual(queryItems[0].value, "1")
+        XCTAssertEqual(queryItems[1].name, "param[]".queryEscaped)
+        XCTAssertEqual(queryItems[1].value, "2")
+        XCTAssertEqual(queryItems[2].name, "anotherParam".queryEscaped)
+        XCTAssertEqual(queryItems[2].value, "1")
+        XCTAssertEqual(queryItems[3].name, "anotherParam".queryEscaped)
+        XCTAssertEqual(queryItems[3].value, "2")
+    }
+    
     func test_streamUpload() async throws {
         setupStubber(echo: true)
         defer { stopStubber() }

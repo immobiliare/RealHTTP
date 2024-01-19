@@ -102,6 +102,27 @@ extension HTTPBody {
             return components
         }
         
+        /// Creates an array of `URLQueryItem` from the contained parameters.
+        ///
+        /// - Returns: [URLQueryItem]
+        internal func encodedParametersToURLQueryItems() -> [URLQueryItem] {
+            guard let parameters = self.parameters, parameters.isEmpty == false else {
+                return []
+            }
+            
+            var queryItems = [URLQueryItem]()
+            
+            for key in parameters.keys.sorted(by: <) {
+                let value = parameters[key]!
+                let results = encodeKey(key, withValue: value)
+                for result in results {
+                    queryItems.append(URLQueryItem(name: result.0, value: result.1))
+                }
+            }
+            
+            return queryItems
+        }
+        
         /// Encode a single object according to settings.
         ///
         /// - Parameters:
