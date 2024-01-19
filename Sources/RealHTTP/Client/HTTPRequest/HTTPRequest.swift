@@ -397,9 +397,7 @@ public extension HTTPRequest {
         let paramsData = HTTPBody.URLParametersData(parameters,
                                                     boolEncoding: boolEncoding,
                                                     arrayEncoding: arrayEncoding)
-        paramsData.encodedParametersToDictionary().forEach { item in
-            add(queryItem: URLQueryItem(name: item.key, value: item.value))
-        }
+        add(queryItems: paramsData.encodedParametersToURLQueryItems())
     }
     
 }
