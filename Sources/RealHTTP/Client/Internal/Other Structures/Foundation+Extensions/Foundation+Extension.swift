@@ -102,7 +102,14 @@ extension String {
     /// - Parameter string: source string.
     /// - Returns: String
     public var queryEscaped: String {
-        self.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowedSet) ?? self
+        let generalDelimiters = ":#[]@ " // does not include "?" or "/" due to RFC 3986 - Section 3.4
+        let subDelimiters = "!$&'()*+,;="
+        
+        let allowedCharacters = generalDelimiters + subDelimiters
+        let customAllowedSet =  NSCharacterSet(charactersIn:allowedCharacters).inverted
+        let escapedString = self.addingPercentEncoding(withAllowedCharacters: customAllowedSet)!
+        
+        return escapedString
     }
     
     // MARK: - Private Properties
