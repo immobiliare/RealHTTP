@@ -340,6 +340,12 @@ public extension HTTPRequest {
         set { urlComponents.queryItems = newValue }
     }
     
+    /// Setup a list of percent encoded query string parameters.
+    var percentEncodedQueryItems: [URLQueryItem]? {
+        get { urlComponents.percentEncodedQueryItems }
+        set { urlComponents.percentEncodedQueryItems = newValue }
+    }
+    
     /// Set the port of the request. If not set the default HTTP port is used.
     var port: Int? {
         get { urlComponents.port }
