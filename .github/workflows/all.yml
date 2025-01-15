@@ -13,19 +13,10 @@ concurrency:
   cancel-in-progress: true
   
 jobs:
-  macos-run-tests:
-    name: Unit Tests (Xcode ${{ matrix.xcode }})
-    strategy:
-      fail-fast: false
-      matrix:
-        xcode: [latest-stable]
-        include:
-          - xcode: latest-stable
-            macos: macos-latest
-    runs-on: ${{ matrix.macos }}
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer
+  build:
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Run Tests
-        run: swift test
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+      run: swift test
